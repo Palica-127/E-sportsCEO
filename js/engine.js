@@ -41,14 +41,18 @@ KEYS.forEach(function (k) {
 
 /* ---------- estado ---------- */
 var st, RT = {}, C = {}, T = 0;
+function jclone(v, d) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return d;
+  try { var j = JSON.stringify(v); return j.length > 300000 ? d : JSON.parse(j); } catch (e) { return d; }
+}
 function num(v, d) { v = +v; return isFinite(v) && v >= 0 && v < 1e30 ? v : d; }
 function newG(k) {
   var G = GAMES[k];
   return { m: 0, t: 0, o: G.items.map(function () { return 0; }), life: 0, stars: 0, pc: 0, ach: {}, goal: 0,
-    vis: G.items.map(function () { return false; }), rt: 0, c: 0, evn: 0 };
+    vis: G.items.map(function () { return false; }), rt: 0, c: 0, evn: 0, tabs: {}, sh: {}, mu: {} };
 }
 function newSt() {
-  var s = { v: 2, cur: 'lan', mode: '1', last: Date.now(), set: { sound: false, haptic: true, motion: 'auto' },
+  var s = { v: 2, cur: 'lan', mode: '1', tab: {}, last: Date.now(), set: { sound: false, haptic: true, motion: 'auto' },
     stats: { clicks: 0, buys: 0, play: 0, since: Date.now(), awayMax: 0 }, g: {} };
   KEYS.forEach(function (k) { s.g[k] = newG(k); });
   return s;
@@ -58,6 +62,7 @@ function sanitize(d) {
   var s = newSt();
   s.cur = KEYS.indexOf(d.cur) >= 0 ? d.cur : 'lan';
   s.mode = ['1', '10', 'max'].indexOf(d.mode) >= 0 ? d.mode : '1';
+  if (d.tab && typeof d.tab === 'object') KEYS.forEach(function (k) { if (typeof d.tab[k] === 'string') s.tab[k] = d.tab[k].slice(0, 40); });
   s.last = num(d.last, Date.now());
   var ds = d.set || {};
   s.set = { sound: !!ds.sound, haptic: ds.haptic !== false, motion: ['auto', 'reduce', 'full'].indexOf(ds.motion) >= 0 ? ds.motion : 'auto' };
@@ -71,6 +76,8 @@ function sanitize(d) {
     g.goal = Math.min(Math.floor(num(r.goal, 0)), G.goals ? G.goals.length : 0);
     g.o = G.items.map(function (it, i) { var n = Math.floor(num(r.o && r.o[i], 0)); return Math.min(n, it.max); });
     g.vis = G.items.map(function (it, i) { return !!(r.vis && r.vis[i]) || g.o[i] > 0; });
+    g.tabs = jclone(r.tabs, {}); g.sh = jclone(r.sh, {});
+    g.mu = {}; if (r.mu && typeof r.mu === 'object') Object.keys(r.mu).slice(0, 40).forEach(function (id) { var f = +r.mu[id]; if (isFinite(f) && f > 0 && f < 1e6) g.mu[id.slice(0, 40)] = f; });
     if (r.ach && typeof r.ach === 'object') G.ach.forEach(function (a) { if (r.ach[a.id]) g.ach[a.id] = num(r.ach[a.id], 1); });
   });
   return s;
@@ -80,19 +87,191 @@ function load() {
   if (!raw) return newSt();
   try { return sanitize(JSON.parse(raw)); } catch (e) { return newSt(); }
 }
+function collectTabs() {
+  KEYS.forEach(function (k) {
+    TABS[k].forEach(function (t) {
+      if (!t.save || !t.ready) return;
+      var v = safeCall(t, 'save', [apiOf(k)]);
+      if (v !== undefined) st.g[k].tabs[t.id] = v;
+    });
+  });
+}
 function save() {
   if (!st) return;
+  collectTabs();
   st.last = Date.now();
   tryf(function () { localStorage.setItem(K, JSON.stringify(st)); });
 }
 function initRT() {
   KEYS.forEach(function (k) {
     var E = GAMES[k].ev;
-    RT[k] = { ev: null, bt: 0, bm: 1, bk: '', combo: 0, lastClick: -9, evN: E.a + Math.random() * (E.b - E.a), sg: -1 };
+    RT[k] = { ex: {}, tmp: [], ev: null, bt: 0, bm: 1, bk: '', combo: 0, lastClick: -9, evN: E.a + Math.random() * (E.b - E.a), sg: -1 };
     C[k] = {};
   });
 }
 function dirty(k) { C[k] = {}; }
+
+/* ---------- registro de abas (plugin API estavel; ver docs/TABS_API.md) ---------- */
+var TABS = { lan: [], civ: [], esp: [] }, APIS = {}, tabErr = {}, booted = false, renderQ = false;
+function safeCall(t, fn, args) {
+  try { return t[fn].apply(t, args || []); }
+  catch (e) { var id = t.key + ':' + t.id + ':' + fn; if (!tabErr[id]) { tabErr[id] = 1; console.error('aba ' + id, e); } }
+}
+function hookFirst(k, fn) {
+  var l = TABS[k], i, v;
+  for (i = 0; i < l.length; i++) {
+    if (!l[i].ready || !l[i][fn] || !tabOpen(l[i])) continue;
+    v = safeCall(l[i], fn, [apiOf(k)]);
+    if (v !== undefined && v !== null) return v;
+  }
+}
+function tabOpen(t) { return !t.unlock || !!safeCall(t, 'unlock', [apiOf(t.key)]); }
+function makeList(host, opt) {
+  var map = {};
+  return {
+    set: function (items) {
+      var seen = {}, i, key, e, nodes = host.childNodes;
+      for (i = 0; i < items.length; i++) {
+        key = String(opt.key(items[i])); seen[key] = 1; e = map[key];
+        if (!e) { e = map[key] = opt.create(items[i], i); e.el.dataset.k = key; }
+        if (e.update) e.update(items[i], i);
+        if (nodes[i] !== e.el) host.insertBefore(e.el, nodes[i] || null);
+      }
+      for (key in map) if (!seen[key]) { if (map[key].el.parentNode === host) host.removeChild(map[key].el); delete map[key]; }
+    },
+    clear: function () { map = {}; host.textContent = ''; },
+    get size() { return host.childNodes.length; }
+  };
+}
+function apiOf(k) {
+  if (APIS[k]) return APIS[k];
+  var G = GAMES[k];
+  var g = function () { return st.g[k]; };
+  var a = {
+    key: k, cur: G.cur, G: G, fmt: fmt, fmtT: fmtT,
+    get shared() { return st.g[k].sh; },
+    money: function () { return g().m; },
+    life: function () { return g().life; },
+    canAfford: function (v) { return g().m >= v; },
+    spend: function (v) { var s = g(); if (!(v >= 0) || s.m < v * (1 - 1e-12)) return false; s.m = Math.max(0, s.m - v); dirty(k); return true; },
+    earn: function (v, count) { var s = g(); v = +v; if (!(v > 0)) return; s.m += v; if (count !== false) { s.t += v; s.life += v; } },
+    ps: function () { return ps(k); },
+    psBase: function () { return psBase(k); },
+    previewPs: function (ch) {
+      ch = ch || {}; var ex = exSum(k), mu = {}, id;
+      for (id in g().mu) mu[id] = g().mu[id];
+      if (ch.extra) for (id in ch.extra) { var j = G.idx[id]; if (j !== undefined) ex[j] = (ex[j] || 0) + ch.extra[id]; }
+      if (ch.mult) for (id in ch.mult) mu[id] = ch.mult[id];
+      var o = g().o;
+      if (ch.owned) { o = o.slice(); for (id in ch.owned) { var q = G.idx[id]; if (q !== undefined) o[q] = Math.max(0, Math.min(G.items[q].max, o[q] + ch.owned[id])); } }
+      return psRaw(k, o, ex, mu);
+    },
+    owned: function (id) { var i = G.idx[id]; return i === undefined ? 0 : g().o[i]; },
+    maxOf: function (id) { var i = G.idx[id]; return i === undefined ? 0 : G.items[i].max; },
+    setOwned: function (id, n) { var i = G.idx[id]; if (i === undefined) return; g().o[i] = Math.max(0, Math.min(G.items[i].max, Math.floor(n))); dirty(k); refreshVis(k); },
+    mult: function (id, f) { id = String(id); f = +f; if (!isFinite(f) || f <= 0 || f === 1) delete g().mu[id]; else g().mu[id] = f; dirty(k); },
+    getMult: function (id) { return g().mu[id] || 1; },
+    setExtra: function (owner, itemId, n) { var i = G.idx[itemId]; if (i === undefined) return; var e = RT[k].ex[owner] = RT[k].ex[owner] || {}; if (n) e[i] = n; else delete e[i]; dirty(k); },
+    temp: function (id, f, sec) {
+      var l = RT[k].tmp, i; for (i = 0; i < l.length; i++) if (l[i].id === id) { l.splice(i, 1); break; }
+      if (f > 0 && f !== 1 && sec > 0) l.push({ id: id, f: f, left: sec }); dirty(k);
+    },
+    stage: function () {
+      var i = tierIdx(k), sh = g().sh;
+      return { tier: i, tierName: G.tiers[i].n, region: sh.region || null, division: sh.division || null, intl: !!sh.intl };
+    },
+    toast: function (m, o) { toast(m, o); },
+    banner: function (txt) { if (k === st.cur) stageUp(txt); },
+    sfx: sfx, buzz: buzz,
+    unlock: function (id) {
+      var s = g(), found = G.ach.some(function (x) { return x.id === id; });
+      if (!found || s.ach[id]) return false;
+      s.ach[id] = Date.now(); toast('Conquista: ' + G.ach.filter(function (x) { return x.id === id; })[0].n); sfx('ach'); buzz([10, 30, 10]); checkAch(); return true;
+    },
+    isUnlocked: function (id) { return !!g().ach[id]; },
+    invalidate: function () { renderQ = true; if (UIready) scheduleRender(); },
+    isCurrent: function () { return st.cur === k; },
+    isVisible: function (tabId) { var c = curTab(k); return st.cur === k && !!c.t && c.id === tabId && !document.hidden; },
+    now: function () { return T; },
+    rm: RM,
+    stars: function () { return g().stars; },
+    runs: function () { return g().pc; },
+    openDialog: openDlg, closeDialog: closeDlg,
+    list: makeList,
+    ui: { text: setText, attr: setAttr, bar: setBar, hide: setHid, data: setData },
+    save: function () { save(); }
+  };
+  return (APIS[k] = a);
+}
+function mountTab(t) {
+  var k = t.key, root = document.createElement('div'), a = apiOf(k);
+  root.className = 'tabroot'; root.id = 'tab-' + k + '-' + t.id; root.hidden = true; root.setAttribute('role', 'tabpanel');
+  $('tabroots').appendChild(root); t.root = root;
+  if (t.mount) safeCall(t, 'mount', [root, a]);
+  if (t.load) safeCall(t, 'load', [st.g[k].tabs[t.id] || null, a]);
+  t.ready = true;
+}
+function reloadTabs(keys) {
+  keys.forEach(function (k) {
+    RT[k].ex = {}; RT[k].tmp = [];
+    TABS[k].forEach(function (t) { if (t.ready && t.load) safeCall(t, 'load', [st.g[k].tabs[t.id] || null, apiOf(k)]); });
+    dirty(k);
+  });
+}
+function registerTab(k, def) {
+  if (!TABS[k]) throw new Error('registerTab: jogo desconhecido ' + k);
+  if (!def || typeof def.id !== 'string' || !/^[a-z0-9_-]+$/i.test(def.id)) throw new Error('registerTab: id invalido');
+  if (TABS[k].some(function (x) { return x.id === def.id; })) throw new Error('registerTab: id repetido ' + def.id);
+  var t = {}; for (var p in def) t[p] = def[p];
+  t.key = k; t.label = t.label || t.id; t.icon = t.icon || '';
+  if (t.ach) t.ach.forEach(function (a) { a.c = ['x']; GAMES[k].ach.push(a); });
+  TABS[k].push(t);
+  if (booted) { mountTab(t); reloadTabs([k]); if (UIready) { paintTabs(true); applyTabView(); } }
+  return t;
+}
+function tabsOpen(k) {
+  var G = GAMES[k], base = (G.tabs && G.tabs[0]) || { id: 'main', label: 'Comprar', icon: '🛒' }, out = [{ id: base.id, label: base.label, icon: base.icon, t: null }];
+  TABS[k].forEach(function (t) { if (t.ready && tabOpen(t)) out.push({ id: t.id, label: t.label, icon: t.icon, t: t }); });
+  return out;
+}
+function curTab(k) {
+  var l = tabsOpen(k), i; for (i = 0; i < l.length; i++) if (l[i].id === st.tab[k]) return l[i];
+  return l[0];
+}
+function tabsUpdate(dt) {
+  KEYS.forEach(function (k) {
+    TABS[k].forEach(function (t) { if (t.ready && t.update && tabOpen(t)) safeCall(t, 'update', [dt, apiOf(k)]); });
+  });
+}
+var tabSig = '';
+function paintTabs(force) {
+  var k = st.cur, l = tabsOpen(k), c = curTab(k), nav = $('subtabs');
+  var sig = k + '|' + l.map(function (x) { return x.id + x.label; }).join(',') + '|' + c.id;
+  if (!force && sig === tabSig) return; tabSig = sig;
+  nav.hidden = l.length < 2;
+  if (l.length < 2) { nav.textContent = ''; return; }
+  nav.textContent = '';
+  l.forEach(function (x) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip subtab'; b.setAttribute('role', 'tab'); b.dataset.t = x.id;
+    b.setAttribute('aria-selected', String(x.id === c.id));
+    var ic = document.createElement('span'); ic.setAttribute('aria-hidden', 'true'); ic.textContent = x.icon;
+    b.appendChild(ic); b.appendChild(document.createTextNode(' ' + x.label)); nav.appendChild(b);
+  });
+}
+function applyTabView() {
+  var k = st.cur, c = curTab(k), sub = !!c.t;
+  $('app').classList.toggle('sub', sub);
+  KEYS.forEach(function (kk) { TABS[kk].forEach(function (t) { if (t.root) t.root.hidden = !(sub && kk === k && t === c.t); }); });
+  paintTabs(true); dirtyScene = true;
+  if (sub) { if (c.t.show) safeCall(c.t, 'show', [apiOf(k)]); renderTab(); }
+}
+function renderTab() {
+  var k = st.cur, c = curTab(k); renderQ = false;
+  if (c.t && c.t.render && !sheetOpen) safeCall(c.t, 'render', [apiOf(k)]);
+}
+function selectTab(id) {
+  var k = st.cur; if (st.tab[k] === id) return; st.tab[k] = id; applyTabView(); sfx('tap'); save();
+}
 
 /* ---------- logica ---------- */
 function nMarcos(k) {
@@ -108,10 +287,17 @@ function multU(G, o, i) {
   if (l) for (j = 0; j < l.length; j++) m *= Math.pow(l[j].f, o[l[j].i]);
   return m;
 }
-function psRaw(k, o) {
-  var G = GAMES[k], g = st.g[k], s = 0, i, u, m;
-  for (i = 0; i < G.units.length; i++) { u = G.units[i]; if (o[u.i]) s += u.p * o[u.i] * multU(G, o, u.i); }
+function exSum(k) {
+  var out = {}, e = RT[k].ex, id, j;
+  for (id in e) for (j in e[id]) out[j] = (out[j] || 0) + e[id][j];
+  return out;
+}
+function psRaw(k, o, ex, mu) {
+  var G = GAMES[k], g = st.g[k], s = 0, i, u, m, n, id;
+  ex = ex || exSum(k);
+  for (i = 0; i < G.units.length; i++) { u = G.units[i]; n = o[u.i] + (ex[u.i] || 0); if (n > 0) s += u.p * n * multU(G, o, u.i); }
   m = (1 + 0.10 * g.stars) * (1 + (G.bonusAch || 0) * nMarcos(k));
+  mu = mu || g.mu; for (id in mu) m *= mu[id];
   for (i = 0; i < G.alls.length; i++) m *= Math.pow(G.alls[i].f, o[G.alls[i].i]);
   return s * m;
 }
@@ -120,6 +306,7 @@ function boost(k) {
   var r = RT[k], b = 1;
   if (r.bt > 0) b *= r.bm;
   if (r.ev && r.ev.type === 'apagao') b *= 0.25;
+  for (var i = 0; i < r.tmp.length; i++) b *= r.tmp[i].f;
   return b;
 }
 function ps(k) { return psBase(k) * boost(k); }
@@ -154,7 +341,8 @@ function refreshVis(k) {
   return ch;
 }
 function tierIdx(k) {
-  var G = GAMES[k], o = st.g[k].o, r = 0;
+  var G = GAMES[k], o = st.g[k].o, r = 0, v = hookFirst(k, 'tier');
+  if (typeof v === 'number') return Math.max(0, Math.min(G.tiers.length - 1, Math.floor(v)));
   G.tiers.forEach(function (t, j) { if (!t.c || o[t.ci] >= t.c[1]) r = j; });
   return r;
 }
@@ -221,6 +409,8 @@ function sceneX(k) {
   if (r.ev) ev = r.ev.type; else if (r.bt > 0) ev = r.bk;
   XS.tier = tierIdx(k); XS.ev = ev; XS.boost = Math.max(1, boost(k)); XS.combo = r.combo; XS.stars = g.stars;
   XS.ach = nMarcos(k); XS.goal = g.goal;
+  XS.roster = XS.division = XS.region = XS.champ = undefined;
+  TABS[k].forEach(function (t) { if (t.scene && t.ready) safeCall(t, 'scene', [XS, apiOf(k)]); });
   return XS;
 }
 function sceneO(k) { return st.g[k].o; }
@@ -327,11 +517,11 @@ function tap(x, y) {
 var evEl;
 function spawnEvent(k) {
   var G = GAMES[k], E = G.ev, r = RT[k];
-  r.ev = { type: E.type, left: E.dur, taps: 0 };
+  r.ev = { type: E.type, left: E.dur, taps: 0, v: E.variants ? E.variants[Math.random() * E.variants.length | 0] : null };
   var b = evEl;
   b.style.left = (8 + Math.random() * 40) + '%'; b.style.top = (14 + Math.random() * 30) + '%';
   paintEvent(k);
-  toast(E.type === 'apagao' ? 'Apagão! Toque 3 vezes no disjuntor.' : E.type === 'descoberta' ? 'Uma ideia surgiu! Toque na lâmpada.' : 'Hora do clutch! Toque rápido.');
+  toast(r.ev.v ? r.ev.v.msg : E.type === 'apagao' ? 'Apagão! Toque 3 vezes no disjuntor.' : E.type === 'descoberta' ? 'Uma ideia surgiu! Toque na lâmpada.' : 'Hora do clutch! Toque rápido.');
   sfx('no');
 }
 function paintEvent(k) {
@@ -339,8 +529,9 @@ function paintEvent(k) {
   setHid(b, !on);
   if (!on) return;
   var e = r.ev.type;
-  setText(b, e === 'apagao' ? '⚡ Ligar o disjuntor (' + r.ev.taps + '/3)' : e === 'descoberta' ? '💡' : '🔥 CLUTCH!');
-  setAttr(b, 'aria-label', e === 'apagao' ? 'Ligar o disjuntor, ' + r.ev.taps + ' de 3 toques' : e === 'descoberta' ? 'Descoberta! Toque para coletar Ciência' : 'Clutch! Toque para triplicar a produção');
+  var v = r.ev.v;
+  setText(b, e === 'apagao' ? '⚡ Ligar o disjuntor (' + r.ev.taps + '/3)' : e === 'descoberta' ? '💡' : v ? v.btn : '🔥 CLUTCH!');
+  setAttr(b, 'aria-label', e === 'apagao' ? 'Ligar o disjuntor, ' + r.ev.taps + ' de 3 toques' : e === 'descoberta' ? 'Descoberta! Toque para coletar Ciência' : v ? v.aria : 'Clutch! Toque para triplicar a produção');
 }
 function endEvent(k, ok) {
   var r = RT[k], G = GAMES[k], E = G.ev, g = st.g[k];
@@ -364,19 +555,21 @@ function evTap() {
     endEvent(k, true); toast('Eureka! ' + f.replace(/^Fato:\s*/, 'Fato: ') + ' (+' + G.cur + ' ' + fmt(v) + ')', { ms: 5000 }); sfx('up'); buzz(15);
   } else {
     r.bt = 20; r.bm = 3; r.bk = 'clutch';
-    endEvent(k, true); toast('O ADC fez um 1v4! Produção x3 por 20 s'); sfx('up'); buzz([20, 40, 20]);
+    var okMsg = r.ev.v ? r.ev.v.ok : 'O ADC fez um 1v4! Produção x3 por 20 s';
+    endEvent(k, true); toast(okMsg); sfx('up'); buzz([20, 40, 20]);
   }
   burst(); scheduleRender();
 }
 function evTick(dt) {
   KEYS.forEach(function (k) {
     var r = RT[k], E = GAMES[k].ev;
+    for (var q = r.tmp.length - 1; q >= 0; q--) { r.tmp[q].left -= dt; if (r.tmp[q].left <= 0) { r.tmp.splice(q, 1); dirty(k); } }
     if (r.bt > 0) { r.bt -= dt; if (r.bt <= 0) { r.bt = 0; r.bm = 1; r.bk = ''; dirty(k); } }
     if (r.ev) {
       r.ev.left -= dt;
       if (r.ev.left <= 0) {
         var e = r.ev.type; endEvent(k, false);
-        if (k === st.cur) toast(e === 'apagao' ? 'A luz voltou sozinha... teve cliente pedindo reembolso.' : e === 'clutch' ? 'Perdeu a jogada... tem a próxima.' : 'A ideia passou... a próxima vem aí.');
+        if (k === st.cur) toast(e === 'apagao' ? 'A luz voltou sozinha... teve cliente pedindo reembolso.' : e === 'clutch' ? (GAMES[k].ev.fail || 'Perdeu a jogada... tem a próxima.') : 'A ideia passou... a próxima vem aí.');
       }
     } else if (k === st.cur && !document.hidden && !r.bt && st.g[k].rt >= E.min && psBase(k) > 0) {
       r.evN -= dt;
@@ -398,6 +591,7 @@ function achCur(k, a) {
     case 'ev': return [g.evn, c[1]];
     case 'stars': return [g.stars, c[1]];
     case 'goal': return [g.goal, c[1]];
+    case 'x': return [g.ach[a.id] ? 1 : 0, 1];
   }
   return [0, 1];
 }
@@ -443,9 +637,16 @@ function prestige(k) {
   g.m = 0; g.t = 0; g.rt = 0; g.goal = 0;
   g.o = G.items.map(function () { return 0; });
   g.vis = G.items.map(function () { return false; });
-  var r = RT[k]; r.ev = null; r.bt = 0; r.bm = 1; r.bk = ''; r.combo = 0; r.sg = 0;
+  var r = RT[k]; r.ev = null; r.bt = 0; r.bm = 1; r.bk = ''; r.combo = 0; r.tmp = []; r.ex = {};
+  g.mu = {};
   r.evN = G.ev.a + Math.random() * (G.ev.b - G.ev.a);
-  dirty(k); refreshVis(k); checkAch();
+  dirty(k); refreshVis(k);
+  TABS[k].forEach(function (t) {
+    if (!t.ready) return;
+    if (t.onPrestige) safeCall(t, 'onPrestige', [apiOf(k)]);
+    else if (t.load && t.save) safeCall(t, 'load', [safeCall(t, 'save', [apiOf(k)]) || null, apiOf(k)]);
+  });
+  r.sg = tierIdx(k); dirty(k); refreshVis(k); checkAch();
   toast(G.pr.coin + ' +' + p + ' (+' + (p * 10) + '% para sempre)'); sfx('up'); buzz([30, 50, 30]);
   if (UIready) { dirtyScene = true; buildRows(); scheduleRender(); }
   save();
@@ -457,14 +658,14 @@ var acc = 0, acc2 = 0;
 function tick(dt) {
   T += dt; st.stats.play += dt;
   KEYS.forEach(function (k) { st.g[k].rt += dt; earn(k, dt); });
-  evTick(dt);
+  evTick(dt); tabsUpdate(dt);
   acc += dt;
   if (acc >= 1) {
     acc = 0;
     KEYS.forEach(function (k) { if (refreshVis(k)) { /* nova linha */ } if (GAMES[k].goals) checkGoal(k); });
     checkAch(); checkStages();
   }
-  if (UIready) { paintHud(); acc2 += dt; if (acc2 >= 0.3) { acc2 = 0; paintRows(); paintEvent(st.cur); } }
+  if (UIready) { paintHud(); acc2 += dt; if (acc2 >= 0.3) { acc2 = 0; paintRows(); paintEvent(st.cur); paintTabs(); renderTab(); } else if (renderQ) renderTab(); }
 }
 
 /* ---------- offline ---------- */
@@ -485,18 +686,23 @@ function showAway(sec, d) {
 
 /* ---------- render ---------- */
 var H, UI = [], MYST, MORE, STRIP, PRES, NAV = {}, rq = 0, presArm = 0;
-function scheduleRender() { if (rq) return; rq = requestAnimationFrame(function () { rq = 0; paintHud(); paintRows(); paintNav(); }); }
+function scheduleRender() { if (rq) return; rq = requestAnimationFrame(function () { rq = 0; paintHud(); paintRows(); paintNav(); if (renderQ) renderTab(); }); }
 function paintHud() {
   var k = st.cur, G = GAMES[k], g = st.g[k], i = tierIdx(k), nx = G.tiers[i + 1], p = 1, txt = 'Fase final';
-  setText(H.bal, G.cur + ' ' + fmt(g.m));
+  var bt = G.cur + ' ' + fmt(g.m); setText(H.bal, bt); H.bal.classList.toggle('sm', bt.length > 10);
   setText(H.ps, G.cur + ' ' + fmt(ps(k)) + '/s');
-  setText(H.stage, G.tiers[i].n);
-  if (nx) {
-    var it = G.items[nx.ci], o = g.o[nx.ci], c = cost1(k, nx.ci);
-    p = (Math.min(o, nx.c[1]) + (o < nx.c[1] && g.vis[nx.ci] ? Math.min(1, g.m / c) : 0)) / nx.c[1];
-    txt = 'Próx.: ' + nx.n + ' · ' + Math.min(o, nx.c[1]) + '/' + nx.c[1] + ' ' + it.n;
+  var hh = hookFirst(k, 'hud');
+  if (hh) {
+    setText(H.stage, hh.stage || G.tiers[i].n); setText(H.next, hh.next || ''); setBar(H.bar, hh.p);
+  } else {
+    setText(H.stage, G.tiers[i].n);
+    if (nx && nx.c) {
+      var it = G.items[nx.ci], o = g.o[nx.ci], c = cost1(k, nx.ci);
+      p = (Math.min(o, nx.c[1]) + (o < nx.c[1] && g.vis[nx.ci] ? Math.min(1, g.m / c) : 0)) / nx.c[1];
+      txt = 'Próx.: ' + nx.n + ' · ' + Math.min(o, nx.c[1]) + '/' + nx.c[1] + ' ' + it.n;
+    } else if (nx) { txt = 'Próx.: ' + nx.n; p = 0; }
+    setText(H.next, txt); setBar(H.bar, p);
   }
-  setText(H.next, txt); setBar(H.bar, p);
   if (H.bigv) {
     var G2 = GAMES[k], r = RT[k];
     setText(H.bigv, '+' + fmt(clickVal(k)) + ' por toque' + (G2.combo && r.combo > 1 ? ' · ' + G2.combo.name + ' x' + r.combo : ''));
@@ -618,7 +824,7 @@ function build() {
   $('cbar').classList.toggle('on', !!G.combo);
   cv.setAttribute('aria-label', 'Cena animada: ' + G.name);
   Array.prototype.forEach.call(document.querySelectorAll('#modes .mode'), function (b) { b.setAttribute('aria-checked', String(b.dataset.m === st.mode)); });
-  buildRows(); fit(); say(); dirtyScene = true; paintHud(); paintRows(); paintNav(); paintEvent(k);
+  buildRows(); fit(); say(); dirtyScene = true; paintHud(); paintRows(); paintNav(); paintEvent(k); applyTabView();
 }
 var tk;
 function say() {
@@ -666,7 +872,7 @@ function paintSettings() {
 }
 function crc(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h.toString(36); }
 function exportSave() {
-  st.last = Date.now();
+  collectTabs(); st.last = Date.now();
   var j = JSON.stringify({ v: 2, d: st });
   return 'MI2:' + btoa(unescape(encodeURIComponent(j))) + ':' + crc(j);
 }
@@ -680,7 +886,8 @@ function parseSave(txt) {
   return sanitize(o.d);
 }
 function applyState(s) {
-  st = s; KEYS.forEach(function (k) { dirty(k); RT[k].ev = null; RT[k].bt = 0; RT[k].bm = 1; RT[k].combo = 0; refreshVis(k); RT[k].sg = tierIdx(k); });
+  st = s; reloadTabs(KEYS);
+  KEYS.forEach(function (k) { dirty(k); RT[k].ev = null; RT[k].bt = 0; RT[k].bm = 1; RT[k].combo = 0; refreshVis(k); RT[k].sg = tierIdx(k); });
   document.body.classList.toggle('rm', RM());
   if (UIready) { build(); checkAch(); paintSettings(); }
 }
@@ -696,7 +903,7 @@ function doReset() {
   closeDlg($('dlg'));
   var snap = JSON.stringify(st);
   (zerar === 'all' ? KEYS : [st.cur]).forEach(function (k) {
-    st.g[k] = newG(k); dirty(k); refreshVis(k); RT[k].ev = null; RT[k].bt = 0; RT[k].combo = 0; RT[k].sg = 0;
+    st.g[k] = newG(k); st.tab[k] = ''; reloadTabs([k]); dirty(k); refreshVis(k); RT[k].ev = null; RT[k].bt = 0; RT[k].combo = 0; RT[k].sg = tierIdx(k);
   });
   build(); save(); closeDlg($('sheet'));
   toast('Jogo zerado.', { action: 'Desfazer', ms: 10000, fn: function () { applyState(sanitize(JSON.parse(snap))); save(); } });
@@ -731,6 +938,7 @@ function initUI() {
     if (b.id === 'menu') return openSheet();
     if (b.dataset.k !== st.cur) { st.cur = b.dataset.k; $('rows').scrollTop = 0; presArm = 0; build(); save(); sfx('tap'); }
   });
+  $('subtabs').addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('.subtab') : null; if (b) selectTab(b.dataset.t); });
   $('modes').addEventListener('click', function (e) {
     var b = e.target.closest('.mode'); if (!b) return;
     st.mode = b.dataset.m; Array.prototype.forEach.call(document.querySelectorAll('#modes .mode'), function (x) { x.setAttribute('aria-checked', String(x === b)); });
@@ -788,6 +996,8 @@ function initUI() {
 var prev = Date.now(), hiddenAt = 0;
 function start() {
   st = load(); initRT();
+  KEYS.forEach(function (k) { TABS[k].forEach(mountTab); });
+  booted = true;
   KEYS.forEach(function (k) { refreshVis(k); RT[k].sg = tierIdx(k); });
   initUI();
   document.body.classList.toggle('rm', RM());
@@ -811,7 +1021,8 @@ window.IDLE = {
   ps: ps, psBase: psBase, clickVal: clickVal, pending: pending, prestige: prestige, creditAway: creditAway, tierIdx: tierIdx,
   exportSave: exportSave, importSave: importSave, save: save, evTap: evTap, spawnEvent: spawnEvent, fmt: fmt, refreshVis: refreshVis,
   setT: function (v) { T = v; }, get T() { return T; }, newSt: newSt, applyState: applyState, build: build, load: load,
-  paintRows: paintRows, openSheet: openSheet, showTab: showTab, ui: function (v) { UIready = v; }
+  paintRows: paintRows, sceneX: sceneX, RT: RT, gainOf: gainOf, psRaw: psRaw, TABS: TABS, api: apiOf, selectTab: selectTab, renderTab: renderTab, tabsOpen: tabsOpen, openSheet: openSheet, showTab: showTab, ui: function (v) { UIready = v; }
 };
-start();
+window.Engine = { version: 1, KEYS: KEYS, registerTab: registerTab, api: apiOf, tabs: TABS };
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

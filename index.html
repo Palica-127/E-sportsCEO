@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#0e1014">
 <title>Mini Idle 3 em 1</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/tab-lan.css">
+<link rel="stylesheet" href="css/tab-civ.css">
 </head>
 <body>
 <div class="app" id="app">
@@ -39,6 +41,7 @@
   </section>
 
   <main class="panel">
+    <nav class="subtabs" id="subtabs" role="tablist" aria-label="Abas do jogo" hidden></nav>
     <div class="phead">
       <span class="phead-lb" id="mlbl">Comprar</span>
       <div class="modes" id="modes" role="radiogroup" aria-labelledby="mlbl">
@@ -53,6 +56,7 @@
       <div class="goal-b"><i id="goalB"></i></div>
     </div>
     <ul class="list" id="rows" aria-label="Melhorias"></ul>
+    <div class="tabroots" id="tabroots"></div>
   </main>
 
   <nav class="nav" aria-label="Jogos e menu">
@@ -133,7 +137,19 @@
 <script src="js/scenes/esp.js"></script>
 <script src="js/games/lan.js"></script>
 <script src="js/games/civ.js"></script>
+<script src="js/data/jogadores.js"></script>
 <script src="js/games/esp.js"></script>
 <script src="js/engine.js"></script>
+<!-- ABAS (plugins): cada aba vive em js/tabs/<jogo>-<id>.js e se registra com Engine.registerTab(...).
+     Para adicionar uma aba nova, inclua o <script> dela AQUI, depois do engine.js (a ordem das abas = ordem destes scripts).
+     O motor só inicia no DOMContentLoaded, então todas as abas já estão registradas quando o jogo abre. Veja docs/TABS_API.md. -->
+<script src="js/tabs/esp-mercado.js"></script>
+<script src="js/tabs/esp-liga.js"></script>
+<script src="js/tabs/lan-torneios.js"></script>
+<script src="js/tabs/lan-funcionarios.js"></script>
+<script src="js/tabs/lan-ranking.js"></script>
+<script src="js/tabs/civ-mapa.js"></script>
+<script src="js/tabs/civ-tecnologia.js"></script>
+<script src="js/tabs/civ-maravilhas.js"></script>
 </body>
 </html>

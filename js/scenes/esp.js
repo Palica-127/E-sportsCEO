@@ -11,7 +11,7 @@
   var SCR = ['#1e88e5', '#43a047', '#8e24aa', '#f4511e', '#00acc1'];
   var SPN = ['Padaria do Zé', 'EnergiMax', 'TurboNet', 'Posto Sol', 'Mega Byte'];
   var SPC = ['#c0392b', '#16a085', '#2980b9', '#d35400', '#8e44ad'];
-  var MSG = ['GG!', 'vai time!!', 'que jogada', 'MVP', 'kkkkk', 'clutch!', 'bora bora', 'insano', 'hype!!', 'toma!', 'ace!!', 'campeão'];
+  var MSG = ['GG!', 'vai time!!', 'gank mid!', 'MVP', 'kkkkk', 'clutch!', 'bora baron', 'sem flash', 'hype!!', 'dragão!', 'pentakill', 'campeão'];
   var NICK = ['lia', 'bob', 'zeca', 'ana', 'tito', 'ju'];
   var NCOL = ['#ff8a80', '#80d8ff', '#ccff90', '#ffe57f', '#ea80fc', '#a7ffeb'];
   var CONF = ['#ff5252', '#ffd740', '#69f0ae', '#40c4ff', '#e040fb', '#fff'];
@@ -27,6 +27,17 @@
   var TRC = ['#b0703a', '#c0c6cf', '#e6b422', '#ffd54a', '#7de3ff', '#fff3a0'];
   var TICK = 'MARCA GLOBAL  *  MEGA BYTE  *  TURBONET  *  ENERGIMAX  *  POSTO SOL  *  PADARIA DO ZÉ  *  ';
   var bt = -99, bx = 0, by = 0, bn = 0; // estado do burst
+  // Tema LoL (somente jargão/ambientação; formas genéricas): funções TOP, JNG, MID, ADC, SUP
+  var RC = ['#e5534b', '#3fb950', '#58a6ff', '#f0a030', '#b07cf0'];
+  var ROLEIX = { TOP: 0, JNG: 1, MID: 2, ADC: 3, SUP: 4 };
+  var TB = ['#4a5a78', '#5aa9e6', '#6fd8a0', '#ffd54a', '#ff9f5a']; // moldura do telão por tier
+  var FLC = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#ecf0f1', '#9b59b6'];
+  var TWS = []; for (var q2 = 0; q2 <= 11; q2++) TWS.push(q2 + '/11');
+  var S5X = [], S5Y = [], S4X = [], S4Y = [];
+  for (q = 0; q < 10; q++) { var ra = q & 1 ? 0.45 : 1, an5 = -Math.PI / 2 + q * Math.PI / 5; S5X.push(Math.cos(an5) * ra); S5Y.push(Math.sin(an5) * ra); }
+  for (q = 0; q < 8; q++) { var rb = q & 1 ? 0.38 : 1, an4 = -Math.PI / 2 + q * Math.PI / 4; S4X.push(Math.cos(an4) * rb); S4Y.push(Math.sin(an4) * rb); }
+  var NC = Object.create(null), ncN = 0, DASH = [2, 2], NODASH = [];
+  var PX = 0, PY = 0;
 
   function cl(v, mx) { v = Math.floor(+v); return v > 0 ? (v > mx ? mx : v) : 0; } // NaN, negativo, > max e Infinity seguros
   function fmt(v) {
@@ -37,11 +48,67 @@
   function txt(ctx, s, x, y, font, col, al) { ctx.font = font; ctx.fillStyle = col; ctx.textAlign = al || 'left'; ctx.fillText(s, x, y); }
   function circ(ctx, x, y, r, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); }
   function star(ctx, x, y, s, col) { ctx.fillStyle = col; ctx.fillRect(x - s, y - 0.5, s * 2, 1); ctx.fillRect(x - 0.5, y - s, 1, s * 2); }
+  function poly(ctx, ax, ay, x, y, r, col) { // estrela de N pontas a partir de tabelas pré-calculadas
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x + ax[0] * r, y + ay[0] * r);
+    for (var n = 1; n < ax.length; n++) ctx.lineTo(x + ax[n] * r, y + ay[n] * r);
+    ctx.closePath(); ctx.fill();
+  }
+  function dia(ctx, x, y, r, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill(); }
+  function ent(arr, i) { var e = arr && arr[i]; return e && typeof e === 'object' ? e : null; }
+  function roleIx(e, i) { var r = ROLEIX[String(e.r).toUpperCase()]; return r === undefined ? i % 5 : r; }
+  function fit(s, n) { // trunca nome (com cache para não alocar por frame)
+    s = s == null ? '' : String(s); var key = n + '|' + s, v = NC[key];
+    if (v !== undefined) return v;
+    if (ncN > 300) { NC = Object.create(null); ncN = 0; }
+    v = s.length > n ? s.slice(0, Math.max(1, n - 1)) + '\u2026' : s; NC[key] = v; ncN++; return v;
+  }
+  function roleIcon(ctx, ri, cx, cy) { // ícone branco por função: TOP quadrado, JNG triângulo, MID círculo, ADC losango, SUP cruz
+    ctx.fillStyle = '#fff';
+    if (ri === 0) ctx.fillRect(cx - 2, cy - 2, 4, 4);
+    else if (ri === 1) { ctx.beginPath(); ctx.moveTo(cx, cy - 2.6); ctx.lineTo(cx + 2.4, cy + 2); ctx.lineTo(cx - 2.4, cy + 2); ctx.fill(); }
+    else if (ri === 2) { ctx.beginPath(); ctx.arc(cx, cy, 2.2, 0, TAU); ctx.fill(); }
+    else if (ri === 3) dia(ctx, cx, cy, 2.8, '#fff');
+    else { ctx.fillRect(cx - 0.8, cy - 2.4, 1.6, 4.8); ctx.fillRect(cx - 2.4, cy - 0.8, 4.8, 1.6); }
+  }
+  // plaquinha de nome sobre a cadeira. e=null: vaga fantasma (ri = função da vaga)
+  function plaque(ctx, cx, y, pw, e, ri, t, i) {
+    var x0 = cx - pw / 2, real = e && e.real === true;
+    if (!e) {
+      ctx.globalAlpha = 0.3; ctx.fillStyle = '#0b0d16'; ctx.fillRect(x0, y, pw, 9);
+      ctx.fillStyle = RC[ri]; ctx.fillRect(x0, y, 9, 9); roleIcon(ctx, ri, x0 + 4.5, y + 4.5);
+      txt(ctx, 'vaga', x0 + 11, y + 6.6, '6px sans-serif', '#aab', 'left');
+      ctx.globalAlpha = 1; return;
+    }
+    ctx.fillStyle = '#0b0d16'; ctx.globalAlpha = 0.9; ctx.fillRect(x0, y, pw, 9); ctx.globalAlpha = 1;
+    ctx.fillStyle = RC[ri]; ctx.fillRect(x0, y, 9, 9); roleIcon(ctx, ri, x0 + 4.5, y + 4.5);
+    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 10, y, pw - 11, 9); ctx.clip();
+    txt(ctx, fit(e.n, Math.max(3, Math.floor((pw - 12) / 3.5))), x0 + 11, y + 6.6, 'bold 6px sans-serif', real ? '#ffe27a' : '#fff', 'left');
+    ctx.restore();
+    ctx.strokeStyle = real ? '#ffd54a' : RC[ri]; ctx.lineWidth = real ? 1.3 : 0.8; ctx.strokeRect(x0 + 0.4, y + 0.4, pw - 0.8, 8.2);
+    if (real) {
+      poly(ctx, S5X, S5Y, x0 + pw - 1, y - 1.5, 4.2 + Math.sin(t * 4 + i) * 0.5, '#ffd54a');
+      if (Math.sin(t * 3 + i * 2) > 0.85) star(ctx, x0 + pw + 2, y - 4, 2, '#fff');
+    }
+  }
+  function label(ctx, s, cx, y, real, ri) { // nome do reserva
+    var w = Math.min(26, s.length * 3.5 + 6);
+    ctx.globalAlpha = 0.88; ctx.fillStyle = '#0b0d16'; ctx.fillRect(cx - w / 2, y, w, 8); ctx.globalAlpha = 1;
+    ctx.fillStyle = RC[ri]; ctx.fillRect(cx - w / 2, y + 7, w, 1.2);
+    txt(ctx, s, cx, y + 6, 'bold 6px sans-serif', real ? '#ffe27a' : '#fff', 'center');
+    if (real) poly(ctx, S5X, S5Y, cx + w / 2, y, 3.2, '#ffd54a');
+  }
 
   // Titular sentado no setup. on=false: cadeira vazia (fantasma). eq 0..5, sp 0..6, live: streamer do time.
-  function player(ctx, i, x, k, t, gy, on, eq, sp, live) {
-    var sh = SHIRT[i % 10], sk = SKIN[(i * 3) % 5], b = Math.sin(t * 14 + i * 1.7), rg = BEAM[(Math.floor(t * 3) + i) % 4];
+  function player(ctx, i, x, k, t, gy, on, eq, sp, live, e) {
+    var ri = e ? roleIx(e, i) : i % 5, real = !!e && e.real === true, hi = !!e && +e.o >= 90;
+    var sh = e ? RC[ri] : SHIRT[i % 10], sk = SKIN[(i * 3) % 5], b = Math.sin(t * 14 + i * 1.7), rg = BEAM[(Math.floor(t * 3) + i) % 4];
     ctx.save(); ctx.translate(x, gy); ctx.scale(k, k);
+    if (on && hi) { // aura sutil de craque (nota >= 90)
+      ctx.globalAlpha = 0.09 + 0.04 * Math.sin(t * 2.2 + i); circ(ctx, -3, -24, 25, RC[ri]);
+      ctx.globalAlpha = 0.12 + 0.04 * Math.sin(t * 2.7 + i); circ(ctx, -3, -24, 16, RC[ri]);
+      ctx.globalAlpha = 0.7; for (var q3 = 0; q3 < 3; q3++) star(ctx, -3 + Math.cos(t * 1.4 + q3 * 2.1 + i) * 21, -24 + Math.sin(t * 1.4 + q3 * 2.1 + i) * 18, 1.5, '#fff');
+      ctx.globalAlpha = 1;
+    }
     if (!on) ctx.globalAlpha = 0.22;
     if (on && eq >= 5) { ctx.globalAlpha = 0.14 + 0.05 * Math.sin(t * 3 + i); ctx.fillStyle = rg; ctx.fillRect(-18, -34, 36, 40); ctx.globalAlpha = 1; }
     ctx.fillStyle = '#222'; ctx.fillRect(-10, -12, 13, 2);              // cadeira
@@ -50,8 +117,13 @@
     if (on) {
       ctx.fillStyle = sh; ctx.fillRect(-8, -29, 10, 15);                // torso
       if (sp > 0) { ctx.fillStyle = SPC[i % Math.min(5, sp)]; ctx.fillRect(-7, -27, 8, 4); ctx.fillStyle = '#fff'; ctx.fillRect(-6, -26, 4, 1); } // logo na camisa
+      if (real) { // uniforme de pro: gola e mangas douradas, estrela no peito, faixa na cabeça
+        ctx.fillStyle = '#ffd54a'; ctx.fillRect(-8, -29, 10, 2); ctx.fillRect(-8, -29, 1.5, 15); ctx.fillRect(0.5, -29, 1.5, 15);
+        poly(ctx, S5X, S5Y, -3, -18.5, 2.8, '#ffd54a');
+      }
       circ(ctx, -3, -33, 4, sk);
       ctx.fillStyle = HAIR[(i * 2) % 5]; ctx.fillRect(-7, -38, 8, 3);
+      if (real) { ctx.fillStyle = '#ffd54a'; ctx.fillRect(-7, -36, 8, 1); }
       if (eq >= 3) { // headset
         ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(-3, -34, 5, Math.PI, TAU); ctx.stroke();
         ctx.fillStyle = eq >= 5 ? rg : '#d33'; ctx.fillRect(-9, -35, 3, 5); ctx.fillStyle = '#111'; ctx.fillRect(-9, -31, 5, 1);
@@ -81,12 +153,12 @@
     ctx.restore();
   }
 
-  function reserve(ctx, i, x, gy, t) { // reserva de colete no banco
+  function reserve(ctx, i, x, gy, t, e) { // reserva de colete no banco
     var nod = Math.sin(t * 1.6 + i * 2);
     ctx.save(); ctx.translate(x, gy);
     ctx.fillStyle = '#223'; ctx.fillRect(-3, -13, 10, 3); ctx.fillRect(5, -11, 3, 11);
     ctx.fillStyle = SHIRT[(i * 4 + 2) % 10]; ctx.fillRect(-4, -28, 9, 16);
-    ctx.fillStyle = '#f1c40f'; ctx.fillRect(-4, -28, 9, 14); ctx.fillStyle = '#c9a100'; ctx.fillRect(-1, -28, 3, 14); // colete
+    ctx.fillStyle = e ? RC[roleIx(e, i + 3)] : '#f1c40f'; ctx.fillRect(-4, -28, 9, 14); ctx.fillStyle = e && e.real === true ? '#ffd54a' : '#c9a100'; ctx.fillRect(-1, -28, 3, 14); // colete
     circ(ctx, 0.5, -32 + nod * 0.4, 3.6, SKIN[(i * 2 + 1) % 5]);
     ctx.fillStyle = HAIR[(i + 3) % 5]; ctx.fillRect(-3, -37 + nod * 0.4, 7, 3);
     ctx.fillStyle = SKIN[(i * 2 + 1) % 5]; ctx.fillRect(3, -22, 6, 2);
@@ -195,13 +267,62 @@
     if (Math.sin(t * 3 + i * 2) > 0.8) star(ctx, x + 4, yb - 14 * s, 2, '#fff');
   }
 
+  function lanePt(lane, f, l, r, tp, b) { // ponto na lane (0 topo, 1 meio, 2 base), f 0..1 da base azul à vermelha
+    if (lane === 1) { PX = l + (r - l) * f; PY = b - (b - tp) * f; }
+    else if (lane === 0) { if (f < 0.5) { PX = l; PY = b - (b - tp) * 2 * f; } else { PX = l + (r - l) * (2 * f - 1); PY = tp; } }
+    else if (f < 0.5) { PX = l + (r - l) * 2 * f; PY = b; } else { PX = r; PY = b - (b - tp) * (2 * f - 1); }
+  }
+  var EF = [0.58, 0.74, 0.88], AF = [0.42, 0.26, 0.12];
+  // telão: mapa de lanes minimalista + torres + objetivos (losango = dragão, estrela = barão); tela de campeão alternada
+  function lolScreen(ctx, mx, my, mw, mh, t, nu, tier, ti, tw, dr, bn) {
+    var i, j, l, r, tp, b, m2 = mh - 17, y1, y2;
+    ctx.fillStyle = '#04060d'; ctx.fillRect(mx, my, mw, mh);
+    if (ti > 0 && (Math.floor(t / 5) & 1)) { // tela de campeão
+      ctx.fillStyle = '#2a1c05'; ctx.fillRect(mx, my, mw, mh);
+      ctx.globalAlpha = 0.25 + 0.1 * Math.sin(t * 4); ctx.fillStyle = '#ffd54a'; ctx.fillRect(mx, my + mh - 8, mw, 8); ctx.globalAlpha = 1;
+      txt(ctx, 'CAMPEÃO', mx + mw / 2, my + 8, 'bold 6px sans-serif', '#ffd54a', 'center');
+      trophy(ctx, mx + mw / 2, my + mh - 7, 1.05, '#ffd54a', t, 2);
+      if (ti >= 6 && Math.sin(t * 5) > -0.4) txt(ctx, 'MUNDIAL', mx + mw / 2, my + mh - 1.5, 'bold 6px sans-serif', '#fff', 'center');
+    } else {
+      ctx.fillStyle = '#0c1a14'; ctx.fillRect(mx, my, mw, m2);
+      l = mx + 5; r = mx + mw - 5; tp = my + 5; b = my + m2 - 5;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#2f6fa8'; ctx.lineWidth = 2.5; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.moveTo(l, tp); ctx.lineTo(r, b); ctx.stroke(); ctx.globalAlpha = 1; // rio
+      ctx.strokeStyle = '#c9b57a'; ctx.lineWidth = 1.2; ctx.beginPath();
+      ctx.moveTo(l, b); ctx.lineTo(l, tp); ctx.lineTo(r, tp);   // top
+      ctx.moveTo(l, b); ctx.lineTo(r, tp);                      // mid
+      ctx.moveTo(l, b); ctx.lineTo(r, b); ctx.lineTo(r, tp);    // bot
+      ctx.stroke(); ctx.lineCap = 'butt';
+      for (i = 0; i < 3; i++) for (j = 0; j < 3; j++) { // torres: aliadas azuis; inimigas laranja, cinza se derrubadas
+        lanePt(i, AF[j], l, r, tp, b); ctx.fillStyle = '#4fc3f7'; ctx.fillRect(PX - 1, PY - 1, 2, 2);
+        lanePt(i, EF[j], l, r, tp, b); ctx.fillStyle = j * 3 + i < tw ? '#555' : '#ff7043'; ctx.fillRect(PX - 1, PY - 1, 2, 2);
+      }
+      for (i = 0; i < nu; i++) { lanePt(i % 3, (t * 0.1 + i * 0.27) % 1, l, r, tp, b); circ(ctx, PX, PY, 1.3, i & 1 ? '#aef' : '#fff'); } // movimento do time
+      dia(ctx, l, b, 3.4, '#4fc3f7');
+      dia(ctx, r, tp, 3.4, tw >= 11 ? (Math.sin(t * 6) > 0 ? '#ffd54a' : '#fff') : '#ff5252');
+    }
+    ctx.strokeStyle = TB[tier]; ctx.lineWidth = 1.2; ctx.strokeRect(mx + 0.5, my + 0.5, mw - 1, mh - 1);
+    y1 = my + m2 + 1; y2 = y1 + 8;
+    ctx.fillStyle = '#ff7043'; ctx.fillRect(mx + 3, y1 + 3, 4, 4); ctx.fillRect(mx + 3, y1 + 2, 1, 1); ctx.fillRect(mx + 6, y1 + 2, 1, 1); // ícone de torre
+    txt(ctx, TWS[tw], mx + 9, y1 + 7, 'bold 6px sans-serif', '#fff', 'left');
+    for (i = 0; i < 4; i++) { ctx.globalAlpha = i < dr ? 1 : 0.25; dia(ctx, mx + 5 + i * 5, y2 + 4, 2.1, '#ff9a3c'); }
+    for (i = 0; i < 2; i++) { ctx.globalAlpha = i < bn ? 1 : 0.25; poly(ctx, S4X, S4Y, mx + mw - 11 + i * 6, y2 + 4, 2.8, '#c77dff'); }
+    ctx.globalAlpha = 1;
+  }
+
   SCENES.esp = {
     h: 230,
-    draw: function (ctx, W, H, o, t) {
+    draw: function (ctx, W, H, o, t, ex) {
       o = o || [];
+      var ro = ex && ex.roster, ST = ro && ro.starters, SB = ro && ro.subs, hasS = false, hasB = false;
       var a = cl(o[0], 5), rs = cl(o[1], 2), ch = cl(o[2], 1), tr = cl(o[3], 6), h = cl(o[4], 6), eq = cl(o[5], 5),
           an = cl(o[6], 1), sp = cl(o[7], 6), cn = cl(o[8], 6), ps = cl(o[9], 1), fc = cl(o[10], 6), ar = cl(o[11], 4), ti = cl(o[12], 6);
       var gy = H - 46, cx = W / 2, i, j, k, g, x, y, id;
+      for (i = 0; i < 5; i++) if (ent(ST, i)) hasS = true;
+      for (i = 0; i < 2; i++) if (ent(SB, i)) hasB = true;
+      var useS = !!ST && typeof ST === 'object' && (hasS || a === 0), useB = !!SB && typeof SB === 'object' && (hasB || rs === 0);
+      var lvl = a + rs + ch + tr + h + eq + an + sp + cn + ps + fc + ar + ti;
+      var tw = Math.min(11, Math.floor(lvl * 11 / 50)), dr = Math.min(4, Math.floor(lvl / 10)), bn2 = Math.min(2, Math.floor(lvl / 22));
       var tier = ti > 0 ? 4 : ar > 0 ? 3 : sp > 0 ? 2 : ch > 0 ? 1 : 0;
       var YB = 128; // linha de base do cenário de fundo
 
@@ -227,6 +348,18 @@
             ctx.fillStyle = CROWD[Math.floor(R[(id * 7) & 255] * 5)];
             ctx.fillRect(3 + k * 7 + (j & 1) * 3, y - dy, 4, 5);
             if (R[(id * 3) & 255] > 0.95 && Math.sin(t * 8 + id) > 0.85) { ctx.fillStyle = '#fff'; ctx.fillRect(3 + k * 7 + (j & 1) * 3, y - dy - 3, 2, 2); }
+          }
+        }
+        if (ar >= 2) { // bandeiras genéricas penduradas acima da arquibancada
+          var fy = YB - 4 - (rows - 1) * 9 - 18, nfl = Math.floor(W / (ar >= 4 ? 13 : 17)), fw = W / nfl;
+          ctx.strokeStyle = '#ccc'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(0, fy - 1); ctx.lineTo(W, fy - 1); ctx.stroke();
+          for (i = 0; i < nfl; i++) {
+            x = i * fw + 1; y = fy + Math.sin(t * 3 + i) * 0.7; var c1 = FLC[(i * 2) % 6], c2 = FLC[(i * 2 + 3) % 6], ty2 = i & 3;
+            ctx.fillStyle = c1; ctx.fillRect(x, y, fw - 3, 8); ctx.fillStyle = c2;
+            if (ty2 === 0) ctx.fillRect(x, y + 3, fw - 3, 2.5);
+            else if (ty2 === 1) ctx.fillRect(x + (fw - 3) / 3, y, (fw - 3) / 3, 8);
+            else if (ty2 === 2) circ(ctx, x + (fw - 3) / 2, y + 4, 2, c2);
+            else { ctx.fillRect(x + 2, y + 3, fw - 7, 2); ctx.fillRect(x + (fw - 3) / 2 - 1, y + 1, 2, 6); }
           }
         }
         if (ar >= 3) {
@@ -283,12 +416,14 @@
 
       // ---- zona central: treino tático (quadro/telões) e estante de troféus ----
       var zx0 = 72, zx1 = W - 96, zw = Math.max(60, zx1 - zx0), zc = zx0 + zw / 2, ty = sp >= 6 ? 54 : 42, bh = 44;
+      var MW = zw >= 200 ? 50 : 40, MH = tr >= 6 ? 34 : 44, mmx = zx0, showMap = zw >= 100;
       if (tr > 0) {
-        var wl = tr >= 3 ? zw * 0.46 : zw, nsc = tr >= 5 ? 3 : tr >= 4 ? 2 : tr >= 3 ? 1 : 0, sbh = tr >= 6 ? 32 : bh;
+        var wl = tr >= 3 ? zw * 0.3 : (showMap ? zw - MW - 6 : zw), nsc = tr >= 5 ? 3 : tr >= 4 ? 2 : tr >= 3 ? 1 : 0, sbh = tr >= 6 ? 32 : bh;
+        if (showMap) mmx = zx0 + wl + 6;
         ctx.fillStyle = '#caa56a'; ctx.fillRect(zx0 - 2, ty - 2, wl + 4, sbh + 4);
         ctx.fillStyle = '#1f5a3a'; ctx.fillRect(zx0, ty, wl, sbh);
         ctx.globalAlpha = 0.45; ctx.fillStyle = '#fff'; ctx.fillRect(zx0 + wl / 2, ty, 1, sbh); ctx.globalAlpha = 1;
-        txt(ctx, 'TÁTICA', zx0 + 3, ty + 8, '6px sans-serif', '#cfe', 'left');
+        txt(ctx, 'DRAFT', zx0 + 3, ty + 8, '6px sans-serif', '#cfe', 'left');
         var nd = tr >= 2 ? 8 : 4, p0x = 0, p0y = 0;
         for (j = 0; j < nd; j++) {
           x = zx0 + 6 + R[(j * 5) & 255] * (wl - 12) + Math.sin(t * 0.9 + j) * 3; y = ty + 12 + R[(j * 5 + 1) & 255] * (sbh - 18) + Math.cos(t * 0.8 + j) * 2;
@@ -297,9 +432,10 @@
           if (tr >= 2 && (j === 2 || j === 5)) { ctx.strokeStyle = '#fff'; ctx.globalAlpha = 0.6; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p0x, p0y); ctx.lineTo(x, y); ctx.stroke(); ctx.globalAlpha = 1; p0x = x; p0y = y; }
         }
         if (nsc > 0) { // telas de VOD review
-          var wr = zw - wl - 6, sw = wr / nsc - 2;
+          var vx0 = showMap ? mmx + MW + 4 : zx0 + wl + 6, wr = zx0 + zw - vx0;
+          nsc = Math.min(nsc, Math.floor(wr / 18)); var sw = nsc > 0 ? wr / nsc - 2 : 0;
           for (i = 0; i < nsc; i++) {
-            var sx = zx0 + wl + 6 + i * (sw + 2);
+            var sx = vx0 + i * (sw + 2);
             ctx.fillStyle = '#111'; ctx.fillRect(sx, ty, sw, 26); ctx.fillStyle = SCR[(i + 1) % 5]; ctx.fillRect(sx + 1, ty + 1, sw - 2, 20);
             ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.7; circ(ctx, sx + 4 + ((t * 8 + i * 9) % (sw - 8)), ty + 6 + R[(i * 9) & 255] * 8 + Math.sin(t * 2 + i) * 2, 1.5, '#fff'); ctx.globalAlpha = 1;
             ctx.fillStyle = '#333'; ctx.fillRect(sx + 1, ty + 22, sw - 2, 3); ctx.fillStyle = '#f33'; ctx.fillRect(sx + 1, ty + 22, (sw - 2) * (((t * 0.1 + i * 0.3) % 1)), 3);
@@ -310,14 +446,15 @@
           txt(ctx, 'SCRIM ' + (13 + Math.floor(t / 9) % 3) + ' x 7  ·  dieta e sono OK', zc, ty + 42, 'bold 7px sans-serif', '#9fe', 'center');
         }
       }
+      if (showMap) lolScreen(ctx, mmx, ty, MW, MH, t, Math.min(4, a), tier, ti, tw, dr, bn2);
       if (ti > 0) { // estante de troféus
-        var sy = YB - 2, tsp = Math.min(22, (zw - 4) / 6), tx0 = zc - tsp * 3 + tsp / 2;
+        var sy = YB - 12, tsp = Math.min(22, (zw - 4) / 6), tx0 = zc - tsp * 3 + tsp / 2;
         ctx.fillStyle = '#4a3320'; ctx.fillRect(zc - tsp * 3 - 2, sy, tsp * 6 + 4, 3);
         for (i = 0; i < ti; i++) {
           if (i === 5) { g = ctx.createRadialGradient(tx0 + i * tsp, sy - 10, 1, tx0 + i * tsp, sy - 10, 24); g.addColorStop(0, '#ffe27a'); g.addColorStop(1, 'rgba(255,200,50,0)'); ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 3); ctx.fillStyle = g; ctx.fillRect(tx0 + i * tsp - 24, sy - 34, 48, 48); ctx.globalAlpha = 1; }
           trophy(ctx, tx0 + i * tsp, sy, i === 5 ? 1.35 : 1, TRC[i], t, i);
         }
-        if (ti >= 6 && Math.sin(t * 6) > -0.3) txt(ctx, 'CAMPEÃO MUNDIAL', zc, sy - 22, 'bold 8px sans-serif', '#ffd54a', 'center');
+        if (ti >= 6 && Math.sin(t * 6) > -0.3 && !(tr >= 6 && sp >= 6)) txt(ctx, 'CAMPEÃO MUNDIAL', zc, sy - 24, 'bold 8px sans-serif', '#ffd54a', 'center');
       }
 
       // ---- canal do time ----
@@ -369,9 +506,21 @@
       if (ch > 0) coach(ctx, W - 16, gy, t);
       var bx0 = W - 70; // banco de reservas
       ctx.fillStyle = '#6b4f33'; ctx.fillRect(bx0, gy - 12, 38, 3); ctx.fillRect(bx0 + 2, gy - 9, 2, 9); ctx.fillRect(bx0 + 34, gy - 9, 2, 9);
-      for (i = 0; i < rs; i++) reserve(ctx, i, bx0 + 10 + i * 17, gy, t);
+      for (i = 0; i < 2; i++) {
+        var eb = useB ? ent(SB, i) : null;
+        if (useB ? !eb : i >= rs) continue;
+        reserve(ctx, i, bx0 + 10 + i * 17, gy, t, eb);
+      }
+      if (useB) for (i = 0; i < 2; i++) { var eb2 = ent(SB, i); if (eb2) label(ctx, fit(eb2.n, 6), bx0 + 10 + i * 17, gy - 44 - i * 9, eb2.real === true, roleIx(eb2, i + 3)); }
       var s = Math.min(40, (px1 - px0) / 5), st0 = px0 + ((px1 - px0) - s * 5) / 2, kk = Math.min(1.2, (s - 4) / 28);
-      for (i = 0; i < 5; i++) player(ctx, i, st0 + s * (i + 0.5), kk, t, gy, i < a, eq, sp, cn > 0 && i === 0 && a > 0);
+      for (i = 0; i < 5; i++) {
+        var es = useS ? ent(ST, i) : null, onp = useS ? !!es : i < a;
+        player(ctx, i, st0 + s * (i + 0.5), kk, t, gy, onp, eq, sp, cn > 0 && i === 0 && onp, es);
+      }
+      if (useS) for (i = 0; i < 5; i++) { // plaquinhas de nome e função
+        var e2 = ent(ST, i), lv = cn > 0 && i === 0 && e2;
+        plaque(ctx, st0 + s * (i + 0.5), gy - (lv ? 50 : 40) * kk - 15, Math.min(s - 2, 42), e2, e2 ? roleIx(e2, i) : i, t, i);
+      }
 
       // ---- brilho e confetes do título ----
       if (ti >= 4) {
