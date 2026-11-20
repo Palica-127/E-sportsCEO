@@ -82,6 +82,8 @@ x.champ    = 0 | 1;                              // 1 por ~12 s (MSI) ou ~20 s (
 
 Evento clicável (`type:'clutch'`, produção x3 por 20 s), com 5 variações de LoL sorteadas: **Roubo de Barão**, **Teamfight**, **Flash salvador**, **Pentakill** e **Alma do dragão**. Conquistas novas: *Contratação de peso*, *Cinco reais*, *Mala pronta* (importado), *Estrela de 95*, *Subimos!*, *Passaporte carimbado*, *Campeões do meio do ano*, *Rumo ao Mundial*, *Campeões do Mundo*, *Split perfeito*. O botão grande da aba Time passou a se chamar **Farmar** (tema LoL).
 
+> Nota: a economia semanal em R$ (docs/ESPORTS_ECONOMIA.md) substitui os preços, salários, reservas reais e o relógio interno da Liga descritos aqui; a lógica de elegibilidade e a lista de jogadores continuam valendo. O simulador desta seção foi trocado por `tests/sim_esp.js`.
+
 ## 7. Balanceamento e simulação
 
 Mudanças de números (o jogo-base fechava em ~1 h com o simulador abaixo, bem antes das 2,5 h do projeto original, então foi preciso alongar): custos base dos 10 itens de **Treino tático em diante** x5,1 (x3 e depois x1,7, sem mudar a progressão de crescimento `g`); Titular, Reserva e Coach ficam iguais (o começo do jogo não muda). Fecha-se agora no **título mundial**, que depende de força do time (elenco + estrutura), não só de renda.
@@ -109,4 +111,4 @@ Limites da simulação: o jogador real escolhe melhor (ou pior) o elenco; é pro
 
 ## 9. Testes
 
-`node tests/tabs_api.js` (API de abas), `node tests/esp_logic.js` (Mercado, Liga, prestígio, contrato, migração), `python3 tests/e2e.py` (Playwright + Chrome, 390x780 e 360x640, capturas em `tests/shots/`) e `node tests/sim.js` (balanceamento). `tests/boot.js` usa o jsdom de `/tmp/t/node_modules` (ajuste o caminho se necessário).
+`node tests/tabs_api.js` (API de abas), `node tests/esp_logic.js` (Mercado, Liga, prestígio, contrato, migração), `python3 tests/e2e.py` (Playwright + Chrome, 390x780 e 360x640, capturas em `tests/shots/`) e `node tests/sim_esp.js` (balanceamento semanal). `tests/boot.js` usa o jsdom de `/tmp/t/node_modules` (ajuste o caminho se necessário).

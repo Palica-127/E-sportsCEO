@@ -96,6 +96,16 @@ list.clear(); list.size;
 - `tier(api) -> inteiro`: estágio da carreira (usado no banner "Nova fase", nas estatísticas e em `x.tier` da cena).
 - `scene(x, api)`: acrescente campos a `x`, o 6º argumento de `SCENES.<jogo>.draw(ctx,W,H,o,t,x)`. O objeto é reaproveitado entre quadros: **sempre sobrescreva** seus campos (os campos `roster`, `division`, `region`, `champ` são zerados antes). Não aloque objetos novos a cada quadro (cache).
 
+### 4.1 Extensões para jogos semanais (eSports; todas opcionais e aditivas)
+
+- Campos do jogo em `GAMES.<id>`: `weekly:true` (sem produção por segundo; a aba `home` dirige a economia), `noClick:true` (sem botão/dock; o painel Time vira o painel de semana), `ver` (versão da economia: save com `ver` diferente reinicia só aquele jogo, preserva conquistas e estrelas em `sh.legacy`, e o motor mostra um aviso), `m0` (caixa inicial), `pr.hook:true` (o prestígio usa os hooks abaixo). Itens aceitam `auto:1` (espelho calculado por plugin, não comprável) e `gate:"id"` (bloqueio devolvido por `gate`).
+- Aba com `home:true`: montada em `#home`, acima das sub-abas, fora da lista de abas abertas; recebe `mount(root, api)` e `render` como as outras.
+- Hooks extras (a primeira aba que devolver valor vence): `away(sec, api) -> {lines:[...]}` (progresso offline em vez da produção por segundo), `prestigeInfo(api)`, `onPrestige(api)`, `gate(itemId, api) -> texto|undefined`, `confirmBuy(itemId, cost, api) -> texto|null` (confirmação antes de compra com custo recorrente), `goalRw(api) -> número` (recompensa da meta), `bought(itemId, n, api)`.
+- `hud` pode devolver também `bal` (saldo textual), `ps` (texto de fluxo), `tone` (`ok|bad`) e `nav` (texto sob o ícone da barra inferior).
+- `api.pay(valor) -> boolean` (debita o caixa se houver saldo; o saldo pode ficar negativo só por `api.earn`), `api.fmtM(n)` (dinheiro em R$ curto) e `api.select(tabId)` (abre uma aba).
+- Cena: além de `x.roster`, `x.division`, `x.region`, `x.champ`, o `scene` do eSports preenche `x.focus` (id do foco), `x.mood` (0..100), `x.wp` (0..1, progresso da semana), `x.last` ('W'|'L'|null, ~2,6 s), `x.alert` (0|1|2, lâmpada de caixa) e `x.net` (saldo da última semana); `o[13]` é o social media. Todos opcionais: a cena não quebra se faltarem.
+- Funções entre plugins do mesmo jogo ficam em `window.ESPX` (não em `api.shared`, que é JSON persistido).
+
 ## 5. Layout e estilo
 
 - A raiz da aba (`root`) ocupa o painel inteiro e rola sozinha (`overflow-y:auto`); a página nunca rola (100dvh). Com uma aba extra aberta, a cena encolhe (92 px) e o botão de clique grande some; ao voltar para a aba padrão tudo volta.

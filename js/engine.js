@@ -14,6 +14,13 @@ function fmt(n) {
   while (n >= 1000 && i < S.length - 1) { n /= 1000; i++; }
   return (Math.floor(n * 100) / 100).toString().replace('.', ',') + ' ' + S[i];
 }
+function fmtM(n) {
+  if (!isFinite(n)) return 'R$ 0';
+  var neg = n < 0, s, S = ['mil', 'mi', 'bi', 'tri'], i = -1; n = Math.abs(n);
+  if (n < 1000) s = String(Math.floor(n));
+  else { while (n >= 1000 && i < S.length - 1) { n /= 1000; i++; } s = (n < 100 ? Math.floor(n * 10) / 10 : Math.floor(n)).toString().replace('.', ',') + ' ' + S[i]; }
+  return (neg ? '-' : '') + 'R$ ' + s;
+}
 function fx(n) { return String(Math.round(n * 100) / 100).replace('.', ','); }
 function fmtT(s) { return s < 60 ? Math.ceil(s) + ' s' : s < 3600 ? Math.ceil(s / 60) + ' min' : (Math.ceil(s / 360) / 10).toString().replace('.', ',') + ' h'; }
 function fmtD(s) { var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' h ' + m + ' min' : Math.max(1, m) + ' min'; }
@@ -40,7 +47,7 @@ KEYS.forEach(function (k) {
 });
 
 /* ---------- estado ---------- */
-var st, RT = {}, C = {}, T = 0;
+var st, RT = {}, C = {}, T = 0, MIG = [];
 function jclone(v, d) {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return d;
   try { var j = JSON.stringify(v); return j.length > 300000 ? d : JSON.parse(j); } catch (e) { return d; }
@@ -48,7 +55,7 @@ function jclone(v, d) {
 function num(v, d) { v = +v; return isFinite(v) && v >= 0 && v < 1e30 ? v : d; }
 function newG(k) {
   var G = GAMES[k];
-  return { m: 0, t: 0, o: G.items.map(function () { return 0; }), life: 0, stars: 0, pc: 0, ach: {}, goal: 0,
+  return { m: G.m0 || 0, ver: G.ver || 0, t: 0, o: G.items.map(function () { return 0; }), life: 0, stars: 0, pc: 0, ach: {}, goal: 0,
     vis: G.items.map(function () { return false; }), rt: 0, c: 0, evn: 0, tabs: {}, sh: {}, mu: {} };
 }
 function newSt() {
@@ -71,6 +78,13 @@ function sanitize(d) {
   KEYS.forEach(function (k) {
     var G = GAMES[k], r = d.g[k], g = s.g[k];
     if (!r || typeof r !== 'object') return;
+    if (G.ver && num(r.ver, 0) !== G.ver) { /* save de uma versao antiga da economia deste jogo: recomeca, mas conquistas e Hall da Fama ficam */
+      g.t = num(r.t, 0); g.life = Math.max(num(r.life, 0), g.t); g.stars = Math.floor(num(r.stars, 0)); g.pc = Math.floor(num(r.pc, 0));
+      g.sh = { legacy: g.stars };
+      if (r.ach && typeof r.ach === 'object') G.ach.forEach(function (a) { if (r.ach[a.id]) g.ach[a.id] = num(r.ach[a.id], 1); });
+      if (g.life > 0 || (r.o && r.o.some && r.o.some(Boolean))) MIG.push(k);
+      return;
+    }
     g.m = num(r.m, 0); g.t = num(r.t, 0); g.life = Math.max(num(r.life, 0), g.t); g.stars = Math.floor(num(r.stars, 0));
     g.pc = Math.floor(num(r.pc, 0)); g.rt = num(r.rt, 0); g.c = Math.floor(num(r.c, 0)); g.evn = Math.floor(num(r.evn, 0));
     g.goal = Math.min(Math.floor(num(r.goal, 0)), G.goals ? G.goals.length : 0);
@@ -105,7 +119,7 @@ function save() {
 function initRT() {
   KEYS.forEach(function (k) {
     var E = GAMES[k].ev;
-    RT[k] = { ex: {}, tmp: [], ev: null, bt: 0, bm: 1, bk: '', combo: 0, lastClick: -9, evN: E.a + Math.random() * (E.b - E.a), sg: -1 };
+    RT[k] = { ex: {}, tmp: [], ev: null, bt: 0, bm: 1, bk: '', combo: 0, lastClick: -9, evN: E ? E.a + Math.random() * (E.b - E.a) : 1e12, sg: -1 };
     C[k] = {};
   });
 }
@@ -122,6 +136,14 @@ function hookFirst(k, fn) {
   for (i = 0; i < l.length; i++) {
     if (!l[i].ready || !l[i][fn] || !tabOpen(l[i])) continue;
     v = safeCall(l[i], fn, [apiOf(k)]);
+    if (v !== undefined && v !== null) return v;
+  }
+}
+function hookWith(k, fn, args) { /* como hookFirst, com argumentos antes de api */
+  var l = TABS[k], i, v;
+  for (i = 0; i < l.length; i++) {
+    if (!l[i].ready || !l[i][fn] || !tabOpen(l[i])) continue;
+    v = safeCall(l[i], fn, (args || []).concat([apiOf(k)]));
     if (v !== undefined && v !== null) return v;
   }
 }
@@ -148,12 +170,14 @@ function apiOf(k) {
   var G = GAMES[k];
   var g = function () { return st.g[k]; };
   var a = {
-    key: k, cur: G.cur, G: G, fmt: fmt, fmtT: fmtT,
+    key: k, cur: G.cur, G: G, fmt: fmt, fmtT: fmtT, fmtM: fmtM,
     get shared() { return st.g[k].sh; },
     money: function () { return g().m; },
     life: function () { return g().life; },
     canAfford: function (v) { return g().m >= v; },
     spend: function (v) { var s = g(); if (!(v >= 0) || s.m < v * (1 - 1e-12)) return false; s.m = Math.max(0, s.m - v); dirty(k); return true; },
+    pay: function (v) { v = +v; if (!(v > 0)) return; g().m -= v; }, /* so para jogos "weekly": desconta SEM piso (o plugin garante m >= 0 antes de salvar) */
+    select: function (tabId) { if (st.cur === k) selectTab(tabId); },
     earn: function (v, count) { var s = g(); v = +v; if (!(v > 0)) return; s.m += v; if (count !== false) { s.t += v; s.life += v; } },
     ps: function () { return ps(k); },
     psBase: function () { return psBase(k); },
@@ -205,8 +229,9 @@ function apiOf(k) {
 }
 function mountTab(t) {
   var k = t.key, root = document.createElement('div'), a = apiOf(k);
-  root.className = 'tabroot'; root.id = 'tab-' + k + '-' + t.id; root.hidden = true; root.setAttribute('role', 'tabpanel');
-  $('tabroots').appendChild(root); t.root = root;
+  root.className = t.home ? 'homeroot' : 'tabroot'; root.id = 'tab-' + k + '-' + t.id; root.hidden = true;
+  if (!t.home) root.setAttribute('role', 'tabpanel');
+  (t.home ? $('home') : $('tabroots')).appendChild(root); t.root = root;
   if (t.mount) safeCall(t, 'mount', [root, a]);
   if (t.load) safeCall(t, 'load', [st.g[k].tabs[t.id] || null, a]);
   t.ready = true;
@@ -231,7 +256,7 @@ function registerTab(k, def) {
 }
 function tabsOpen(k) {
   var G = GAMES[k], base = (G.tabs && G.tabs[0]) || { id: 'main', label: 'Comprar', icon: '🛒' }, out = [{ id: base.id, label: base.label, icon: base.icon, t: null }];
-  TABS[k].forEach(function (t) { if (t.ready && tabOpen(t)) out.push({ id: t.id, label: t.label, icon: t.icon, t: t }); });
+  TABS[k].forEach(function (t) { if (t.ready && !t.home && tabOpen(t)) out.push({ id: t.id, label: t.label, icon: t.icon, t: t }); });
   return out;
 }
 function curTab(k) {
@@ -261,13 +286,14 @@ function paintTabs(force) {
 function applyTabView() {
   var k = st.cur, c = curTab(k), sub = !!c.t;
   $('app').classList.toggle('sub', sub);
-  KEYS.forEach(function (kk) { TABS[kk].forEach(function (t) { if (t.root) t.root.hidden = !(sub && kk === k && t === c.t); }); });
+  KEYS.forEach(function (kk) { TABS[kk].forEach(function (t) { if (t.root) t.root.hidden = t.home ? !(kk === k && !sub) : !(sub && kk === k && t === c.t); }); });
   paintTabs(true); dirtyScene = true;
-  if (sub) { if (c.t.show) safeCall(c.t, 'show', [apiOf(k)]); renderTab(); }
+  if (sub) { if (c.t.show) safeCall(c.t, 'show', [apiOf(k)]); renderTab(); } else renderTab();
 }
 function renderTab() {
   var k = st.cur, c = curTab(k); renderQ = false;
   if (c.t && c.t.render && !sheetOpen) safeCall(c.t, 'render', [apiOf(k)]);
+  else if (!c.t && !sheetOpen) TABS[k].forEach(function (t) { if (t.home && t.ready && t.render) safeCall(t, 'render', [apiOf(k)]); });
 }
 function selectTab(id) {
   var k = st.cur; if (st.tab[k] === id) return; st.tab[k] = id; applyTabView(); sfx('tap'); save();
@@ -301,7 +327,7 @@ function psRaw(k, o, ex, mu) {
   for (i = 0; i < G.alls.length; i++) m *= Math.pow(G.alls[i].f, o[G.alls[i].i]);
   return s * m;
 }
-function psBase(k) { var c = C[k]; if (c.pb === undefined) c.pb = psRaw(k, st.g[k].o); return c.pb; }
+function psBase(k) { if (GAMES[k].weekly) return 0; var c = C[k]; if (c.pb === undefined) c.pb = psRaw(k, st.g[k].o); return c.pb; }
 function boost(k) {
   var r = RT[k], b = 1;
   if (r.bt > 0) b *= r.bm;
@@ -321,7 +347,7 @@ function qty(k, i, mode) {
   var it = GAMES[k].items[i], g = st.g[k], left = it.max - g.o[i], n;
   mode = mode || st.mode;
   if (left <= 0) return 0;
-  if (mode === '1' || it.g === 1) return 1;
+  if (mode === '1' || it.g === 1 || GAMES[k].noClick) return 1;
   if (mode === '10') return Math.min(10, left);
   n = Math.floor(Math.log(1 + g.m * (it.g - 1) / cost1(k, i)) / Math.log(it.g));
   n = Math.max(1, Math.min(left, n));
@@ -346,11 +372,16 @@ function tierIdx(k) {
   G.tiers.forEach(function (t, j) { if (!t.c || o[t.ci] >= t.c[1]) r = j; });
   return r;
 }
+function pendInfo(k) { /* jogos com pr.hook: o plugin diz quanto vale e se pode */
+  var v = hookWith(k, 'prestigeInfo', []);
+  return v && typeof v === 'object' ? { gain: Math.max(0, Math.floor(num(v.gain, 0))), can: !!v.can, why: v.why ? String(v.why) : '' } : { gain: 0, can: false, why: '' };
+}
 function pending(k) {
   var P = GAMES[k].pr, g = st.g[k];
+  if (P.hook) return pendInfo(k).gain;
   return Math.max(0, Math.floor(Math.cbrt(g.life / P.T0)) - g.stars);
 }
-function earn(k, dt) { var v = ps(k) * dt, g = st.g[k]; g.m += v; g.t += v; g.life += v; return v; }
+function earn(k, dt) { if (GAMES[k].weekly) return 0; var v = ps(k) * dt, g = st.g[k]; g.m += v; g.t += v; g.life += v; return v; }
 
 /* ---------- UI helpers ---------- */
 var UIready = false;
@@ -409,7 +440,7 @@ function sceneX(k) {
   if (r.ev) ev = r.ev.type; else if (r.bt > 0) ev = r.bk;
   XS.tier = tierIdx(k); XS.ev = ev; XS.boost = Math.max(1, boost(k)); XS.combo = r.combo; XS.stars = g.stars;
   XS.ach = nMarcos(k); XS.goal = g.goal;
-  XS.roster = XS.division = XS.region = XS.champ = undefined;
+  XS.roster = XS.division = XS.region = XS.champ = undefined; XS.focus = XS.mood = XS.wp = XS.last = XS.alert = XS.net = undefined;
   TABS[k].forEach(function (t) { if (t.scene && t.ready) safeCall(t, 'scene', [XS, apiOf(k)]); });
   return XS;
 }
@@ -456,17 +487,18 @@ function buy(k, i, n) {
   var before = multU(G, g.o, i);
   g.m = Math.max(0, g.m - c); g.o[i] += n; st.stats.buys += n;
   dirty(k); refreshVis(k);
-  if (it.t === 'u' && multU(G, g.o, i) > before && UIready) { toast('Marco! ' + it.n + ' rende x2'); }
+  if (it.t === 'u' && !G.weekly && multU(G, g.o, i) > before && UIready) { toast('Marco! ' + it.n + ' rende x2'); }
   if (it.t === 'l' && UIready) toast(it.n + ': ' + it.lv[g.o[i] - 1]);
+  if (G.weekly) hookWith(k, 'bought', [it.id, n]);
   if (G.goals) checkGoal(k);
   return true;
 }
 function checkGoal(k) {
   var G = GAMES[k], g = st.g[k], got = false;
   while (G.goals && g.goal < G.goals.length && g.o[G.goals[g.goal].ci] >= G.goals[g.goal].k) {
-    var rw = Math.max((G.goalMul || 300) * ps(k), 100 * clickVal(k)); g.m += rw; g.t += rw; g.life += rw;
+    var rw = G.weekly ? Math.max(2000, (hookWith(k, 'goalRw', []) || 0)) : Math.max((G.goalMul || 300) * ps(k), 100 * clickVal(k)); g.m += rw; g.t += rw; g.life += rw;
     g.goal++; got = true; dirty(k);
-    toast((k === st.cur ? '' : G.short + ': ') + 'Meta cumprida! +' + G.cur + ' ' + fmt(rw)); sfx('ach'); buzz([10, 30, 10]);
+    toast((k === st.cur ? '' : G.short + ': ') + 'Meta cumprida! +' + (G.weekly ? fmtM(rw) : G.cur + ' ' + fmt(rw))); sfx('ach'); buzz([10, 30, 10]);
   }
   return got;
 }
@@ -474,6 +506,7 @@ function checkGoal(k) {
 /* ---------- clique ---------- */
 function doClick(k) {
   var r = RT[k], G = GAMES[k], g = st.g[k];
+  if (G.noClick) return 0;
   if (G.combo) {
     if (T - r.lastClick < G.combo.gap) {
       r.combo = Math.min(G.combo.max, r.combo + 1);
@@ -516,7 +549,7 @@ function tap(x, y) {
 /* ---------- eventos ---------- */
 var evEl;
 function spawnEvent(k) {
-  var G = GAMES[k], E = G.ev, r = RT[k];
+  var G = GAMES[k], E = G.ev, r = RT[k]; if (!E) return;
   r.ev = { type: E.type, left: E.dur, taps: 0, v: E.variants ? E.variants[Math.random() * E.variants.length | 0] : null };
   var b = evEl;
   b.style.left = (8 + Math.random() * 40) + '%'; b.style.top = (14 + Math.random() * 30) + '%';
@@ -535,7 +568,7 @@ function paintEvent(k) {
 }
 function endEvent(k, ok) {
   var r = RT[k], G = GAMES[k], E = G.ev, g = st.g[k];
-  r.ev = null; r.evN = E.a + Math.random() * (E.b - E.a);
+  r.ev = null; r.evN = E ? E.a + Math.random() * (E.b - E.a) : 1e12;
   if (ok) { g.evn++; }
   dirty(k); paintEvent(k);
 }
@@ -571,7 +604,7 @@ function evTick(dt) {
         var e = r.ev.type; endEvent(k, false);
         if (k === st.cur) toast(e === 'apagao' ? 'A luz voltou sozinha... teve cliente pedindo reembolso.' : e === 'clutch' ? (GAMES[k].ev.fail || 'Perdeu a jogada... tem a próxima.') : 'A ideia passou... a próxima vem aí.');
       }
-    } else if (k === st.cur && !document.hidden && !r.bt && st.g[k].rt >= E.min && psBase(k) > 0) {
+    } else if (E && k === st.cur && !document.hidden && !r.bt && st.g[k].rt >= E.min && psBase(k) > 0) {
       r.evN -= dt;
       if (r.evN <= 0) spawnEvent(k);
     }
@@ -632,14 +665,14 @@ function stageUp(nome) {
 /* ---------- prestigio ---------- */
 function prestige(k) {
   var g = st.g[k], G = GAMES[k], p = pending(k);
-  if (p < 3) return false;
+  if (G.pr.hook ? !pendInfo(k).can : p < 3) return false;
   g.stars += p; g.pc++;
-  g.m = 0; g.t = 0; g.rt = 0; g.goal = 0;
+  g.m = G.m0 || 0; g.t = 0; g.rt = 0; g.goal = 0;
   g.o = G.items.map(function () { return 0; });
   g.vis = G.items.map(function () { return false; });
   var r = RT[k]; r.ev = null; r.bt = 0; r.bm = 1; r.bk = ''; r.combo = 0; r.tmp = []; r.ex = {};
   g.mu = {};
-  r.evN = G.ev.a + Math.random() * (G.ev.b - G.ev.a);
+  r.evN = G.ev ? G.ev.a + Math.random() * (G.ev.b - G.ev.a) : 1e12;
   dirty(k); refreshVis(k);
   TABS[k].forEach(function (t) {
     if (!t.ready) return;
@@ -647,7 +680,7 @@ function prestige(k) {
     else if (t.load && t.save) safeCall(t, 'load', [safeCall(t, 'save', [apiOf(k)]) || null, apiOf(k)]);
   });
   r.sg = tierIdx(k); dirty(k); refreshVis(k); checkAch();
-  toast(G.pr.coin + ' +' + p + ' (+' + (p * 10) + '% para sempre)'); sfx('up'); buzz([30, 50, 30]);
+  toast(G.pr.coin + ' +' + p + (G.weekly ? ' (+' + (p * 5) + '% de renda para sempre)' : ' (+' + (p * 10) + '% para sempre)')); sfx('up'); buzz([30, 50, 30]);
   if (UIready) { dirtyScene = true; buildRows(); scheduleRender(); }
   save();
   return p;
@@ -671,17 +704,44 @@ function tick(dt) {
 /* ---------- offline ---------- */
 function creditAway(sec) {
   if (!(sec >= 30)) return null;
-  var cap = Math.min(sec, MAXAWAY), b = {}, d = {};
+  var cap = Math.min(sec, MAXAWAY), b = {}, d = {}, lines = {}, any = false;
   KEYS.forEach(function (k) { b[k] = st.g[k].m; });
-  KEYS.forEach(function (k) { var g = st.g[k], v = psBase(k) * cap * EFF; g.m += v; g.t += v; g.life += v; d[k] = v; });
+  KEYS.forEach(function (k) {
+    var g = st.g[k], G = GAMES[k], v;
+    if (G.weekly && MIG.indexOf(k) >= 0) { d[k] = 0; return; } /* save recem-reiniciado: sem simulacao offline */
+    if (G.weekly) { /* eSports: o plugin simula as semanas (Piloto automatico) e devolve as linhas do aviso */
+      var r = hookWith(k, 'away', [sec]); d[k] = g.m - b[k];
+      if (r && r.lines && r.lines.length) { lines[k] = r.lines; any = true; }
+      return;
+    }
+    v = psBase(k) * cap * EFF; g.m += v; g.t += v; g.life += v; d[k] = v; any = true;
+  });
   st.stats.awayMax = Math.max(st.stats.awayMax, sec);
-  if (UIready) showAway(sec, d);
+  if (UIready && any && !MIG.length) showAway(sec, d, lines);
   return d;
 }
-function showAway(sec, d) {
-  setText($('awayT'), 'Você ficou fora por ' + fmtD(sec) + '. Ganho offline: 50% da produção, até 4 h' + (sec > MAXAWAY ? ' (o resto do tempo não conta)' : '') + '.');
-  $('awayL').innerHTML = KEYS.map(function (k) { return '<div class="stat"><span>' + GAMES[k].name + '</span><b>+' + GAMES[k].cur + ' ' + fmt(d[k]) + '</b></div>'; }).join('');
+function showAway(sec, d, lines) {
+  lines = lines || {}; setText($('awayH'), 'Bem-vindo de volta!');
+  var wk = KEYS.some(function (k) { return GAMES[k].weekly; });
+  setText($('awayT'), 'Você ficou fora por ' + fmtD(sec) + '. ' + (wk ? 'Lan e Caverna: 50% da produção, até 4 h. eSports: Piloto automático, 90% do ritmo, até 4 h' : 'Ganho offline: 50% da produção, até 4 h') + (sec > MAXAWAY ? ' (o resto do tempo não conta)' : '') + '.');
+  $('awayL').innerHTML = KEYS.map(function (k) {
+    var G = GAMES[k];
+    if (G.weekly) return lines[k] ? '<div class="stat"><span>' + G.name + '</span></div>' + lines[k].map(function (t) { return '<p class="awl">' + t.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</p>'; }).join('') : '';
+    return '<div class="stat"><span>' + G.name + '</span><b>+' + G.cur + ' ' + fmt(d[k]) + '</b></div>';
+  }).join('');
   openDlg($('away')); sfx('buy');
+}
+/* aviso generico (ex.: o jogo mudou e o save foi reiniciado) no mesmo dialogo do ganho offline */
+function showNote(title, text, lines) {
+  if (!UIready) return;
+  setText($('awayH'), title); setText($('awayT'), text);
+  $('awayL').innerHTML = (lines || []).map(function (t) { return '<p class="awl">' + String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</p>'; }).join('');
+  openDlg($('away'));
+}
+function flushMig() {
+  if (!MIG.length || !UIready) return;
+  var names = MIG.map(function (k) { return GAMES[k].name; }).join(' e '); MIG = [];
+  showNote('A economia do eSports mudou', 'O time de eSports recomeça com a nova economia semanal: sem botão de clicar, com Foco da semana, patrocínios, salários e eventos. O Hall da Fama (🌟) e as conquistas ficam. Lan House e Caverna não mudaram.', ['O elenco e as compras antigas foram desfeitos. O Mercado tem preços e salários novos em R$.']);
 }
 
 /* ---------- render ---------- */
@@ -689,9 +749,9 @@ var H, UI = [], MYST, MORE, STRIP, PRES, NAV = {}, rq = 0, presArm = 0;
 function scheduleRender() { if (rq) return; rq = requestAnimationFrame(function () { rq = 0; paintHud(); paintRows(); paintNav(); if (renderQ) renderTab(); }); }
 function paintHud() {
   var k = st.cur, G = GAMES[k], g = st.g[k], i = tierIdx(k), nx = G.tiers[i + 1], p = 1, txt = 'Fase final';
-  var bt = G.cur + ' ' + fmt(g.m); setText(H.bal, bt); H.bal.classList.toggle('sm', bt.length > 10);
-  setText(H.ps, G.cur + ' ' + fmt(ps(k)) + '/s');
-  var hh = hookFirst(k, 'hud');
+  var hh = hookFirst(k, 'hud'), bt = hh && hh.bal ? String(hh.bal) : G.weekly ? fmtM(g.m) : G.cur + ' ' + fmt(g.m);
+  setText(H.bal, bt); H.bal.classList.toggle('sm', bt.length > 10);
+  setText(H.ps, hh && hh.ps != null ? String(hh.ps) : G.weekly ? '' : G.cur + ' ' + fmt(ps(k)) + '/s'); setData(H.ps, 'tone', hh && hh.tone ? hh.tone : '');
   if (hh) {
     setText(H.stage, hh.stage || G.tiers[i].n); setText(H.next, hh.next || ''); setBar(H.bar, hh.p);
   } else {
@@ -703,7 +763,7 @@ function paintHud() {
     } else if (nx) { txt = 'Próx.: ' + nx.n; p = 0; }
     setText(H.next, txt); setBar(H.bar, p);
   }
-  if (H.bigv) {
+  if (H.bigv && !G.noClick) {
     var G2 = GAMES[k], r = RT[k];
     setText(H.bigv, '+' + fmt(clickVal(k)) + ' por toque' + (G2.combo && r.combo > 1 ? ' · ' + G2.combo.name + ' x' + r.combo : ''));
     setBar(H.cbar.firstElementChild, G2.combo ? r.combo / G2.combo.max : 0);
@@ -741,16 +801,23 @@ function gainOf(k, i, n) {
 }
 function paintRows() {
   var k = st.cur, G = GAMES[k], g = st.g[k], rate = ps(k), best = -1, bestC = Infinity, done = [], firstLocked = -1, locked = 0;
+  var wk = !!G.weekly, wr = wk ? hookFirst(k, 'hud') : null; if (wr) rate = +wr.rate || 0;
   G.items.forEach(function (it, i) {
     var u = UI[i]; if (!u) return;
     var o = g.o[i];
+    if (it.auto) { setHid(u.r, true); setData(u.r, 'state', 'hidden'); return; }
     if (o >= it.max) { setData(u.r, 'state', 'done'); setHid(u.r, false); done.push(it); return; }
     if (!g.vis[i]) { setHid(u.r, true); setData(u.r, 'state', 'hidden'); locked++; if (firstLocked < 0) firstLocked = i; return; }
     setHid(u.r, false);
-    var n = qty(k, i), c = costK(k, i, n), ok = g.m >= c;
+    var n = qty(k, i), c = costK(k, i, n), gate = wk && it.gate ? hookWith(k, 'gate', [it.id]) : null, ok = g.m >= c && !gate;
     setText(u.own, it.t === 'u' ? o + '/' + it.max : 'nv ' + o + '/' + it.max);
-    setText(u.mg, '+' + fmt(gainOf(k, i, n)) + '/s');
-    if (it.t === 'u') {
+    setData(u.r, 'wk', wk ? '1' : '0');
+    if (wk) {
+      setText(u.mg, it.fx || ''); setText(u.mt, it.sal ? 'Salário ' + fmtM(it.sal) + '/sem' : it.up ? 'Manutenção 0,4%/sem' : '');
+      setText(u.lv, it.t === 'l' ? (o > 0 ? it.lv[o - 1] + ' › ' : 'Próx.: ') + it.lv[o] : '');
+    } else setText(u.mg, '+' + fmt(gainOf(k, i, n)) + '/s');
+    if (wk) { /* sem marcos nem producao */ }
+    else if (it.t === 'u') {
       var nm = 0; for (var q = 0; q < it.mc.length; q++) if (o < it.mc[q]) { nm = it.mc[q]; break; }
       setBar(u.mb, nm ? o / nm : 1); setText(u.mt, nm ? 'x2 ao ter ' + nm : 'marcos completos');
     } else {
@@ -758,10 +825,11 @@ function paintRows() {
       setText(u.mt, 'x' + fx(it.f) + (it.tgt === 'all' ? ' em tudo' : ' em ' + G.items[G.idx[it.tgt]].n));
       setText(u.lv, (o > 0 ? it.lv[o - 1] + ' › ' : 'Próx.: ') + it.lv[o]);
     }
-    setText(u.b1, ok ? 'Comprar x' + n : (rate > 0 ? 'faltam ' + fmtT((c - g.m) / rate) : 'faltam ' + fmt(c - g.m)));
-    setText(u.b2, G.cur + ' ' + fmt(c)); setBar(u.fill, g.m / c);
+    if (wk) setText(u.b1, gate ? gate : ok ? (it.t === 'u' ? 'Contratar' : 'Comprar') : (rate > 0 ? 'faltam ~' + fmtT((c - g.m) / rate) : 'faltam ' + fmtM(c - g.m)));
+    else setText(u.b1, ok ? 'Comprar x' + n : (rate > 0 ? 'faltam ' + fmtT((c - g.m) / rate) : 'faltam ' + fmt(c - g.m)));
+    setText(u.b2, wk ? fmtM(c) : G.cur + ' ' + fmt(c)); setBar(u.fill, g.m / c);
     setAttr(u.buy, 'aria-disabled', ok ? 'false' : 'true');
-    setAttr(u.buy, 'aria-label', 'Comprar ' + n + ' ' + it.n + ' por ' + G.cur + ' ' + fmt(c) + (ok ? '' : ', ainda não disponível'));
+    setAttr(u.buy, 'aria-label', (wk && it.t === 'u' ? 'Contratar ' : 'Comprar ') + (n > 1 ? n + ' ' : '') + it.n + ' por ' + (wk ? fmtM(c) : G.cur + ' ' + fmt(c)) + (gate ? ', bloqueado: ' + gate : ok ? '' : ', ainda não disponível'));
     setData(u.r, 'state', ok ? 'afford' : 'poor');
     if (ok && cost1(k, i) < bestC) { best = i; bestC = cost1(k, i); }
   });
@@ -783,18 +851,21 @@ function paintRows() {
   paintPres(); paintGoal();
 }
 function paintPres() {
-  var k = st.cur, g = st.g[k], P = GAMES[k].pr, p = pending(k), show = p > 0;
+  var k = st.cur, g = st.g[k], P = GAMES[k].pr, p = pending(k), show = p > 0, can, hk = !!P.hook;
   setHid(PRES.r, !show); if (!show) return;
-  setText(PRES.t, P.coin + ' ' + g.stars + ' (+' + (g.stars * 10) + '%)');
-  var can = p >= 3;
-  setText(PRES.s, can ? P.name + ': ganhe ' + P.coin.split(' ')[0] + ' ' + p + ' (+' + (p * 10) + '% para sempre)' : 'Pendente: ' + p + ' (precisa de 3 para ' + P.name.toLowerCase() + ')');
+  if (hk) { var inf = pendInfo(k); can = inf.can; setText(PRES.t, P.coin + ' ' + g.stars + ' (+' + (g.stars * 5) + '% de renda)'); setText(PRES.s, can ? P.name + ': ganhe ' + P.coin.split(' ')[0] + ' ' + p + ' (+' + (p * 5) + '% de renda para sempre)' : (inf.why || 'Ainda não dá para recomeçar')); }
+  else {
+    setText(PRES.t, P.coin + ' ' + g.stars + ' (+' + (g.stars * 10) + '%)');
+    can = p >= 3;
+    setText(PRES.s, can ? P.name + ': ganhe ' + P.coin.split(' ')[0] + ' ' + p + ' (+' + (p * 10) + '% para sempre)' : 'Pendente: ' + p + ' (precisa de 3 para ' + P.name.toLowerCase() + ')');
+  }
   setText(PRES.b, presArm ? 'Confirmar?' : (can ? P.name : 'Em breve'));
   setAttr(PRES.b, 'aria-disabled', can ? 'false' : 'true');
 }
 function onPres() {
-  var k = st.cur, p = pending(k);
-  if (p < 3) { toast('Faltam ' + (3 - p) + ' para poder recomeçar.'); return; }
-  if (!presArm) { presArm = 1; paintPres(); toast(GAMES[k].pr.ask + ' Toque de novo para confirmar.'); setTimeout(function () { presArm = 0; if (UIready) paintPres(); }, 4000); return; }
+  var k = st.cur, p = pending(k), hk = GAMES[k].pr.hook, can = hk ? pendInfo(k).can : p >= 3;
+  if (!can) { toast(hk ? (pendInfo(k).why || 'Ainda não dá para recomeçar.') : 'Faltam ' + (3 - p) + ' para poder recomeçar.'); return; }
+  if (!presArm) { presArm = 1; paintPres(); toast(GAMES[k].pr.ask + ' Toque de novo para confirmar.', { ms: 6000 }); setTimeout(function () { presArm = 0; if (UIready) paintPres(); }, 6000); return; }
   presArm = 0; prestige(k);
 }
 function paintGoal() {
@@ -809,9 +880,9 @@ function paintGoal() {
 function paintNav() {
   KEYS.forEach(function (k) {
     var n = NAV[k]; if (!n) return;
-    setText(n.ps, GAMES[k].cur + ' ' + fmt(ps(k)) + '/s');
-    var can = false, G = GAMES[k], g = st.g[k];
-    if (k !== st.cur) G.items.forEach(function (it, i) { if (g.vis[i] && g.o[i] < it.max && g.m >= cost1(k, i)) can = true; });
+    var can = false, G = GAMES[k], g = st.g[k], hn = G.weekly ? hookFirst(k, 'hud') : null;
+    setText(n.ps, G.weekly ? (hn && hn.nav ? hn.nav : '') : G.cur + ' ' + fmt(ps(k)) + '/s');
+    if (k !== st.cur) G.items.forEach(function (it, i) { if (!it.auto && g.vis[i] && g.o[i] < it.max && g.m >= cost1(k, i)) can = true; });
     setHid(n.dot, !can);
     setAttr(n.b, 'aria-current', k === st.cur ? 'page' : 'false');
   });
@@ -820,8 +891,9 @@ function build() {
   var k = st.cur, G = GAMES[k], r = document.documentElement.style;
   r.setProperty('--c', G.color); r.setProperty('--c-tx', G.tx); r.setProperty('--c-soft', G.color + '29'); r.setProperty('--c-glow', G.color + '66');
   document.title = G.name + ' | Mini Idle';
-  $('bigic').textContent = G.clickIc; $('bigtx').textContent = G.click;
+  $('bigic').textContent = G.clickIc; $('bigtx').textContent = G.click; $('mlbl').textContent = G.buyLabel || 'Comprar';
   $('cbar').classList.toggle('on', !!G.combo);
+  $('app').classList.toggle('weekly', !!G.weekly); $('app').classList.toggle('noclick', !!G.noClick);
   cv.setAttribute('aria-label', 'Cena animada: ' + G.name);
   Array.prototype.forEach.call(document.querySelectorAll('#modes .mode'), function (b) { b.setAttribute('aria-checked', String(b.dataset.m === st.mode)); });
   buildRows(); fit(); say(); dirtyScene = true; paintHud(); paintRows(); paintNav(); paintEvent(k); applyTabView();
@@ -889,7 +961,7 @@ function applyState(s) {
   st = s; reloadTabs(KEYS);
   KEYS.forEach(function (k) { dirty(k); RT[k].ev = null; RT[k].bt = 0; RT[k].bm = 1; RT[k].combo = 0; refreshVis(k); RT[k].sg = tierIdx(k); });
   document.body.classList.toggle('rm', RM());
-  if (UIready) { build(); checkAch(); paintSettings(); }
+  if (UIready) { build(); checkAch(); paintSettings(); flushMig(); }
 }
 function importSave(txt) {
   var d = parseSave(txt), old = JSON.stringify(st);
@@ -917,21 +989,29 @@ function initUI() {
   Array.prototype.forEach.call(document.querySelectorAll('.nv[data-k]'), function (b) { NAV[b.dataset.k] = { b: b, ps: b.querySelector('.nv-ps'), dot: b.querySelector('.dot') }; });
   UIready = true;
   var box = $('stagebox');
-  box.addEventListener('pointerdown', function (e) { if (e.button > 0) return; if (e.target.closest && e.target.closest('#evbtn')) return; tap(e.clientX, e.clientY); });
-  $('big').addEventListener('click', function (e) { if (e.detail === 0) tap(); });
+  box.addEventListener('pointerdown', function (e) { if (e.button > 0 || GAMES[st.cur].noClick) return; if (e.target.closest && e.target.closest('#evbtn')) return; tap(e.clientX, e.clientY); });
+  $('big').addEventListener('click', function (e) { if (e.detail === 0 && !GAMES[st.cur].noClick) tap(); });
   evEl.addEventListener('click', evTap);
   $('rows').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('.buy') : null; if (!b) return;
-    var k = st.cur, i = +b.dataset.i, n = qty(k, i), c = costK(k, i, n), g = st.g[k], row = b.closest('.row');
+    var k = st.cur, i = +b.dataset.i, n = qty(k, i), c = costK(k, i, n), g = st.g[k], row = b.closest('.row'), G = GAMES[k], it = G.items[i];
+    var gate = G.weekly && it.gate ? hookWith(k, 'gate', [it.id]) : null;
+    if (gate) { shake(b); sfx('no'); buzz(12); toast(gate); return; }
     if (g.m < c) {
       shake(b); sfx('no'); buzz(12);
-      var r = ps(k); toast('Faltam ' + GAMES[k].cur + ' ' + fmt(c - g.m) + (r > 0 ? ' (~' + fmtT((c - g.m) / r) + ')' : ''));
+      var r = ps(k); toast('Faltam ' + (G.weekly ? fmtM(c - g.m) : G.cur + ' ' + fmt(c - g.m)) + (r > 0 ? ' (~' + fmtT((c - g.m) / r) + ')' : ''));
       return;
     }
-    buy(k, i, n);
-    flash(row); bump(row.querySelector('.own')); sfx('buy'); buzz(10);
-    pop('-' + fmt(c), ($('fx').clientWidth || 300) / 2, ($('fx').clientHeight || 200) * .5);
-    burst(); dirtyScene = true; paintHud(); paintRows(); paintNav(); save();
+    var go = function () {
+      if (st.g[k].m < c) return;
+      buy(k, i, n);
+      flash(row); bump(row.querySelector('.own')); sfx('buy'); buzz(10);
+      pop('-' + (G.weekly ? fmtM(c) : fmt(c)), ($('fx').clientWidth || 300) / 2, ($('fx').clientHeight || 200) * .5);
+      burst(); dirtyScene = true; paintHud(); paintRows(); paintNav(); save();
+    };
+    var cf = G.weekly ? hookWith(k, 'confirmBuy', [it.id, c]) : null; /* "Seu caixa vai cair R$ 31 mil por semana..." */
+    if (cf) { sfx('no'); toast(String(cf), { action: 'Continuar', ms: 9000, fn: go }); return; }
+    go();
   });
   document.querySelector('.nav').addEventListener('click', function (e) {
     var b = e.target.closest('.nv'); if (!b) return;
@@ -950,10 +1030,13 @@ function initUI() {
     if (v === compact) return; compact = v; app.classList.toggle('compact', v); $('fold').textContent = v ? 'v' : '^';
     $('fold').setAttribute('aria-expanded', String(!v)); $('fold').setAttribute('aria-label', v ? 'Mostrar cena' : 'Ampliar lista');
   }
-  list.addEventListener('scroll', function () {
-    var y = list.scrollTop, spare = list.scrollHeight - list.clientHeight;
+  var onScroll = function (e) {
+    var sc = e.currentTarget, y = sc.scrollTop, spare = sc.scrollHeight - sc.clientHeight;
+    if (sc === list && app.classList.contains('weekly')) return; /* no eSports quem rola e o painel inteiro */
+    if (sc !== list && !app.classList.contains('weekly')) return;
     if (!compact && y > 40 && spare > 120) setCompact(true); else if (compact && y < 4) setCompact(false);
-  }, { passive: true });
+  };
+  list.addEventListener('scroll', onScroll, { passive: true }); document.querySelector('.panel').addEventListener('scroll', onScroll, { passive: true });
   $('fold').addEventListener('click', function () { setCompact(!compact); });
   /* menu */
   var sheet = $('sheet');
@@ -1002,7 +1085,7 @@ function start() {
   initUI();
   document.body.classList.toggle('rm', RM());
   creditAway((Date.now() - st.last) / 1000);
-  build(); checkAch(); paintSettings();
+  build(); checkAch(); paintSettings(); flushMig();
   setInterval(function () {
     if (document.hidden) return;
     var n = Date.now(), dt = Math.min((n - prev) / 1000, 5); prev = n;
@@ -1019,7 +1102,7 @@ function start() {
 window.IDLE = {
   get st() { return st; }, KEYS: KEYS, RT: RT, tick: tick, tap: tap, doClick: doClick, buy: buy, qty: qty, costK: costK, cost1: cost1,
   ps: ps, psBase: psBase, clickVal: clickVal, pending: pending, prestige: prestige, creditAway: creditAway, tierIdx: tierIdx,
-  exportSave: exportSave, importSave: importSave, save: save, evTap: evTap, spawnEvent: spawnEvent, fmt: fmt, refreshVis: refreshVis,
+  exportSave: exportSave, importSave: importSave, flushMig: flushMig, fmtM: fmtM, save: save, evTap: evTap, spawnEvent: spawnEvent, fmt: fmt, refreshVis: refreshVis,
   setT: function (v) { T = v; }, get T() { return T; }, newSt: newSt, applyState: applyState, build: build, load: load,
   paintRows: paintRows, sceneX: sceneX, RT: RT, gainOf: gainOf, psRaw: psRaw, TABS: TABS, api: apiOf, selectTab: selectTab, renderTab: renderTab, tabsOpen: tabsOpen, openSheet: openSheet, showTab: showTab, ui: function (v) { UIready = v; }
 };

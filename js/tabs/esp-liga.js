@@ -1,100 +1,105 @@
 /* Aba LIGA do Time de eSports (plugin): regiao, divisoes T2/T1, splits, promocao, MSI e Mundial.
-   Regras e numeros: docs/LOL_MERCADO.md. Usa so a API publica de abas (docs/TABS_API.md). */
+   Sem relogio proprio: quem joga e a Semana (esp-semana.js), que chama ESPX.liga.step(S, semana, seed) 1x por semana.
+   Numeros: ECO.C.lg (js/data/esp-eco.js). Regras: docs/ESPORTS_ECONOMIA.md secoes 5 e 9. */
 (function () {
 'use strict';
-var G = GAMES.esp, L = G.lg, RG = G.regions;
+var G = GAMES.esp, L = G.lg, RG = G.regions, E = ECO;
+window.ESPX = window.ESPX || {};
 var NAMES = ['Raposas da Névoa', 'Corvos de Ferro', 'Lobos do Norte', 'Furacão Azul', 'Dragões do Vale', 'Tubarões da Maré', 'Águias Prata', 'Guardiões do Farol',
   'Titãs do Cerrado', 'Serpentes Rubras', 'Fênix Dourada', 'Ursos do Gelo', 'Corujas da Noite', 'Panteras Negras', 'Falcões do Sul', 'Leões da Savana',
   'Tempestade Verde', 'Cometas Roxos', 'Ceifadores', 'Sentinelas', 'Vulcão Rubro', 'Marés Vivas', 'Trovão do Leste', 'Aurora Boreal'];
 function hash(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function oppName(kind, i, reg) { return NAMES[hash(kind + ':' + i + ':' + reg) % NAMES.length]; }
-function off(api) { return L.offs[reg(api)] || 0; }
-function winP(S, opp) { return 1 / (1 + Math.pow(10, (opp - S) / L.D)); }
+function winP(S, opp) { return E.winP(S, opp, L.D); }
 
 var s = null, UI = null, apiR = null, asked = false;
 function fresh() {
-  return { v: 1, on: 0, div: 'T2', yr: 1, sp: 1, ph: 'split', gi: 0, w: 0, l: 0, res: [], cd: 0, ser: null, q: { msi: 0, wd: 0 }, seed: (Math.random() * 4294967296) >>> 0,
+  return { v: 2, on: 0, div: 'T2', yr: 1, sp: 1, ph: 'split', gi: 0, w: 0, l: 0, res: [], ser: null, q: { msi: 0, wd: 0 }, pts: 0,
     ti: { promo: 0, msi: 0, wd: 0 }, fail: { promo: 0, msi: 0, wd: 0 }, played: { msi: 0, wd: 0 }, intl: 0, log: [], champ: 0, perf: 0 };
 }
-function rnd() { s.seed = (s.seed + 0x6D2B79F5) | 0; var t = Math.imul(s.seed ^ (s.seed >>> 15), 1 | s.seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 function reg(api) { var r = api.shared.region; return RG[r] ? r : 'BR'; }
-function strength(api, kind) {
-  var sh = api.shared, o = api.owned, A = sh.avg5 != null ? sh.avg5 : (o('tit') * G.mk.genNota + (5 - o('tit')) * G.mk.emptyNota) / 5;
-  var U = o('treino') * L.uw.treino + o('house') * L.uw.house + o('equip') * L.uw.equip + (o('coach') + o('anal') + o('psi')) * L.uw.staff;
-  var pity = kind && s ? Math.min(L.pityMax, (s.fail[kind] || 0) * L.pity) : 0;
-  return A + U + (sh.subS || 0) + pity;
-}
+function rounds(kind) { return kind === 'promo' ? [{ bo: 5, s: L.promoOpp, n: 'Série de acesso' }] : (kind === 'msi' ? L.msi : L.worlds); }
+function fk(kind) { return kind === 'worlds' ? 'wd' : kind; }
+function strength(api, kind, noScrim) { var X = window.ESPX.semana; return X ? X.strength(api, kind ? fk(kind) : null, noScrim) : (api.shared.avg5 || 40); }
 function logAdd(t) { s.log.unshift(t); if (s.log.length > 6) s.log.length = 6; }
-function applyBonus(api) {
-  api.mult('liga:promo', s.ti.promo ? L.bonus.promo : 1);
-  api.mult('liga:msi', Math.pow(L.bonus.msi, Math.min(3, s.ti.msi)));
-  api.mult('liga:wd', Math.pow(L.bonus.wd, Math.min(3, s.ti.wd)));
-}
 function sync(api) { var sh = api.shared; sh.division = s.div; sh.intl = s.intl ? 1 : 0; if (!RG[sh.region] && s.on) sh.region = 'BR'; }
-
-function newSplit() { s.ph = 'split'; s.gi = 0; s.w = 0; s.l = 0; s.res = []; s.ser = null; s.cd = L.breakT; }
-function startSeries(api, kind) {
-  var rounds = kind === 'promo' ? [{ bo: 5, s: L.promoOpp, n: 'Série de acesso' }] : (kind === 'msi' ? L.msi : L.worlds);
-  s.ph = kind; s.ser = { k: kind, r: 0, sw: 0, sl: 0, h: [], res: [] }; s.cd = L.breakT;
+function newSplit() { s.ph = 'split'; s.gi = 0; s.w = 0; s.l = 0; s.res = []; s.ser = null; }
+function startSeries(api, kind, out) {
+  s.ph = kind; s.ser = { k: kind, r: 0, h: [], res: [] };
   if (kind !== 'promo') { s.intl = 1; s.played[kind === 'msi' ? 'msi' : 'wd']++; api.unlock(kind === 'msi' ? 'lgmsi' : 'wdp'); }
   api.toast(kind === 'promo' ? 'Série de acesso! Vença a melhor de 5 para subir.' : kind === 'msi' ? 'Classificados para o MSI!' : 'Classificados para o Mundial!');
   api.banner(kind === 'promo' ? 'Série de acesso' : kind === 'msi' ? 'MSI' : 'Mundial'); sync(api);
 }
-function rounds(kind) { return kind === 'promo' ? [{ bo: 5, s: L.promoOpp, n: 'Série de acesso' }] : (kind === 'msi' ? L.msi : L.worlds); }
-function finish(api, kind, won) {
-  var rg = reg(api), ps = api.ps(), k = kind === 'worlds' ? 'wd' : kind, R = L.rw, rd = s.ser.r, nr = rounds(kind).length;
-  s.ser = null;
+function newYear(out) { s.yr++; s.sp = 1; s.pts = 0; out.year = true; }
+
+function playSplit(api, Sf, wk, seed, out) {
+  var rg = reg(api), t2 = s.div === 'T2', list = t2 ? L.t2opp : L.t1opp, n = t2 ? L.t2games : L.t1games, F = E.C.fame, P = E.C.prize;
+  var opp = list[s.gi % list.length], win = E.mix(seed, wk, 1) < winP(Sf(null, false), opp), nm = oppName(t2 ? 't2' : 't1', s.gi, rg);
+  out.kind = 'split'; out.split = true; out.win = win; out.opp = nm; out.oppS = opp;
+  s.res.push(win ? 'W' : 'L'); if (win) s.w++; else s.l++; s.gi++;
+  out.fame += t2 ? (win ? F.t2win : 0) : (win ? F.t1win : F.t1loss);
+  logAdd((win ? 'Vitória' : 'Derrota') + ' vs ' + nm);
+  out.log = (win ? 'Vitória' : 'Derrota') + ' vs ' + nm;
+  if (s.gi < n) return;
+  /* fim do split */
+  if (t2) {
+    out.prize += s.w * P.t2win + (s.w >= L.promoW ? P.t2bonus : 0);
+    if (s.w >= L.promoW && Sf('promo', true) >= L.promoS) startSeries(api, 'promo', out);
+    else logAdd('Split ' + s.w + 'V-' + s.l + 'D: ' + (s.w >= L.promoW ? 'falta força para a promoção' : 'sem vaga na série de acesso'));
+    if (s.ph !== 'promo') newSplit(); else { s.gi = 0; s.w = 0; s.l = 0; s.res = []; }
+  } else {
+    out.prize += s.w * P.t1win + (s.w >= L.qualW ? P.t1bonus : 0); s.pts += 3 * s.w;
+    if (s.w === n) api.unlock('perf');
+    var w = s.w;
+    if (s.sp === 1 && w >= L.qualW) { s.q.msi = 1; out.fame += F.msiPart; out.pl += 1; s.gi = 0; s.w = 0; s.l = 0; s.res = []; startSeries(api, 'msi', out); }
+    else if (s.sp === 2 && (w >= L.qualW || s.pts >= 33)) { s.q.wd = 1; out.fame += F.wdPart; out.pl += 2; s.gi = 0; s.w = 0; s.l = 0; s.res = []; startSeries(api, 'worlds', out); }
+    else if (s.sp === 1) { logAdd('Fora do MSI (' + w + 'V-' + s.l + 'D)'); s.sp = 2; newSplit(); }
+    else { logAdd('Fora do Mundial (' + w + 'V-' + s.l + 'D)'); newYear(out); newSplit(); }
+  }
+}
+function playSeries(api, Sf, wk, seed, out) {
+  var ser = s.ser, kind = ser.k, rds = rounds(kind), rd = rds[ser.r], need = (rd.bo + 1) >> 1, rg = reg(api), F = E.C.fame, P = E.C.prize;
+  var sw = 0, sl = 0, g = 0, S = Sf(kind === 'worlds' ? 'wd' : kind, false), nm = oppName(kind, ser.r, rg);
+  ser.h = [];
+  while (sw < need && sl < need) { g++; if (E.mix(seed, wk, 10 + g) < winP(S, rd.s)) { sw++; ser.h.push('W'); } else { sl++; ser.h.push('L'); } }
+  var won = sw >= need;
+  out.kind = kind; out.win = won; out.round = ser.r; out.opp = nm; out.oppS = rd.s; out.score = sw + 'x' + sl;
+  if (won) {
+    ser.res[ser.r] = 'W';
+    logAdd(rd.n + ': vitória por ' + sw + 'x' + sl + ' vs ' + nm); out.log = rd.n + ' vencida (' + sw + 'x' + sl + ') vs ' + nm;
+    if (kind === 'msi') { out.fame += F.msiRound; out.prize += P.msiRound; } else if (kind === 'worlds') { out.fame += F.wdRound; out.prize += P.wdRound; }
+    ser.r++;
+    if (ser.r >= rds.length) { finish(api, kind, true, out); return; }
+    api.toast(rd.n + ' vencida! Próxima: ' + rds[ser.r].n);
+  } else { ser.res[ser.r] = 'L'; out.log = rd.n + ' perdida (' + sw + 'x' + sl + ') vs ' + nm; finish(api, kind, false, out); }
+}
+function finish(api, kind, won, out) {
+  var rg = reg(api), F = E.C.fame, P = E.C.prize, rd = s.ser.r, nm = rounds(kind);
+  out.done = true; out.title = won ? kind : null;
   if (kind === 'promo') {
     if (won) {
-      s.div = 'T1'; s.ti.promo = 1; s.fail.promo = 0; api.earn(R.promo * ps); applyBonus(api); api.unlock('promo');
-      logAdd('Promovidos ao ' + RG[rg].l + '!'); api.toast('Promovidos ao ' + RG[rg].l + '! +' + api.cur + ' ' + api.fmt(R.promo * ps) + ' e +10% de renda'); api.banner(RG[rg].l); api.sfx('up');
-      s.yr = 1; s.sp = 1; newSplit();
-    } else { s.fail.promo++; logAdd('Série de acesso perdida'); api.toast('Perdeu a série de acesso. Treine mais e tente no próximo split.'); newSplit(); }
+      s.div = 'T1'; s.ti.promo = 1; s.fail.promo = 0; s.sp = 1; s.yr = 1; s.pts = 0; out.prize += P.promo; out.fame += F.promo; out.pl += 1; api.unlock('promo');
+      logAdd('Promovidos ao ' + RG[rg].l + '!'); api.toast('Promovidos ao ' + RG[rg].l + '!'); api.banner(RG[rg].l); api.sfx('up');
+    } else { s.fail.promo++; logAdd('Série de acesso perdida'); api.toast('Perdeu a série de acesso. Treine mais e tente no próximo split.'); }
+    newSplit();
   } else if (kind === 'msi') {
-    var reward = won ? R.msiWin : rd === nr - 1 ? R.msiFin : R.msiPart;
-    api.earn(reward * ps);
-    if (won) { s.ti.msi++; s.fail.msi = 0; applyBonus(api); api.unlock('msit'); logAdd('Campeões do MSI!'); api.toast('Campeões do MSI! +' + api.cur + ' ' + api.fmt(reward * ps) + ' e bônus de renda'); api.banner('Campeões do MSI'); s.champ = 12; api.sfx('up'); }
-    else { if (rd >= nr - 2) s.fail.msi++; logAdd('Eliminados no MSI (' + rounds('msi')[rd].n + ')'); api.toast('Eliminados no MSI: ' + rounds('msi')[rd].n + '. +' + api.cur + ' ' + api.fmt(reward * ps)); }
+    if (won) { out.prize += P.msiWin; out.fame += F.msiWin; out.pl += 4; s.ti.msi++; s.fail.msi = 0; api.unlock('msit'); logAdd('Campeões do MSI!'); api.toast('Campeões do MSI!'); api.banner('Campeões do MSI'); s.champ = 12; api.sfx('up'); }
+    else { out.prize += P.msiPart; s.fail.msi++; logAdd('Eliminados no MSI (' + nm[rd].n + ')'); api.toast('Eliminados no MSI: ' + nm[rd].n + '. Prêmio de consolação no caixa.'); }
     s.sp = 2; newSplit();
   } else {
-    var rw = won ? R.wdWin : R.wdPart; api.earn(rw * ps);
-    if (won) { s.ti.wd++; s.fail.wd = 0; applyBonus(api); api.unlock('wdt'); logAdd('Campeões do Mundo!'); api.toast('CAMPEÕES DO MUNDO! +' + api.cur + ' ' + api.fmt(rw * ps), { ms: 6000 }); api.banner('Campeões do Mundo!'); s.champ = 20; api.sfx('up'); api.buzz([30, 50, 30, 50, 60]); }
-    else { if (rd >= nr - 2) s.fail.wd++; logAdd('Eliminados no Mundial (' + rounds('worlds')[rd].n + ')'); api.toast('Eliminados no Mundial: ' + rounds('worlds')[rd].n + '. O ano que vem tem mais.'); }
-    s.yr++; s.sp = 1; newSplit();
+    if (won) { out.prize += P.wdWin; out.fame += F.wdWin; out.pl += 10; s.ti.wd++; s.fail.wd = 0; api.unlock('wdt'); logAdd('Campeões do Mundo!'); api.toast('CAMPEÕES DO MUNDO!', { ms: 6000 }); api.banner('Campeões do Mundo!'); s.champ = 20; api.sfx('up'); api.buzz([30, 50, 30, 50, 60]); }
+    else { out.prize += P.wdPart; s.fail.wd++; logAdd('Eliminados no Mundial (' + nm[rd].n + ')'); api.toast('Eliminados no Mundial: ' + nm[rd].n + '. O ano que vem tem mais.'); }
+    newYear(out); newSplit();
   }
   sync(api);
 }
-function playSplitGame(api) {
-  var rg = reg(api), t2 = s.div === 'T2', list = t2 ? L.t2opp : L.t1opp, n = t2 ? L.t2games : L.t1games;
-  var opp = list[s.gi % list.length] + (t2 ? 0 : off(api)), win = rnd() < winP(strength(api), opp);
-  s.res.push(win ? 'W' : 'L'); if (win) s.w++; else s.l++; s.gi++;
-  logAdd((win ? 'Vitória' : 'Derrota') + ' vs ' + oppName(t2 ? 't2' : 't1', s.gi - 1, rg));
-  s.cd = L.matchT;
-  if (s.gi < n) return;
-  /* fim do split */
-  s.cd = L.breakT;
-  if (t2) {
-    if (s.w >= L.promoW && strength(api, 'promo') >= L.promoS) startSeries(api, 'promo');
-    else { logAdd('Split ' + s.w + 'V-' + s.l + 'D: ' + (s.w >= L.promoW ? 'falta força para a promoção' : 'sem vaga na série de acesso')); newSplit(); }
-  } else {
-    if (s.w === n) api.unlock('perf');
-    if (s.sp === 1) { if (s.w >= L.qualW) { s.q.msi = 1; startSeries(api, 'msi'); } else { logAdd('Fora do MSI (' + s.w + 'V-' + s.l + 'D)'); s.sp = 2; newSplit(); } }
-    else { if (s.w >= L.qualW) { s.q.wd = 1; startSeries(api, 'worlds'); } else { logAdd('Fora do Mundial (' + s.w + 'V-' + s.l + 'D)'); s.yr++; s.sp = 1; newSplit(); } }
-  }
+/* Joga o jogo (ou a rodada) da semana. Sf(kind, noScrim) devolve a forca (a Semana monta forma, scrim, lesao e pity). */
+function step(Sf, wk, seed) {
+  var out = { win: null, kind: null, split: false, prize: 0, fame: 0, pl: 0, title: null, done: false, year: false, round: -1, log: '' };
+  if (!s || !s.on || !apiR) return out;
+  if (s.ser) playSeries(apiR, Sf, wk, seed, out); else playSplit(apiR, Sf, wk, seed, out);
+  sync(apiR); return out;
 }
-function playSeriesGame(api) {
-  var ser = s.ser, kind = ser.k, rd = rounds(kind)[ser.r], need = (rd.bo + 1) >> 1, rg = reg(api);
-  var pp = winP(strength(api, kind === 'worlds' ? 'wd' : kind), rd.s + (kind === 'promo' ? 0 : off(api))), win = rnd() < pp;
-  ser.h.push(win ? 'W' : 'L'); if (win) ser.sw++; else ser.sl++;
-  s.cd = L.matchT;
-  if (ser.sw >= need) {
-    ser.res[ser.r] = 'W'; logAdd(rd.n + ': vitória por ' + ser.sw + 'x' + ser.sl + ' vs ' + oppName(kind, ser.r, rg));
-    if (ser.r + 1 >= rounds(kind).length) { finish(api, kind, true); return; }
-    ser.r++; ser.sw = 0; ser.sl = 0; ser.h = []; s.cd = L.breakT;
-    if (kind !== 'promo') api.toast(rd.n + ' vencida! Próxima: ' + rounds(kind)[ser.r].n);
-  } else if (ser.sl >= need) { ser.res[ser.r] = 'L'; finish(api, kind, false); }
-}
-function step(api) { if (s.ser) playSeriesGame(api); else playSplitGame(api); }
 
 /* ---------- HUD / tier / cena ---------- */
 function phaseName(api, short) {
@@ -109,8 +114,8 @@ function hud(api) {
   var out = { stage: phaseName(api, true) };
   if (s.ser) {
     var rds = rounds(s.ser.k), rd = rds[s.ser.r];
-    out.next = rd.n + ' · ' + s.ser.sw + 'x' + s.ser.sl;
-    out.p = (s.ser.r + Math.min(1, (s.ser.sw + s.ser.sl) / rd.bo)) / rds.length; return out;
+    out.next = rd.n + ' · Bo' + rd.bo;
+    out.p = s.ser.r / rds.length; return out;
   }
   if (s.div === 'T2') {
     n = L.t2games;
@@ -151,30 +156,30 @@ function mount(root, api) {
 }
 function render(api) {
   if (!UI) return;
-  var rg = reg(api), S = strength(api), U = api.ui, need = L.promoS, sh = api.shared;
+  var rg = reg(api), S = strength(api), U = api.ui, need = L.promoS, sh = api.shared, X = window.ESPX.semana, wp = X ? X.state().wp : 0;
   U.text(UI.div, s.on ? phaseName(api) : 'Ranqueada · elo baixo');
   U.text(UI.sub, RG[rg].n + ' · ' + (s.on ? 'Ano ' + s.yr + (s.div === 'T1' ? ' · Split ' + s.sp : '') : 'monte o time para se inscrever'));
   U.text(UI.S, Math.floor(S) + (s.div === 'T2' ? ' / ' + need : ''));
-  var scale = s.div === 'T2' ? need : 110;
+  var scale = s.div === 'T2' ? need : 125;
   U.bar(UI.Sb, S / scale); UI.Sm.hidden = s.div !== 'T2'; if (s.div === 'T2') UI.Sm.style.left = '100%';
-  U.text(UI.Sd, 'Elenco ' + Math.round(sh.avg5 || 0) + ' + estrutura ' + Math.round(S - (sh.avg5 || 0) - (sh.subS || 0)) + (sh.subS ? ' + reservas ' + Math.round(sh.subS) : '') + (s.div === 'T2' && S < need ? ' · falta ' + Math.ceil(need - S) + ' para a promoção' : ''));
-  var n = s.div === 'T2' ? L.t2games : L.t1games, opp, oppS, label;
+  var infra = api.owned('treino') + api.owned('house') * 0.8 + api.owned('equip') * 0.8 + (api.owned('coach') + api.owned('anal') + api.owned('psi')) * 1.5;
+  U.text(UI.Sd, 'Elenco ' + Math.round(sh.avg5 || 0) + ' + estrutura ' + Math.round(infra) + ' + moral e forma ' + Math.round(S - (sh.avg5 || 0) - infra) + (s.div === 'T2' && S < need ? ' · falta ' + Math.ceil(need - S) + ' para a promoção' : ''));
+  var n = s.div === 'T2' ? L.t2games : L.t1games, opp, oppS, left = Math.max(0, Math.ceil(E.C.WK - wp));
   if (!s.on) { U.text(UI.vs, 'Aguardando inscrição'); U.text(UI.rec, api.owned('tit') + '/5'); U.bar(UI.Mb, 0); U.text(UI.Md, 'Contrate 5 titulares para disputar a ' + G.t2name(rg) + '.'); }
   else if (s.ser) {
     var rd = rounds(s.ser.k)[s.ser.r]; opp = oppName(s.ser.k, s.ser.r, rg);
-    var rs = rd.s + (s.ser.k === 'promo' ? 0 : off(api)); U.text(UI.vs, rd.n + ' · vs ' + opp + ' (força ' + rs + ')'); U.text(UI.rec, s.ser.sw + ' x ' + s.ser.sl);
-    U.bar(UI.Mb, 1 - Math.max(0, s.cd) / (s.cd > L.matchT ? L.breakT : L.matchT)); U.text(UI.Md, 'Melhor de ' + rd.bo + ' · chance por jogo ' + Math.round(winP(strength(api, s.ser.k === 'worlds' ? 'wd' : s.ser.k), rs) * 100) + '%');
+    U.text(UI.vs, rd.n + ' · vs ' + opp + ' (força ' + rd.s + ')'); U.text(UI.rec, 'Bo' + rd.bo);
+    U.bar(UI.Mb, wp / E.C.WK); U.text(UI.Md, 'Rodada em ' + left + ' s · chance por jogo ' + Math.round(winP(strength(api, s.ser.k === 'worlds' ? 'wd' : s.ser.k), rd.s) * 100) + '%');
   } else {
-    var list = s.div === 'T2' ? L.t2opp : L.t1opp; oppS = list[s.gi % list.length] + (s.div === 'T2' ? 0 : off(api)); opp = oppName(s.div === 'T2' ? 't2' : 't1', s.gi, rg);
+    var list = s.div === 'T2' ? L.t2opp : L.t1opp; oppS = list[s.gi % list.length]; opp = oppName(s.div === 'T2' ? 't2' : 't1', s.gi, rg);
     U.text(UI.vs, 'Jogo ' + Math.min(s.gi + 1, n) + '/' + n + ' · vs ' + opp + ' (força ' + oppS + ')'); U.text(UI.rec, s.w + 'V ' + s.l + 'D');
-    U.bar(UI.Mb, 1 - Math.max(0, s.cd) / (s.cd > L.matchT ? L.breakT : L.matchT));
-    U.text(UI.Md, (s.div === 'T2' ? 'Precisa de ' + L.promoW + ' vitórias e força ' + need + ' para a série de acesso' : 'Precisa de ' + L.qualW + ' vitórias para o ' + (s.sp === 1 ? 'MSI' : 'Mundial')) + ' · chance ' + Math.round(winP(S, oppS) * 100) + '%');
+    U.bar(UI.Mb, wp / E.C.WK);
+    U.text(UI.Md, (s.div === 'T2' ? 'Precisa de ' + L.promoW + ' vitórias e força ' + need + ' para a série de acesso' : 'Precisa de ' + L.qualW + ' vitórias para o ' + (s.sp === 1 ? 'MSI' : 'Mundial')) + ' · jogo em ' + left + ' s · chance ' + Math.round(winP(S, oppS) * 100) + '%');
   }
   var arr = s.ser ? s.ser.h : s.res, tot = s.ser ? rounds(s.ser.k)[s.ser.r].bo : n;
   Array.prototype.forEach.call(UI.dots.children, function (d, i) {
     var v = arr[i] || ''; d.hidden = i >= tot; U.data(d, 'r', v); U.text(d, v);
   });
-  /* chave */
   UI.serC.hidden = !s.ser;
   if (s.ser) {
     var rds = rounds(s.ser.k); U.text(UI.serT, s.ser.k === 'promo' ? 'Série de acesso' : s.ser.k === 'msi' ? 'Chave do MSI' : 'Chave do Mundial');
@@ -182,7 +187,7 @@ function render(api) {
     Array.prototype.forEach.call(UI.rounds.children, function (li, i) {
       li.hidden = i >= rds.length; if (i >= rds.length) return;
       var r = s.ser.res[i] || (i === s.ser.r ? 'now' : ''); U.data(li, 'r', r);
-      U.text(li, (r === 'W' ? '✔ ' : r === 'L' ? '✖ ' : r === 'now' ? '▶ ' : '○ ') + rds[i].n + ' · Bo' + rds[i].bo + ' · força ' + (rds[i].s + (s.ser.k === 'promo' ? 0 : off(api))));
+      U.text(li, (r === 'W' ? '✔ ' : r === 'L' ? '✖ ' : r === 'now' ? '▶ ' : '○ ') + rds[i].n + ' · Bo' + rds[i].bo + ' · força ' + rds[i].s);
     });
   }
   U.text(UI.tro, '🥇 Acesso ' + (s.ti.promo ? '✔' : '—') + '   🏆 MSI ' + s.ti.msi + '   🌍 Mundial ' + s.ti.wd);
@@ -202,38 +207,42 @@ Engine.registerTab('esp', {
   ],
   mount: mount,
   load: function (d, api) {
-    s = fresh();
-    if (d && typeof d === 'object') {
+    apiR = api; s = fresh();
+    if (d && typeof d === 'object' && d.v === 2) {
       var f = fresh(); for (var k in f) if (d[k] !== undefined && typeof d[k] === typeof f[k]) s[k] = d[k];
-      ['q', 'ti', 'fail', 'played'].forEach(function (m) { s[m] = Object.assign({}, f[m], d[m] && typeof d[m] === 'object' ? d[m] : {}); });
-      if (!Array.isArray(s.log)) s.log = []; s.log = s.log.slice(0, 6).map(String); if (!Array.isArray(s.res)) s.res = [];
-      s.div = s.div === 'T1' ? 'T1' : 'T2';
-      if (s.ser && (!s.ser.k || !rounds(s.ser.k)[s.ser.r] || !Array.isArray(s.ser.h) || !Array.isArray(s.ser.res))) { s.ser = null; newSplit(); }
-      s.seed = s.seed >>> 0;
-    } else if (!api.shared.region && (api.life() > 0 || api.owned('tit') > 0)) { api.shared.region = 'BR'; } /* save antigo: Brasil / T2 */
+      ['q', 'ti', 'fail', 'played'].forEach(function (m) {
+        s[m] = {}; Object.keys(f[m]).forEach(function (kk) { var v = d[m] && +d[m][kk]; s[m][kk] = isFinite(v) && v >= 0 && v < 1e4 ? Math.floor(v) : 0; });
+      });
+      if (!Array.isArray(s.log)) s.log = []; s.log = s.log.slice(0, 6).map(String);
+      if (!Array.isArray(s.res)) s.res = []; s.res = s.res.slice(0, 9).map(function (x) { return x === 'W' ? 'W' : 'L'; });
+      s.div = s.div === 'T1' ? 'T1' : 'T2'; s.sp = s.sp === 2 ? 2 : 1; s.yr = Math.max(1, Math.floor(+s.yr) || 1); s.pts = Math.max(0, +s.pts || 0);
+      s.gi = Math.max(0, Math.min(9, Math.floor(+s.gi) || 0)); s.w = Math.max(0, Math.min(9, Math.floor(+s.w) || 0)); s.l = Math.max(0, Math.min(9, Math.floor(+s.l) || 0));
+      if (s.ser && (typeof s.ser !== 'object' || !s.ser.k || !rounds(s.ser.k)[s.ser.r] || !Array.isArray(s.ser.h) || !Array.isArray(s.ser.res))) { s.ser = null; newSplit(); }
+      if (s.ser) { s.ph = s.ser.k; s.ser.h = s.ser.h.slice(0, 5).map(function (x) { return x === 'W' ? 'W' : 'L'; }); s.ser.res = s.ser.res.slice(0, 4); } else s.ph = 'split';
+    }
     if (api.owned('tit') >= 5) s.on = 1;
-    asked = false; applyBonus(api); sync(api);
+    asked = false; sync(api);
   },
   save: function () { return s; },
   update: function (dt, api) {
     if (!s) return;
     if (!api.shared.region && api.isCurrent() && !asked && UI && UI.dlg) { asked = true; api.openDialog(UI.dlg); }
-    if (!s.on) { if (api.owned('tit') >= 5) { s.on = 1; s.cd = L.breakT; sync(api); var rg = reg(api); api.toast('Inscritos no ' + G.t2name(rg) + '!'); api.banner('T2 · ' + RG[rg].n); } return; }
+    if (!s.on) { if (api.owned('tit') >= 5) { s.on = 1; sync(api); var rg = reg(api); api.toast('Inscritos no ' + G.t2name(rg) + '!'); api.banner('T2 · ' + RG[rg].n); } return; }
     if (s.champ > 0) s.champ = Math.max(0, s.champ - dt);
-    s.cd -= dt; var guard = 0;
-    while (s.cd <= 0 && guard++ < 40) step(api);
     sync(api);
   },
   render: render, hud: hud, tier: tier,
   scene: function (x, api) {
+    if (!s) return;
     x.region = RG[reg(api)].n; x.champ = s.champ > 0 ? 1 : 0;
     x.division = s.ph === 'msi' ? 'MSI' : s.ph === 'worlds' ? 'MUNDIAL' : s.div;
   },
-  onPrestige: function (api) { /* nova temporada: volta pra T2; troféus, bônus e "disputou internacional" ficam */
-    var keep = { ti: s.ti, played: s.played, intl: s.intl, seed: s.seed };
-    s = fresh(); s.ti = keep.ti; s.played = keep.played; s.intl = keep.intl; s.seed = keep.seed;
-    s.on = api.owned('tit') >= 5 ? 1 : 0; applyBonus(api); sync(api);
+  onPrestige: function (api) { /* nova temporada: volta pra T2; troféus e "disputou internacional" ficam */
+    var keep = { ti: s.ti, played: s.played, intl: s.intl };
+    s = fresh(); s.ti = keep.ti; s.played = keep.played; s.intl = keep.intl;
+    s.on = api.owned('tit') >= 5 ? 1 : 0; sync(api);
   }
 });
-window.LIGA = { strength: function (k) { return strength(apiR, k); }, state: function () { return s; }, winP: winP, step: function () { step(apiR); }, rounds: rounds };
+window.ESPX.liga = { step: step, state: function () { return s; }, rounds: rounds, hud: hud, winP: winP, oppName: oppName };
+window.LIGA = { strength: function (k) { return strength(apiR, k); }, state: function () { return s; }, winP: winP, step: step, rounds: rounds };
 })();

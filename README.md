@@ -29,4 +29,4 @@ O progresso fica salvo no navegador (`localStorage`, chave `miniidle-v2`). No me
 - `js/data/jogadores.js`: 280 jogadores reais de 6 ligas (BrasLOL); `img/jogadores/<id>.webp` é opcional (foto no cartão)
 - `js/scenes/*.js`: cenas animadas em canvas
 - `docs/`: especificações de design, conteúdo e interface; `docs/TABS_API.md` (API de abas), `docs/LOL_MERCADO.md` (Mercado, Liga, balanceamento)
-- `tests/`: testes (`node tests/tabs_api.js`, `node tests/esp_logic.js`, `python3 tests/e2e.py`) e simulador (`node tests/sim.js`)
+- `tests/`: testes (`node tests/tabs_api.js`, `node tests/esp_logic.js`, `python3 tests/e2e.py`) e simulador do motor real (`node tests/sim_esp.js todos 9`)

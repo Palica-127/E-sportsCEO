@@ -1,5 +1,5 @@
 // Cena "Time de eSports": da garagem ao estadio lotado. Só formas de canvas, sem imagens.
-// Contrato (DESIGN.md 4.4): o[0..12] = Titular, Reserva, Coach, Treino tatico, Gaming house, Equipamento,
+// Contrato (DESIGN.md 4.4): o[0..13] = Titular, Reserva, Coach, Treino tatico, Gaming house, Equipamento,
 // Analista, Patrocinio, Canal, Psicologo, Fa-clube, Arena, Titulo.
 (function () {
   var TAU = Math.PI * 2;
@@ -310,6 +310,46 @@
     ctx.globalAlpha = 1;
   }
 
+
+  /* ---- camada da economia semanal (campos opcionais de ex: focus, mood, wp, last, alert, net) ---- */
+  var FGLY = { treino: '\u2699', conteudo: '\u25B6', descanso: 'Zz', scrims: 'VS', imprensa: '\u266A', negociar: '$', bootcamp: '\u2708' };
+  var FCOL = { treino: '#4fc3f7', conteudo: '#ff5252', descanso: '#9aa7ff', scrims: '#ffb74d', imprensa: '#f48fb1', negociar: '#66bb6a', bootcamp: '#ffd54a' };
+  function weekFx(ctx, W, H, gy, t, ex, o, st0, s) {
+    if (!ex || typeof ex !== 'object') return;
+    var f = typeof ex.focus === 'string' && FCOL[ex.focus] ? ex.focus : null, md = +ex.mood, wp = +ex.wp, al = cl(ex.alert, 2), i, x, y;
+    var cx = st0 + s * 2.5;
+    if (f) { // icone do foco sobre o time + efeitos simples
+      var col = FCOL[f], by = gy - 78 + Math.sin(t * 2) * 1.5;
+      ctx.globalAlpha = 0.92; ctx.fillStyle = '#0b0d16'; ctx.fillRect(cx - 14, by - 10, 28, 20);
+      ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.strokeRect(cx - 14, by - 10, 28, 20); ctx.globalAlpha = 1;
+      txt(ctx, FGLY[f], cx, by + 5, 'bold 12px sans-serif', col, 'center');
+      if (f === 'descanso') for (i = 0; i < 3; i++) txt(ctx, 'z', cx + 18 + i * 7, by - 2 - ((t * 10 + i * 6) % 18), 'bold ' + (7 + i * 2) + 'px sans-serif', '#cdd5ff', 'left');
+      else if (f === 'conteudo') { ctx.fillStyle = Math.sin(t * 5) > 0 ? '#ff5252' : '#7a1f1f'; ctx.beginPath(); ctx.arc(cx - 20, by - 6, 2.4, 0, TAU); ctx.fill(); }
+      else if (f === 'scrims') for (i = 0; i < 5; i++) { ctx.fillStyle = i & 1 ? '#ff7043' : '#4fc3f7'; ctx.fillRect(st0 + s * (i + 0.5) + 10, gy - 14 - (i & 1) * 2, 4, 4); }
+      else if (f === 'bootcamp') { ctx.fillStyle = '#8d6e63'; ctx.fillRect(W - 40, gy - 14, 14, 10); ctx.fillRect(W - 24, gy - 11, 11, 7); ctx.fillStyle = '#ffd54a'; ctx.fillRect(W - 36, gy - 16, 6, 2); }
+    }
+    if (isFinite(md)) { // barra de moral
+      var bw = Math.min(70, W * 0.3), bx = 6, byy = gy + 14, v = Math.max(0, Math.min(100, md)) / 100;
+      ctx.globalAlpha = 0.85; ctx.fillStyle = '#0b0d16'; ctx.fillRect(bx - 1, byy - 1, bw + 2, 8); ctx.globalAlpha = 1;
+      ctx.fillStyle = v < 0.4 ? '#ef5350' : v > 0.8 ? '#66bb6a' : '#ffca28'; ctx.fillRect(bx, byy, bw * v, 6);
+      txt(ctx, v < 0.4 ? 'MORAL BAIXA' : v > 0.8 ? 'MORAL ALTA' : 'MORAL', bx + bw + 4, byy + 6, 'bold 6px sans-serif', '#fff', 'left');
+      if (v < 0.4) for (i = 0; i < 5; i++) { ctx.fillStyle = 'rgba(10,10,20,.35)'; ctx.fillRect(st0 + s * (i + 0.5) - 8, gy - 44, 14, 6); } // cabecas baixas (sombra)
+      else if (v > 0.8) for (i = 0; i < 5; i++) { ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(t * 4 + i)); star(ctx, st0 + s * (i + 0.5) - 3, gy - 52 - Math.abs(Math.sin(t * 4 + i)) * 3, 2, '#ffd54a'); ctx.globalAlpha = 1; }
+    }
+    if (isFinite(wp)) { ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(0, gy + 2, W, 2); ctx.fillStyle = '#7df9ff'; ctx.fillRect(0, gy + 2, W * Math.max(0, Math.min(1, wp)), 2); }
+    if (al > 0) { // lampada de alerta de caixa
+      var on = al >= 2 ? Math.sin(t * 8) > 0 : true; ctx.globalAlpha = on ? 1 : 0.3;
+      circ(ctx, W - 14, 12, 7, al >= 2 ? '#ff2d2d' : '#ffb300'); ctx.globalAlpha = on ? 0.3 : 0; circ(ctx, W - 14, 12, 12, al >= 2 ? '#ff2d2d' : '#ffb300'); ctx.globalAlpha = 1;
+      txt(ctx, '!', W - 14, 15.5, 'bold 10px sans-serif', '#fff', 'center');
+    }
+    if (ex.last === 'W' || ex.last === 'L') {
+      if (ex.last === 'W') for (i = 0; i < 24; i++) { x = (i * 37 + t * 20) % W; y = ((t * 60 + i * 23) % (gy)); ctx.fillStyle = CONF[i % 6]; ctx.fillRect(x, y, 3, 3); }
+      else { ctx.globalAlpha = 0.18 + 0.1 * Math.sin(t * 10); ctx.fillStyle = '#ff1a1a'; ctx.fillRect(0, 0, W, gy); ctx.globalAlpha = 1; }
+      var net = +ex.net;
+      if (isFinite(net)) { var lab = (ex.last === 'W' ? 'VITORIA ' : 'DERROTA ') + (net >= 0 ? '+' : '-') + 'R$' + fmt(Math.abs(net)); ctx.globalAlpha = 0.92; ctx.fillStyle = '#0b0d16'; var tw2 = Math.min(W - 8, lab.length * 5 + 12); ctx.fillRect(W / 2 - tw2 / 2, 56, tw2, 14); ctx.globalAlpha = 1; txt(ctx, lab, W / 2, 66, 'bold 8px sans-serif', ex.last === 'W' ? '#9dfc9d' : '#ff9d9d', 'center'); }
+    }
+  }
+
   SCENES.esp = {
     h: 230,
     draw: function (ctx, W, H, o, t, ex) {
@@ -531,6 +571,9 @@
           ctx.fillStyle = CONF[i % 6]; ctx.fillRect(x, y, 1.5 + Math.abs(Math.cos(t * 4 + i)) * 4, 3);
         }
       }
+      var sm = cl(o[13], 1);
+      if (sm > 0) { x = 14; ctx.fillStyle = '#223'; ctx.fillRect(x - 4, gy - 12, 3, 12); ctx.fillRect(x + 1, gy - 12, 3, 12); ctx.fillStyle = '#9c27b0'; ctx.fillRect(x - 5, gy - 26, 10, 15); circ(ctx, x, gy - 31, 4, SKIN[1]); ctx.fillStyle = '#111'; ctx.fillRect(x + 4, gy - 22, 4, 6); ctx.fillStyle = Math.sin(t * 3) > 0 ? '#6cf' : '#9ef'; ctx.fillRect(x + 5, gy - 21, 2, 4); }
+      weekFx(ctx, W, H, gy, t, ex, o, st0, s);
       spark(ctx, t);
       ctx.textAlign = 'left'; ctx.globalAlpha = 1;
     },

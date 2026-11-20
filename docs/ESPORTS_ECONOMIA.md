@@ -1196,3 +1196,12 @@ Campos novos em `x` (opcionais; sem eles a cena segue como hoje):
 4. Eventos e alertas; offline e prestígio.
 5. Motor: `weekly`, `noClick`, `pay`, `away`, `hud.bal/ps`, formatação R$.
 6. Cena: `focus`, `mood` (opcional).
+
+
+## 10. Implementação (desvios e resultados)
+
+Arquivos: `js/data/esp-eco.js` (constantes e funções puras `ECO`), `js/tabs/esp-semana.js` (plugin `home`: semana, foco, eventos, ofertas, resgate, prestígio), `esp-liga.js` (sem relógio próprio; `step(Sf, wk, seed)`), `esp-mercado.js` (preços/salários em R$), `esp-negocios.js` (Patrocínio, Redes, Finanças), `scenes/esp.js`. Funções entre plugins em `window.ESPX`.
+
+Simulação do motor real (`node tests/sim_esp.js todos 9`, região BR, jogador sintético): ativo ~3,3 h (alvo 2,5-3,5), casual ~4,5 h (alvo ~4), ocioso (volta a cada 1 h) ~6,1 h; caixa mínimo > 0, sem resgates, maior intervalo sem compra do ativo ~11 min.
+
+Desvios: (1) viagem e bônus de TV usam `res.kind` (o Python original usava o resultado errado); (2) sem reservas reais no Mercado e sem `offs` de região na Liga; dispensar um real vira amador; (3) recompensa de meta = 3x a receita bruta semanal; (4) a semana só começa a contar depois da escolha da região e a barra pausa com evento pendente; (5) funções compartilhadas em `ESPX`, não em `api.shared`.

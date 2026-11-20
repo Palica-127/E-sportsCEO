@@ -1,31 +1,44 @@
-/* Dados puros: TIME DE ESPORTS (DESIGN.md secao 4, CONTENT.md secao 3) */
+/* Dados puros: TIME DE ESPORTS (economia semanal: docs/ESPORTS_ECONOMIA.md). Sem botao de clicar: R$ entra e sai 1x por semana (js/tabs/esp-semana.js). */
 GAMES.esp = {
   name: "Time de eSports", short: "eSports", emoji: "🏆", color: "#a855f7", tx: "#c084fc",
-  cur: "⭐", click: "Farmar", clickIc: "🗡️",
+  cur: "R$", click: "Farmar", clickIc: "🗡️",
+  weekly: true, noClick: true, ver: 2, m0: 3000, buyLabel: "Contratações",
+  eco: { WK: 40, away: { eff: 0.9, max: 14400 } },
   tabs: [{ id: "time", label: "Time", icon: "🎮" }], /* abas extras entram por Engine.registerTab (js/tabs/) */
-  clickBase: 1, clickPs: 0.03,
+  clickBase: 1, clickPs: 0,
   items: [
-    { id: "tit", n: "Titular", d: "Top, Selva, Meio, Atirador ou Suporte. Joga por uma pizza.", t: "u", max: 5, c0: 15, g: 1.70, p: 0.5, req: null, ic: "🎮" },
-    { id: "res", n: "Reserva", d: "Fica no banco treinando flash e paciência.", t: "u", max: 2, c0: 75, g: 3.24, p: 1.8, req: ["tit", 5], ic: "🪑" },
-    { id: "coach", n: "Coach", d: "Faz o draft, pede café e culpa o suporte.", t: "u", max: 1, c0: 480, g: 1, p: 6, req: ["res", 1], ic: "📋" },
-    { id: "treino", n: "Treino tático", d: "Rankeada, scrim, VOD review e bootcamp.", t: "l", max: 6, c0: 3820, g: 1.79, tgt: "tit", f: 1.6, req: ["coach", 1], ic: "🧠",
+    { id: "tit", n: "Titular amador", d: "Top, Selva, Meio, Atirador ou Suporte. Joga por uma pizza.", t: "u", max: 5, c0: 800, g: 1.5, p: 0, req: null, ic: "🎮",
+      fx: "Nota 58 (+2 por Centro de treino, +1 por Gaming house)", sal: 150 },
+    { id: "res", n: "Reserva amador", d: "Fica no banco treinando flash e paciência.", t: "u", max: 2, c0: 6000, g: 3, p: 0, req: ["tit", 5], ic: "🪑",
+      fx: "Lesão pesa menos (-25% por reserva)", sal: 80 },
+    { id: "coach", n: "Coach", d: "Faz o draft, pede café e culpa o suporte.", t: "u", max: 1, c0: 70000, g: 1, p: 0, req: ["tit", 5], ic: "📋",
+      fx: "+1,5 força · treino e bootcamp rendem mais", sal: 2500 },
+    { id: "treino", n: "Centro de treino", d: "Rankeada, scrim, VOD review e bootcamp.", t: "l", max: 6, c0: 12000, g: 3.3, tgt: "all", f: 1, req: ["tit", 5], ic: "🧠",
+      fx: "+1,0 força por nível · amadores +2 de nota", up: 1,
       lv: ["Rankeada solo", "Scrim amador", "Scrim com pro", "VOD review", "Bootcamp", "Draft perfeito"] },
-    { id: "house", n: "Gaming house", d: "Moram, treinam e brigam por causa da louça.", t: "l", max: 6, c0: 36210, g: 1.72, tgt: "all", f: 1.3, req: ["treino", 1], ic: "🏠",
+    { id: "house", n: "Gaming house", d: "Moram, treinam e brigam por causa da louça.", t: "l", max: 6, c0: 48000, g: 3.5, tgt: "all", f: 1, req: ["treino", 1], ic: "🏠",
+      fx: "+0,8 força por nível · moral-alvo +3", up: 1,
       lv: ["Garagem do tio", "Apê alugado", "Casa de 2 andares", "Casa com chef", "Centro de treinamento", "CT com academia"] },
-    { id: "equip", n: "Equipamento", d: "Mouse, teclado e headset de pro player.", t: "l", max: 5, c0: 351900, g: 1.85, tgt: "tit", f: 1.5, req: ["house", 1], ic: "🖱️",
+    { id: "equip", n: "Equipamento", d: "Mouse, teclado e headset de pro player.", t: "l", max: 5, c0: 190000, g: 3.7, tgt: "all", f: 1, req: ["house", 1], ic: "🖱️",
+      fx: "+0,8 força por nível", up: 1,
       lv: ["Mouse com fio", "Teclado mecânico", "Headset 7.1", "Monitor 240 Hz", "Setup completo RGB"] },
-    { id: "anal", n: "Analista", d: "VOD, planilha e opinião forte sobre o Barão.", t: "u", max: 1, c0: 2499000, g: 1, p: 300, req: ["equip", 1], ic: "📊" },
-    { id: "patro", n: "Patrocínio", d: "Da padaria do bairro à marca global.", t: "l", max: 6, c0: 4641000, g: 1.80, tgt: "all", f: 1.35, req: ["anal", 1], ic: "🤝",
-      lv: ["Padaria do Zé", "Posto de gasolina", "Energético", "Banco", "Fabricante de periféricos", "Marca global"] },
-    { id: "canal", n: "Canal do time", d: "Live de 12 horas e cortes de teamfight no TikTok.", t: "l", max: 6, c0: 14790000, g: 1.91, tgt: "all", f: 1.3, req: ["patro", 1], ic: "📺",
-      lv: ["100 inscritos", "1 mil", "10 mil", "100 mil", "1 milhão", "Botão de diamante"] },
-    { id: "psi", n: "Psicólogo", d: "Cuida da cabeça depois de perder o nexus por 1 torre.", t: "u", max: 1, c0: 81600000, g: 1, p: 560, req: ["canal", 1], ic: "🛋️" },
-    { id: "fa", n: "Fã-clube", d: "Torcida organizada com bateria e bandeira.", t: "l", max: 6, c0: 219300000, g: 2.63, tgt: "all", f: 1.35, req: ["psi", 1], ic: "📣",
+    { id: "anal", n: "Analista", d: "VOD, planilha e opinião forte sobre o Barão.", t: "u", max: 1, c0: 1100000, g: 1, p: 0, req: ["equip", 1], ic: "📊",
+      fx: "+1,5 força · scrim +1 · forma x1,2", sal: 4000 },
+    { id: "patro", n: "Patrocínio", d: "Da padaria do bairro à marca global.", t: "l", max: 6, c0: 0, g: 1, tgt: "all", f: 1, req: null, auto: 1, ic: "🤝",
+      lv: ["Padaria do Zé", "Posto Tanque Cheio", "Raio Verde", "Banco Faísca", "Periféricos Nexa", "Aurora Global"] },
+    { id: "canal", n: "Canal do time", d: "Live de 12 horas e cortes de teamfight no TikTok.", t: "l", max: 6, c0: 0, g: 1, tgt: "all", f: 1, req: null, auto: 1, ic: "📺",
+      lv: ["100 inscritos", "1 mil", "10 mil", "100 mil", "1 milhão", "5 milhões"] },
+    { id: "psi", n: "Psicólogo", d: "Cuida da cabeça depois de perder o nexus por 1 torre.", t: "u", max: 1, c0: 4800000, g: 1, p: 0, req: ["anal", 1], ic: "🛋️",
+      fx: "+1,5 força · moral-alvo +5 · derrota pesa metade", sal: 4500 },
+    { id: "fa", n: "Fã-clube", d: "Torcida organizada com bateria e bandeira.", t: "l", max: 6, c0: 0, g: 1, tgt: "all", f: 1, req: null, auto: 1, ic: "📣",
       lv: ["Mãe e tia", "Grupo do zap", "Torcida organizada", "Fã-clube oficial", "Caravana pro estádio", "Estádio de camisa"] },
-    { id: "arena", n: "Arena própria", d: "Casa cheia em todo jogo.", t: "l", max: 4, c0: 1224000000, g: 3.10, tgt: "all", f: 1.6, req: ["fa", 2], ic: "🏟️",
+    { id: "arena", n: "Arena própria", d: "Casa cheia em todo jogo.", t: "l", max: 4, c0: 240000, g: 4, tgt: "all", f: 1, req: ["house", 1], gate: "arena", ic: "🏟️",
+      fx: "Bilheteria + loja +25% por nível · só na liga principal", up: 1,
       lv: ["Auditório alugado", "Ginásio", "Arena 5 mil", "Arena 20 mil"] },
-    { id: "titulo", n: "Sala de troféus", d: "Cada taça na estante atrai mais fã e mais grana.", t: "l", max: 6, c0: 9180000000, g: 2.16, tgt: "all", f: 1.5, req: ["arena", 1], ic: "🏆",
-      lv: ["Copa do bairro", "Taça regional", "Taça do split", "Troféu da liga", "Caneca do MSI", "Réplica do Mundial"] }
+    { id: "titulo", n: "Sala de troféus", d: "Cada taça na estante atrai mais fã e mais grana.", t: "l", max: 6, c0: 0, g: 1, tgt: "all", f: 1, req: null, auto: 1, ic: "🏆",
+      lv: ["Copa do bairro", "Taça regional", "Taça do split", "Troféu da liga", "Caneca do MSI", "Réplica do Mundial"] },
+    { id: "smm", n: "Social media", d: "Vive de notebook, café e meme com 3 milhões de views.", t: "u", max: 1, c0: 480000, g: 1, p: 0, req: ["equip", 1], ic: "📱",
+      fx: "Seguidores, publi e Imprensa x1,5", sal: 2000 }
   ],
   /* Os estágios vêm da aba Liga (hook tier). Os requisitos abaixo só valem se a aba não estiver carregada. */
   tiers: [
@@ -63,26 +76,20 @@ GAMES.esp = {
     "A torcida gritou 'ganha o Barão!' e o time foi fazer o Dragão. Na dúvida, os dois.",
     "O analista jura que a derrota foi 'variância'. Era a quinta seguida."
   ],
-  ev: { type: "clutch", min: 120, a: 200, b: 360, dur: 6, fail: "A janela fechou... tem a próxima jogada.",
-    variants: [
-      { btn: "🐲 ROUBO DE BARÃO!", aria: "Roubo de Barão! Toque para triplicar a produção", msg: "O Barão está quase morto! Toque rápido e roube!", ok: "Roubo de Barão! Produção x3 por 20 s" },
-      { btn: "💥 TEAMFIGHT!", aria: "Teamfight! Toque para triplicar a produção", msg: "Teamfight no meio! Toque para engajar!", ok: "Ace! Time limpou a teamfight. Produção x3 por 20 s" },
-      { btn: "⚡ FLASH!", aria: "Flash salvador! Toque para triplicar a produção", msg: "O atirador está sem flash! Toque e salve!", ok: "Flash salvador! O suporte nem viu. Produção x3 por 20 s" },
-      { btn: "🔥 PENTAKILL!", aria: "Pentakill! Toque para triplicar a produção", msg: "Quatro abates... vai de penta! Toque!", ok: "Pentakill! O atirador esqueceu de comemorar. Produção x3 por 20 s" },
-      { btn: "🐉 ALMA DO DRAGÃO!", aria: "Alma do dragão! Toque para triplicar a produção", msg: "O Dragão nasceu! Toque para pegar a alma!", ok: "Alma do dragão garantida! Produção x3 por 20 s" }
-    ] },
-  pr: { coin: "🌟 Hall da Fama", name: "Nova temporada", T0: 5.2e7, ask: "Nova temporada! A geração atual se aposenta; os jogadores contratados no Mercado continuam." },
-  goalMul: 150, /* DESIGN.md pede 300 x ps; com 300 o jogo fecha em ~2,47 h (ver relatorio) */
+  ev: null, /* sem eventos clicaveis: os eventos do eSports sao as decisoes semanais (esp-semana.js) */
+  pr: { coin: "🌟 Hall da Fama", name: "Nova temporada", hook: true, T0: 1, ask: "Nova temporada! Os troféus ficam, o craque de maior nota vira camisa aposentada e o resto recomeça." },
+  goalMul: 3, /* recompensa de meta = max(2.000, goalMul x bruto semanal medio) em R$ (ver goalRw em esp-semana.js) */
   goals: [
     { n: "Escalação completa", id: "tit", k: 5 },
-    { n: "Banco de reservas", id: "res", k: 2 },
-    { n: "Treino é treino", id: "treino", k: 3 },
-    { n: "Gaming house", id: "house", k: 3 },
-    { n: "Setup de pro", id: "equip", k: 3 },
-    { n: "Patrocínio de verdade", id: "patro", k: 3 },
-    { n: "Milhão de inscritos", id: "canal", k: 5 },
+    { n: "Treino é treino", id: "treino", k: 2 },
+    { n: "Gaming house", id: "house", k: 2 },
+    { n: "Patrocínio de verdade", id: "patro", k: 2 },
+    { n: "Setup de pro", id: "equip", k: 2 },
+    { n: "Dez mil olhos", id: "canal", k: 3 },
+    { n: "Casa de banco", id: "patro", k: 4 },
+    { n: "Sala de troféus", id: "titulo", k: 1 },
     { n: "Torcida gigante", id: "fa", k: 4 },
-    { n: "Casa cheia", id: "arena", k: 3 },
+    { n: "Milhão de inscritos", id: "canal", k: 5 },
     { n: "Estante cheia de troféus", id: "titulo", k: 3 }
   ],
   ach: [
@@ -93,15 +100,13 @@ GAMES.esp = {
     { id: "anal", ic: "📊", n: "Olho de analista", d: "Contrate o analista.", c: ["own", "anal", 1] },
     { id: "gh6", ic: "🏠", n: "Mansão gamer", d: "Gaming house no nível máximo.", c: ["max", "house"] },
     { id: "psi", ic: "🛋️", n: "Mente sã", d: "Contrate o psicólogo.", c: ["own", "psi", 1] },
-    { id: "sp6", ic: "🤝", n: "Camisa cheia", d: "Patrocínio no nível máximo.", c: ["max", "patro"] },
-    { id: "fan", ic: "📣", n: "Torcida organizada", d: "Fã-clube nível 3.", c: ["own", "fa", 3] },
+    { id: "sp6", ic: "🤝", n: "Camisa cheia", d: "Feche um contrato de nível máximo.", c: ["max", "patro"] },
+    { id: "fan", ic: "📣", n: "Torcida organizada", d: "Fama no nível Estrela.", c: ["own", "fa", 4] },
     { id: "arena", ic: "🏟️", n: "Casa cheia", d: "Compre a primeira Arena própria.", c: ["own", "arena", 1] },
-    { id: "tit1", ic: "🏆", n: "Primeira taça na estante", d: "Compre o primeiro troféu.", c: ["own", "titulo", 1] },
+    { id: "tit1", ic: "🏆", n: "Primeira taça na estante", d: "Conquiste o primeiro troféu.", c: ["own", "titulo", 1] },
     { id: "tit6", ic: "🌍", n: "Réplica do Mundial", d: "Complete a sala de troféus.", c: ["max", "titulo"] },
-    { id: "c1000", ic: "🗡️", n: "Mil last hits", d: "Farme 1.000 vezes.", c: ["click", 1000] },
-    { id: "t100k", ic: "💰", n: "100 mil de fama", d: "Acumule 100 mil de Fama.", c: ["tot", 1e5] },
+    { id: "t100k", ic: "💰", n: "Primeiro milhão", d: "Fature R$ 1 milhão no total.", c: ["tot", 1e6] },
     { id: "goal5", ic: "🎯", n: "Meta batida", d: "Cumpra 5 metas de temporada.", c: ["goal", 5] },
-    { id: "clutch", ic: "🔥", n: "Clutch master", d: "Acerte 3 jogadas clutch.", c: ["ev", 3] },
     { id: "star", ic: "🌟", n: "Hall da Fama", d: "Ganhe seu primeiro Hall da Fama.", c: ["stars", 1] }
   ],
   /* ---- Mercado (js/tabs/esp-mercado.js) e Liga (js/tabs/esp-liga.js) ---- */
@@ -110,18 +115,8 @@ GAMES.esp = {
     KR: { n: "Coreia", s: "Coreia", l: "LCK" }, CN: { n: "China", s: "China", l: "LPL" }, AP: { n: "Ásia-Pacífico", s: "AP", l: "LCP" }
   },
   regionOrder: ["BR", "NA", "EU", "KR", "CN", "AP"],
-  mk: { genNota: 58, emptyNota: 40, P0: 50000, kp: 1.1, kp2: 0.7, knee: 83, m74: 1.1, mk: 0.0456, sb74: 0.01, sb96: 0.08, subF: 0.4, agio: 1.5,
-    refund: 0.5, photos: true, importMax: 2, lowFrac: 0.4, subS: 0.1 }
+  mk: { importMax: 2, lowFrac: 0.4, photos: true }
 };
-/* Liga (js/tabs/esp-liga.js): numeros de balanceamento; ver docs/LOL_MERCADO.md */
-GAMES.esp.lg = {
-  matchT: 7, breakT: 10, D: 7, t2games: 8, t1games: 9, promoW: 5, qualW: 6, promoS: 68, promoOpp: 66,
-  t2opp: [47, 50, 53, 55, 57, 60, 63, 59], t1opp: [60, 64, 68, 71, 74, 77, 80, 83, 86],
-  msi: [{ bo: 3, s: 80, n: "Quartas" }, { bo: 5, s: 88, n: "Semifinal" }, { bo: 5, s: 97, n: "Final" }],
-  worlds: [{ bo: 3, s: 95, n: "Oitavas" }, { bo: 5, s: 101, n: "Quartas" }, { bo: 5, s: 107, n: "Semifinal" }, { bo: 5, s: 112.5, n: "Final" }],
-  offs: { BR: 0, NA: 1, EU: 1.5, KR: 2, CN: 2, AP: 0.5 }, /* ligas mais fortes: adversários mais fortes (T1, MSI, Mundial) */
-  pity: 0.75, pityMax: 9, uw: { treino: 1, house: 0.8, equip: 0.8, staff: 1.5 },
-  rw: { promo: 300, msiPart: 200, msiFin: 500, msiWin: 1200, wdPart: 400, wdWin: 3000 },
-  bonus: { promo: 1.10, msi: 1.15, wd: 1.25 }
-};
+/* Liga (js/tabs/esp-liga.js): os numeros vivem em ECO.C.lg (js/data/esp-eco.js); a Liga nao tem relogio proprio, quem chama step() e a Semana */
+GAMES.esp.lg = ECO.C.lg;
 GAMES.esp.t2name = function (reg) { return "Circuito Desafiante " + GAMES.esp.regions[reg].n; };

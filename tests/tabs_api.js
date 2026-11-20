@@ -4,7 +4,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms)); let n=0; const ok=(c,m)=>{n++; 
 (async()=>{
   const ex=[path.join(__dirname,'example-tab.js'),path.join(__dirname,'bad-tab.js')];
   let {w,errs}=boot({extra:ex}); await wait(80); const I=w.IDLE; I.ui(false);
-  ok(w.Engine.tabs.lan.map(t=>t.id).join()==='cofre,ruim','registerTab registra na ordem');
+  ok(w.Engine.tabs.lan.map(t=>t.id).join().endsWith('cofre,ruim'),'registerTab registra na ordem (abas de teste por ultimo)');
   ok(typeof w.Engine.registerTab==='function' && w.Engine.version===1,'Engine.registerTab exposto');
   let threw=false; try{ w.Engine.registerTab('lan',{id:'cofre'}) }catch(e){threw=true} ok(threw,'id repetido e rejeitado');
   threw=false; try{ w.Engine.registerTab('xx',{id:'a'}) }catch(e){threw=true} ok(threw,'jogo desconhecido e rejeitado');
