@@ -28,7 +28,7 @@ input,select{width:100%;min-height:44px;margin-top:4px;padding:8px 10px;border-r
 .slot{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}.slot:last-child{border:0}
 .who{flex:1;min-width:0;display:flex;flex-direction:column}.who b,.who small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.who small{color:var(--mut);font-size:12px}
 .role{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:26px;border-radius:7px;font-size:11px;font-weight:800;color:#0b0e16;background:var(--mut);font-style:normal}
-.r-TOP{background:var(--TOP)}.r-JNG{background:var(--JNG)}.r-MID{background:var(--MID)}.r-ADC{background:var(--ADC)}.r-SUP{background:var(--SUP)}
+.ri0{background:var(--TOP)}.ri1{background:var(--JNG)}.ri2{background:var(--MID)}.ri3{background:var(--ADC)}.ri4{background:var(--SUP)}.ri9{background:#6f7a90}
 .role.off{opacity:.35}.ovr{font-weight:800;min-width:30px;text-align:right}
 .infra{display:flex;align-items:center;gap:10px}.ic{font-size:26px}.bar{height:6px;background:#0f131c;border-radius:4px;margin:6px 0 2px}.bar i{display:block;height:100%;background:var(--ac);border-radius:4px}
 .tb{display:flex;gap:10px;padding:8px 6px;border-radius:8px}.tb span{width:22px;color:var(--mut)}.tb b{flex:1;font-weight:600}.tb em{font-style:normal;color:var(--mut)}
@@ -42,3 +42,5 @@ nav button span{font-size:20px}nav button.on{color:var(--ac)}
 #toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#252d44;border:1px solid var(--ac);padding:10px 14px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center;font-size:14px}
 #toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.tb.cut{border-bottom:2px dashed var(--ac)}.tb.pend{opacity:.7}.tb span{min-width:22px}.warn{color:var(--ADC);font-size:13px;margin:4px 0 8px}.sec{margin:14px 4px 6px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}

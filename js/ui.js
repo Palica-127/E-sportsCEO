@@ -29,7 +29,7 @@
     const regs = Object.entries(window.LOL.leagues).map(([k, v]) => `<option value="${k}" ${k === S.org.regiao ? 'selected' : ''}>${v.nome} · ${v.regiao}</option>`).join('');
     return `<section class="card"><h2>Sua organização</h2>
       <label class="fld">Nome da org<input id="orgnome" value="${esc(S.org.nome)}" maxlength="24"></label>
-      <label class="fld">Região (liga de origem)<select id="regiao">${regs}</select></label>
+      <label class="fld">Região (liga de origem; trocar reinicia as competições)<select id="regiao">${regs}</select></label>
       <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div>
     </section>
     <section class="card"><h2>Semana (${O.GAMES[UI.game].curto})</h2>
@@ -37,6 +37,7 @@
       <div class="kv"><span>Despesa prevista</span><b class="neg">${O.money(p.despesa)}</b></div>
       <div class="kv"><span>Saldo</span><b class="${p.saldo >= 0 ? 'pos' : 'neg'}">${O.money(p.saldo)}</b></div>
       <div class="row2"><button class="btn" data-act="avancar" data-n="1">Avançar 1 semana</button><button class="btn alt" data-act="avancar" data-n="4">Avançar 4</button></div>
+      <button class="btn" style="margin-top:8px" data-act="proximo">Ir até a próxima partida</button>
     </section>
     <section class="card"><h2>Histórico</h2><ul class="log">${O.get().log.slice(0, 8).map(l => `<li>${esc(l)}</li>`).join('') || '<li>Nada ainda.</li>'}</ul></section>
     <section class="card"><button class="btn ghost" data-act="reset">${UI.resetArm ? 'Tem certeza? Toque de novo' : 'Zerar jogo'}</button></section>`;
@@ -63,9 +64,9 @@
     h += `<section class="card"><div class="kv"><span>Força</span><b>${O.forca(UI.game, UI.squad).toFixed(1)}</b></div>
       <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
-      const titulo = i < 5 ? roles[i] : 'RES';
-      return `<div class="slot">${p ? `<span class="role r-${titulo}">${titulo}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos</small></div><span class="ovr">${p.o}</span><button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`
-        : `<span class="role r-${titulo} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === 4 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
+      const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
+      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos</small></div><span class="ovr">${p.o}</span><button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`
+        : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     return h;
   }
@@ -83,7 +84,7 @@
       <button class="chip ${m.pay ? 'on' : ''}" data-act="mpay">💰 Posso pagar</button><button class="chip ${m.asc ? 'on' : ''}" data-act="masc">${m.asc ? '↑ Mais baratos' : '↓ Melhores'}</button><button class="chip ${!m.role ? 'on' : ''}" data-act="mrole" data-id="">Todas</button>${roles.map(r => `<button class="chip ${m.role === r ? 'on' : ''}" data-act="mrole" data-id="${r}">${r}</button>`).join('')}</div>
       <div class="row2"><select id="mliga"><option value="">Todas as ligas</option>${ligas.map(l => `<option ${m.liga === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <input id="mq" placeholder="Buscar nome" value="${esc(m.q)}"></div></section>
-      <section class="card"><h2>${tot} jogadores</h2>` + lista.slice(0, m.n).map(p => `<div class="slot"><span class="role r-${p.r}">${p.r}</span>
+      <section class="card"><h2>${tot} jogadores</h2>` + lista.slice(0, m.n).map(p => `<div class="slot"><span class="role ri${roles.indexOf(p.r)}">${p.r}</span>
         <div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · ${O.money(O.salary(p.o))}/sem</small></div><span class="ovr">${p.o}</span>
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
@@ -95,24 +96,35 @@
         return `<section class="card infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small><div class="bar"><i style="width:${n / it.max * 100}%"></i></div><small>Nível ${n}/${it.max} · +${it.bonus} de força por nível</small></div>
           <button class="mini buy" data-act="infra" data-id="${it.id}" ${max || S.org.caixa < c ? 'disabled' : ''}>${max ? 'MAX' : O.money(c)}</button></section>`; }).join('');
   }
+  const FASE = { off: c => `Entretemporada: ${c.wk} sem. para o próximo split`, wait: () => 'Aguardando inscrição: complete os titulares', reg: c => `Próxima: rodada ${c.round + 1} de ${c.sched.length}`, po: () => 'Playoffs' };
+  function vComp() {
+    const S = O.get(), q = S.games[UI.game].squads[UI.squad], d = O.SQUADS[UI.squad];
+    if (!q.on) return `<section class="card empty"><h2>${d.nome}</h2><p>${d.semDados ? 'Ainda sem dados desta divisão.' : 'Crie este time na aba Elenco para entrar na competição.'}</p></section>`;
+    const c = O.compFor(UI.game, UI.squad); if (!c) return '';
+    const rows = O.classificacao(c), nome = i => esc(O.nome(c, i)), est = ['Quartas', 'Semifinal', 'Final'];
+    let h = `<section class="card"><h2>${c.split ? 'Split ' + c.split : 'Pré-temporada'} · ${window.LOL.leagues[c.reg].nome} ${UI.squad === 't2' ? 'T2' : 'T1'}</h2><p class="hint">${FASE[c.phase](c)}</p>`;
+    if (c.phase === 'wait') h += `<p class="warn">Faltam titulares: contrate no Mercado.</p>`;
+    h += rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''} ${r.pos === 6 ? 'cut' : ''}"><span>${r.pos}</span><b>${esc(r.n)}</b><em>${r.w}V ${r.l}D</em></div>`).join('') + '<p class="hint">Os 6 primeiros vão aos playoffs.</p></section>';
+    if (c.phase === 'po' && c.po) {
+      h += `<section class="card"><h2>Playoffs</h2>` + c.po.res.map(r => `<div class="tb"><span>${est[r.st]}</span><b>${nome(r.a)} x ${nome(r.b)}</b><em>${nome(r.w)}</em></div>`).join('')
+        + c.po.pares.map(([a, b]) => `<div class="tb pend"><span>${est[c.po.stage]}</span><b>${nome(a)} x ${nome(b)}</b><em>a jogar</em></div>`).join('') + '</section>';
+    }
+    if (c.last.length) h += `<section class="card"><h2>Seus últimos jogos</h2>` + c.last.slice(0, 6).map(m => `<div class="tb"><span>${m.v ? '✅' : '❌'}</span><b>vs ${esc(m.op)}</b><em>${m.pl} · ${esc(m.f)}</em></div>`).join('') + '</section>';
+    if (c.hist.length) h += `<section class="card"><h2>Campeões</h2>` + c.hist.slice(0, 5).map(x => `<div class="tb"><span>${x.y}</span><b>🏆 ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : ''}</em></div>`).join('') + '</section>';
+    return h;
+  }
   function vLigas() {
     const g = gameGuard(); if (g) return g;
     const S = O.get(), L = window.LOL.leagues, ver = UI.ligaVer || S.org.regiao;
     const sel = `<div class="chips">${Object.keys(L).map(k => `<button class="chip ${k === ver ? 'on' : ''}" data-act="liga" data-id="${k}">${L[k].nome}</button>`).join('')}</div>`;
-    let h = sel;
-    if (ver === S.org.regiao && S.games[UI.game].squads[UI.squad].on) {
-      const rows = O.tabela(UI.game, UI.squad);
-      h += `<section class="card"><h2>Tabela por força · ${UI.squad === 't2' ? 'T2' : 'T1'} ${L[ver].nome}</h2><p class="hint">Provisório: ainda não há partidas, a posição vem da força do elenco.</p>` +
-        rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''}"><span>${r.pos}</span><b>${esc(r.n)}</b><em>${r.f.toFixed(1)}</em></div>`).join('') + '</section>' + squadTabs();
-    }
-    h += `<section class="card"><h2>${L[ver].nome} · ${L[ver].regiao}</h2><h3>T1</h3>` + L[ver].t1.map(t => timeRow(ver, 1, t)).join('') + '<h3>T2</h3>' + (L[ver].t2.map(t => timeRow(ver, 2, t)).join('') || '<p class="hint">Sem times.</p>') + '</section>';
-    return h;
+    return squadTabs() + vComp() + '<h3 class="sec">Explorar ligas</h3>' + sel
+      + `<section class="card"><h2>${L[ver].nome} · ${L[ver].regiao}</h2><h3>T1</h3>` + L[ver].t1.map(t => timeRow(ver, 1, t)).join('') + '<h3>T2</h3>' + (L[ver].t2.map(t => timeRow(ver, 2, t)).join('') || '<p class="hint">Sem times.</p>') + '</section>';
   }
   function timeRow(lg, tier, t) {
     const key = lg + tier + t.n, open = UI.aberto === key;
     const f = t.p ? (t.p.reduce((a, p) => a + p[1], 0) / t.p.length).toFixed(1) : '—';
     const roles = window.LOL.roles;
-    return `<div class="team"><button data-act="time" data-id="${esc(key)}"><b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role r-${roles[i]}">${roles[i]}</i>${esc(p[0])} <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}</div>` : ''}</div>`;
+    return `<div class="team"><button data-act="time" data-id="${esc(key)}"><b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${esc(p[0])} <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}</div>` : ''}</div>`;
   }
 
   /* ---------- Render e eventos ---------- */
@@ -130,6 +142,7 @@
     else if (a === 'contratar') { const p = O.poolLol().find(x => x.id === id); if (p) res(O.contratar(UI.game, UI.squad, p)); }
     else if (a === 'infra') res(O.comprarInfra(id));
     else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
+    else if (a === 'proximo') { const n = O.avancarAteJogo(); toast(`${n} semana(s) até a próxima partida.`); render(); }
     else if (a === 'mrole') { UI.mk.role = id; UI.mk.n = 30; render(); }
     else if (a === 'mpay') { UI.mk.pay = !UI.mk.pay; UI.mk.n = 30; render(); }
     else if (a === 'masc') { UI.mk.asc = !UI.mk.asc; UI.mk.n = 30; render(); }
@@ -139,7 +152,7 @@
     else if (a === 'reset') { if (UI.resetArm) { O.reset(); UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
   });
   document.addEventListener('change', e => {
-    if (e.target.id === 'regiao') { O.get().org.regiao = e.target.value; UI.ligaVer = null; O.save(); render(); }
+    if (e.target.id === 'regiao') { O.trocarRegiao(e.target.value); UI.ligaVer = null; toast('Região trocada: competições reiniciadas.'); render(); }
     else if (e.target.id === 'mliga') { UI.mk.liga = e.target.value; UI.mk.n = 30; render(); }
     else if (e.target.id === 'orgnome') { O.get().org.nome = e.target.value.trim() || 'Minha Org'; O.save(); header(); }
   });
