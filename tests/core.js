@@ -34,6 +34,21 @@ const n = O.avancarAteJogo(); ok(n >= 3 && n < 60 && O.compFor('lol', 't1').last
 S.org.caixa = 5e6; ok(O.ativarSquad('lol', 't2').ok, 'cria T2'); ok(!!O.compFor('lol', 't2'), 'T2 compete'); O.trocarRegiao('LCK'); ok(O.compFor('lol', 't1').teams.length === 11, 'trocar região recria competições (LCK: 10 times + org)');
 // força: time mais forte vence mais
 let v = 0; for (let i = 0; i < 2000; i++) { const [a, bb] = O.serie(3, 85, 75); if (a > bb) v++; } ok(v / 2000 > 0.8, 'força 85 vs 75 vence >80% das séries Bo3 (' + (v / 20).toFixed(0) + '%)');
+// ---- passo 2: internacionais, pro/rel, academy
+O.set(O.novoJogo()); S = O.get(); S.seed = 9; S.org.caixa = 5e7;
+const b4 = O.livres('lol').sort((a, b) => a.o - b.o); for (const r of O.GAMES.lol.roles) O.contratar('lol', 't1', b4.find(x => x.r === r));
+const d1antes = O.ligaSync().d1.map(t => t.n).join('|'), n1 = O.ligaSync().d1.length, n2 = O.ligaSync().d2.length;
+O.avancar(26 * 3); const ih = O.get().intlHist;
+ok(ih.some(x => x.tipo === 'MSI') && ih.some(x => x.tipo === 'WORLDS'), 'MSI e Mundial disputados (' + ih.map(x => x.tipo + x.y).join(',') + ')');
+ok(ih.every(x => x.camp), 'campeões internacionais registrados');
+ok(O.ligaSync().d1.length === n1 && O.ligaSync().d2.length === n2, 'promoção/rebaixamento mantém tamanho das divisões');
+ok(O.ligaSync().d1.map(t => t.n).join('|') !== d1antes, 'T1 mudou após promoção/rebaixamento');
+ok(Number.isFinite(O.get().org.caixa), 'caixa finito após internacionais');
+const vagasMSI = Object.values(O.INTL.MSI.vagas).reduce((a, b) => a + b, 0), vagasW = Object.values(O.INTL.WORLDS.vagas).reduce((a, b) => a + b, 0);
+ok(vagasMSI === 8 && vagasW === 16, 'vagas: 8 no MSI e 16 no Mundial');
+ok(O.simRapida(O.ligaSync().d1.map(t => ({ n: t.n, f: t.b }))).length === n1, 'simRapida devolve ordem completa');
+O.set(O.novoJogo()); S = O.get(); S.org.caixa = 5e7; ok(O.ativarSquad('lol', 'acad').ok, 'cria Academy'); ok(O.compFor('lol', 'acad').teams.length === 9, 'Academy com 8 times + a org');
+O.trocarRegiao('LCK'); ok(O.get().liga === null && O.ligaSync().reg === 'LCK', 'trocar região recria a liga');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

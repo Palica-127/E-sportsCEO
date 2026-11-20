@@ -21,7 +21,7 @@ Jogo de gerenciamento de uma organização de esports, em site estático (sem bu
 
 ## Próximos passos sugeridos
 1. ~~Calendário e partidas simples~~ (feito para o LoL: tabela, playoffs, premiação).
-2. Torneios internacionais (MSI, Mundial), promoção e rebaixamento entre T2 e T1, Academy do LoL.
+2. ✓ Torneios internacionais (MSI com 8 times após o split 1, Mundial com 16 após o split 2), promoção e rebaixamento entre T2 e T1 (times da IA) e Academy do LoL.
 3. Dados e competições dos outros jogos (CS2, Dota 2, Valorant, Free Fire, R6, EA FC, Wild Rift).
 4. Contratos (duração, salário, renovação), base/revelação de jogadores, transferências entre times da org.
 5. Patrocínios, redes sociais e eventos.

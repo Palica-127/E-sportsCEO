@@ -96,20 +96,26 @@
         return `<section class="card infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small><div class="bar"><i style="width:${n / it.max * 100}%"></i></div><small>Nível ${n}/${it.max} · +${it.bonus} de força por nível</small></div>
           <button class="mini buy" data-act="infra" data-id="${it.id}" ${max || S.org.caixa < c ? 'disabled' : ''}>${max ? 'MAX' : O.money(c)}</button></section>`; }).join('');
   }
-  const FASE = { off: c => `Entretemporada: ${c.wk} sem. para o próximo split`, wait: () => 'Aguardando inscrição: complete os titulares', reg: c => `Próxima: rodada ${c.round + 1} de ${c.sched.length}`, po: () => 'Playoffs' };
+  const FASE = { off: c => `Entretemporada: ${c.wk} sem. para o próximo split`, wait: () => 'Aguardando inscrição: complete os titulares', reg: c => `Próxima: rodada ${c.round + 1} de ${c.sched.length}`, po: () => 'Playoffs', intl: c => `${O.INTL[c.intl.tipo].nome}: ${c.intl.alive.length} times vivos` };
   function vComp() {
     const S = O.get(), q = S.games[UI.game].squads[UI.squad], d = O.SQUADS[UI.squad];
     if (!q.on) return `<section class="card empty"><h2>${d.nome}</h2><p>${d.semDados ? 'Ainda sem dados desta divisão.' : 'Crie este time na aba Elenco para entrar na competição.'}</p></section>`;
     const c = O.compFor(UI.game, UI.squad); if (!c) return '';
     const rows = O.classificacao(c), nome = i => esc(O.nome(c, i)), est = ['Quartas', 'Semifinal', 'Final'];
-    let h = `<section class="card"><h2>${c.split ? 'Split ' + c.split : 'Pré-temporada'} · ${window.LOL.leagues[c.reg].nome} ${UI.squad === 't2' ? 'T2' : 'T1'}</h2><p class="hint">${FASE[c.phase](c)}</p>`;
+    let h = `<section class="card"><h2>${c.split ? 'Split ' + c.split : 'Pré-temporada'} · ${window.LOL.leagues[c.reg].nome} ${O.SQUADS[UI.squad].nome}</h2><p class="hint">${FASE[c.phase](c)}</p>`;
     if (c.phase === 'wait') h += `<p class="warn">Faltam titulares: contrate no Mercado.</p>`;
     h += rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''} ${r.pos === 6 ? 'cut' : ''}"><span>${r.pos}</span><b>${esc(r.n)}</b><em>${r.w}V ${r.l}D</em></div>`).join('') + '<p class="hint">Os 6 primeiros vão aos playoffs.</p></section>';
     if (c.phase === 'po' && c.po) {
       h += `<section class="card"><h2>Playoffs</h2>` + c.po.res.map(r => `<div class="tb"><span>${est[r.st]}</span><b>${nome(r.a)} x ${nome(r.b)}</b><em>${nome(r.w)}</em></div>`).join('')
         + c.po.pares.map(([a, b]) => `<div class="tb pend"><span>${est[c.po.stage]}</span><b>${nome(a)} x ${nome(b)}</b><em>a jogar</em></div>`).join('') + '</section>';
     }
+    if (c.phase === 'intl' && c.intl) {
+      const I = c.intl, nm = i => esc(O.nomeT(I.teams[i]));
+      h += `<section class="card"><h2>🌍 ${O.INTL[I.tipo].nome}</h2><p class="hint">${I.teams.length} times · bolsa ${O.money(O.INTL[I.tipo].bolsa)}</p>` + I.res.slice(-8).map(r => `<div class="tb"><span>${r.st}</span><b>${nm(r.a)} x ${nm(r.b)}</b><em>${nm(r.w)}</em></div>`).join('')
+        + (I.alive.length > 1 ? I.alive.map((a, k) => k % 2 ? '' : `<div class="tb pend"><span>a jogar</span><b>${nm(a)} x ${nm(I.alive[k + 1])}</b><em>${I.teams[a].eu || I.teams[I.alive[k + 1]].eu ? 'você' : ''}</em></div>`).join('') : '') + '</section>';
+    }
     if (c.last.length) h += `<section class="card"><h2>Seus últimos jogos</h2>` + c.last.slice(0, 6).map(m => `<div class="tb"><span>${m.v ? '✅' : '❌'}</span><b>vs ${esc(m.op)}</b><em>${m.pl} · ${esc(m.f)}</em></div>`).join('') + '</section>';
+    if (S.intlHist && S.intlHist.length && UI.squad === 't1') h += `<section class="card"><h2>Títulos internacionais</h2>` + S.intlHist.slice(0, 6).map(x => `<div class="tb"><span>${x.y}</span><b>🌍 ${x.tipo === 'MSI' ? 'MSI' : 'Mundial'}: ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : esc(x.reg || '')}</em></div>`).join('') + '</section>';
     if (c.hist.length) h += `<section class="card"><h2>Campeões</h2>` + c.hist.slice(0, 5).map(x => `<div class="tb"><span>${x.y}</span><b>🏆 ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : ''}</em></div>`).join('') + '</section>';
     return h;
   }
@@ -118,7 +124,7 @@
     const S = O.get(), L = window.LOL.leagues, ver = UI.ligaVer || S.org.regiao;
     const sel = `<div class="chips">${Object.keys(L).map(k => `<button class="chip ${k === ver ? 'on' : ''}" data-act="liga" data-id="${k}">${L[k].nome}</button>`).join('')}</div>`;
     return squadTabs() + vComp() + '<h3 class="sec">Explorar ligas</h3>' + sel
-      + `<section class="card"><h2>${L[ver].nome} · ${L[ver].regiao}</h2><h3>T1</h3>` + L[ver].t1.map(t => timeRow(ver, 1, t)).join('') + '<h3>T2</h3>' + (L[ver].t2.map(t => timeRow(ver, 2, t)).join('') || '<p class="hint">Sem times.</p>') + '</section>';
+      + `<section class="card"><h2>${L[ver].nome} · ${L[ver].regiao}</h2>` + (() => { const mine = ver === S.org.regiao, Lg = mine ? O.ligaSync() : null, t1 = mine ? Lg.d1 : L[ver].t1, t2 = mine ? Lg.d2 : L[ver].t2; return '<h3>T1</h3>' + t1.map(t => timeRow(ver, 1, t)).join('') + '<h3>T2</h3>' + (t2.map(t => timeRow(ver, 2, t)).join('') || '<p class="hint">Sem times.</p>'); })() + '</section>';
   }
   function timeRow(lg, tier, t) {
     const key = lg + tier + t.n, open = UI.aberto === key;
