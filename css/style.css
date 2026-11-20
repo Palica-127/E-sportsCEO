@@ -45,3 +45,24 @@ nav button span{font-size:20px}nav button.on{color:var(--ac)}
 
 .tb.cut{border-bottom:2px dashed var(--ac)}.tb.pend{opacity:.7}.tb span{min-width:22px}.warn{color:var(--ADC);font-size:13px;margin:4px 0 8px}.sec{margin:14px 4px 6px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.acts .mini{font-size:11px;padding:4px 8px}.neg{color:#ff6b6b}
+
+.ev{border-color:var(--ADC)}
+/* ---------- Desktop (PC): barra lateral + cards em colunas ---------- */
+@media (min-width:900px){
+  #app{max-width:none;display:grid;grid-template-columns:230px 1fr;grid-template-rows:auto auto 1fr;grid-template-areas:"nav top" "nav games" "nav main";height:100vh;margin:0}
+  #top{grid-area:top;padding:16px 28px 6px;border-bottom:1px solid var(--line)}
+  .top-l b{font-size:20px}.cash{font-size:22px}
+  #games{grid-area:games;padding:10px 28px 6px;flex-wrap:wrap;overflow:visible}
+  .chips.scroll{flex-wrap:wrap}
+  .chip{min-height:38px;cursor:pointer}.chip:hover{border-color:var(--ac)}
+  nav{grid-area:nav;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--line);padding:20px 12px}
+  nav::before{content:"eSports CEO";display:block;font-weight:800;font-size:19px;color:var(--ac);padding:4px 12px 18px}
+  nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;min-height:46px;padding:0 14px;border-radius:10px;font-size:15px;cursor:pointer}
+  nav button:hover{background:#161b26}nav button.on{background:#1d2440;color:var(--tx)}
+  main{grid-area:main;padding:14px 28px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px;align-content:start;align-items:start}
+  main>*{margin:0}main>.chips,main>.sec{grid-column:1/-1}main>.card{margin-bottom:0}
+  .btn,.mini,button.chip{cursor:pointer}.mini{min-height:34px}.mini:hover:not(:disabled),.btn:hover{filter:brightness(1.15)}
+  .team>button:hover{background:#1b2232}
+  #toast{bottom:28px;left:calc(50% + 115px)}
+}
+@media (min-width:1500px){main{grid-template-columns:repeat(auto-fill,minmax(440px,1fr))}}

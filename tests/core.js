@@ -78,6 +78,17 @@ const l5 = O.livres('lol').sort((a, b) => a.o - b.o); for (const r of O.GAMES.lo
 O.avancar(26 * 2 + 4); ok(S.base.lol && S.base.lol.length >= 1, 'base revelou jovens (' + (S.base.lol || []).length + ')');
 const jov = S.base.lol[0]; ok(O.promoverBase('lol', 't2', jov.id).ok && !S.base.lol.some(x => x.id === jov.id), 'promover da base');
 const pj = S.games.lol.squads.t2.slots.find(p => p && p.id === jov.id); const o0 = pj.o; pj.pot = 99; O.avancar(26 * 2); ok(pj.o > o0, 'jovem evolui (' + o0 + ' → ' + pj.o + ')');
+// ---- passo 5: patrocínios, redes, foco, eventos
+O.set(O.novoJogo()); S = O.get(); S.seed = 11; S.org.caixa = 9e6;
+const of = O.ofertas(); ok(of.length === 3 && of.every(o => o.pay > 0), 'propostas de patrocínio');
+const oid = of[0].id; ok(O.aceitarPatro(oid).ok && S.patro.length === 1, 'fecha patrocínio'); ok(O.rendaPatro() > 0, 'renda de patrocínio');
+for (const o of O.ofertas().slice(0, 2)) O.aceitarPatro(o.id); O.ofertas(); ok(!O.aceitarPatro(O.ofertas()[0].id).ok && S.patro.length === 3, 'máximo 3 patrocinadores');
+const seg0 = S.social.seg; O.setFoco('midia'); O.avancar(10); ok(S.social.seg > seg0 * 1.15, 'foco mídia faz seguidores crescerem (' + seg0 + ' → ' + S.social.seg + ')');
+O.setFoco('treino'); const fT = O.forca('lol', 't1'); O.setFoco('nenhum'); ok(O.forca('lol', 't1') === fT - 1, 'foco treino dá +1 de força');
+S.patro.forEach(x => x.sem = 1); O.avancar(2); ok(S.patro.length === 0, 'patrocínio vence');
+O.set(O.novoJogo()); S = O.get(); S.seed = 21; S.org.caixa = 5e6; let viu = false, resolveu = false;
+for (let i = 0; i < 120 && !resolveu; i++) { O.avancar(1); if (S.evento) { viu = true; const r = O.escolherEvento(0); if (r.ok) { resolveu = true; ok(S.evento === null, 'evento resolvido'); } } }
+ok(viu, 'eventos aparecem'); ok(Number.isFinite(S.org.caixa) && Number.isFinite(S.social.seg), 'valores finitos');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

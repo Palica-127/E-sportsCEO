@@ -6,7 +6,7 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const UI = { tab: 'org', game: 'lol', squad: 't1', mk: { role: '', liga: '', q: '', n: 30, pay: false, asc: false }, ligaVer: null, aberto: null, resetArm: false };
 
-  const TABS = [['org', '🏢', 'Org'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['ligas', '🏆', 'Ligas']];
+  const TABS = [['org', '🏢', 'Org'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Ligas']];
 
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('on');
@@ -27,11 +27,12 @@
   /* ---------- Abas ---------- */
   function vOrg() {
     const S = O.get(), p = O.projecao(UI.game);
+    const ev = vEvento();
     const regs = Object.entries(DG() ? DG().leagues : {}).map(([k, v]) => `<option value="${k}" ${k === O.regiaoDe(UI.game) ? 'selected' : ''}>${v.nome} · ${v.regiao}</option>`).join('');
-    return `<section class="card"><h2>Sua organização</h2>
+    return ev + `<section class="card"><h2>Sua organização</h2>
       <label class="fld">Nome da org<input id="orgnome" value="${esc(S.org.nome)}" maxlength="24"></label>
       <label class="fld">Região de ${O.GAMES[UI.game].curto} (trocar reinicia as competições deste jogo)<select id="regiao">${regs}</select></label>
-      <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div>
+      <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Patrocínios + redes (por semana)</span><b class="pos">${O.money(O.rendaPatro() + O.rendaSocial() - O.custoFoco())}</b></div>
     </section>
     <section class="card"><h2>Semana (${O.GAMES[UI.game].curto})</h2>
       <div class="kv"><span>Receita prevista</span><b class="pos">${O.money(p.receita)}</b></div>
@@ -93,6 +94,19 @@
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
   }
+  function vEvento() {
+    const S = O.get(); if (!S.evento) return '';
+    const e = O.EVENTOS.find(x => x.id === S.evento.id);
+    return `<section class="card ev"><h2>⚡ Evento</h2><p>${esc(e.txt)}</p><p class="hint">Expira em ${S.evento.sem} semanas.</p>` + e.ops.map((o, i) => `<button class="btn ${i ? 'alt' : ''}" style="margin-top:6px" data-act="evento" data-id="${i}">${esc(o.t)}</button>`).join('') + '</section>';
+  }
+  function vNegocios() {
+    const S = O.get(), foco = [['nenhum', '😴 Normal', 'Sem efeito.'], ['treino', '🏋️ Treino', '+1 de força em todos os times.'], ['midia', '📣 Mídia', 'Seguidores crescem +2% por semana (R$ 3 mil/sem).']];
+    let h = vEvento() + `<section class="card"><h2>🎯 Foco da semana</h2><div class="chips">${foco.map(([id, nm]) => `<button class="chip ${S.foco === id ? 'on' : ''}" data-act="foco" data-id="${id}">${nm}</button>`).join('')}</div><p class="hint">${foco.find(x => x[0] === S.foco)[2]}${S.buff ? ' Bootcamp ativo: +' + S.buff.f + ' de força por ' + S.buff.sem + ' sem.' : ''}</p></section>`;
+    h += `<section class="card"><h2>📱 Redes sociais</h2><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Renda semanal (anúncios)</span><b class="pos">${O.money(O.rendaSocial())}</b></div><p class="hint">Vitórias e títulos fazem a base de fãs crescer.</p></section>`;
+    h += `<section class="card"><h2>🤝 Patrocinadores (${S.patro.length}/3)</h2>` + (S.patro.map(x => `<div class="slot"><div class="who"><b>${esc(x.n)}</b><small>${x.sem} semanas restantes</small></div><b class="pos">${O.money(x.pay)}/sem</b></div>`).join('') || '<p class="hint">Nenhum patrocinador ainda.</p>') + '</section>';
+    h += `<section class="card"><h2>Propostas</h2><p class="hint">Mudam a cada 6 semanas e pagam mais com reputação alta.</p>` + O.ofertas().map(o => `<div class="slot"><div class="who"><b>${esc(o.n)}</b><small>${o.sem} semanas</small></div><b>${O.money(o.pay)}/sem</b><button class="mini buy" data-act="patro" data-id="${o.id}" ${S.patro.length >= 3 ? 'disabled' : ''}>Fechar</button></div>`).join('') + '</section>';
+    return h;
+  }
   function vEstrutura() {
     const S = O.get();
     return `<section class="card"><div class="kv"><span>Bônus de força</span><b>+${O.infraBonus().toFixed(1)}</b></div><div class="kv"><span>Manutenção semanal</span><b>${O.money(O.upkeepSemanal())}</b></div></section>` +
@@ -138,7 +152,7 @@
   }
 
   /* ---------- Render e eventos ---------- */
-  const VIEWS = { org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas };
+  const VIEWS = { negocios: vNegocios, org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas };
   function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = VIEWS[UI.tab](); $('main').scrollTop = sc; }
 
   document.addEventListener('click', e => {
@@ -153,6 +167,9 @@
     else if (a === 'renovar') res(O.renovar(UI.game, UI.squad, +b.dataset.slot));
     else if (a === 'mover') res(O.mover(UI.game, UI.squad, id, +b.dataset.slot));
     else if (a === 'base') res(O.promoverBase(UI.game, UI.squad, id));
+    else if (a === 'foco') res(O.setFoco(id));
+    else if (a === 'patro') res(O.aceitarPatro(id));
+    else if (a === 'evento') res(O.escolherEvento(+id));
     else if (a === 'infra') res(O.comprarInfra(id));
     else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
     else if (a === 'proximo') { const n = O.avancarAteJogo(); toast(`${n} semana(s) até a próxima partida.`); render(); }

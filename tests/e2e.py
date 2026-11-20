@@ -8,7 +8,7 @@ async def main():
         print(('OK   ' if c else 'FAIL ') + m); (not c) and fails.append(m)
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox', '--allow-file-access-from-files'])
-        for w, h in [(390, 780), (360, 640)]:
+        for w, h in [(390, 780), (360, 640), (1366, 768)]:
             pg = await b.new_page(viewport={'width': w, 'height': h}); errs = []
             pg.on('pageerror', lambda e: errs.append(str(e))); pg.on('console', lambda m: m.type == 'error' and errs.append(m.text))
             await pg.goto(URL); await pg.wait_for_timeout(300)

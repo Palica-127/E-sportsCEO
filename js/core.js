@@ -59,7 +59,7 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL' },
-             infra: {}, games, comp: {}, ligas: {}, base: {}, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, evento: null, intlHist: [], log: [] };
   }
   let S = novoJogo();
   const get = () => S;
@@ -71,7 +71,7 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
@@ -146,6 +146,51 @@
     const back = Math.round(p.fee * 0.4); q.slots[slot] = null; S.org.caixa += back; log(`Dispensou ${p.n}`); save();
     return { ok: true, msg: `${p.n} dispensado. Devolução: ${money(back)}.` };
   }
+  /* ---------- Patrocínios, redes sociais, foco e eventos ---------- */
+  const MARCAS = ['TurboByte', 'Café Pixel', 'NeoBank', 'Lanches Zap', 'Gamer Chair Pro', 'EnergiaMax', 'FibraNet', 'Skin&Co', 'Pixel Drinks', 'Arena Seguros'];
+  const EVENTOS = [
+    { id: 'collab', txt: 'Um influenciador propõe uma collab com a sua org.', ops: [{ t: 'Aceitar (R$ 20 mil)', c: 20000, f: 'seg', v: 1.15 }, { t: 'Recusar' }] },
+    { id: 'viral', txt: 'Um clipe do seu time viralizou!', ops: [{ t: 'Aproveitar a fama', f: 'seg', v: 1.2 }] },
+    { id: 'boot', txt: 'Uma empresa oferece um bootcamp de treino.', ops: [{ t: 'Pagar R$ 30 mil (+1,5 de força por 8 semanas)', c: 30000, f: 'buff', v: 1.5 }, { t: 'Recusar' }] },
+    { id: 'fisc', txt: 'Fiscalização: imposto atrasado.', ops: [{ t: 'Pagar R$ 15 mil', c: 15000 }, { t: 'Contestar (50%: pagar R$ 30 mil)', f: 'risco' }] },
+    { id: 'pol', txt: 'Uma polêmica nas redes envolve um jogador.', ops: [{ t: 'Nota oficial (R$ 8 mil)', c: 8000 }, { t: 'Ignorar (-8% seguidores)', f: 'seg', v: 0.92 }] },
+    { id: 'vaq', txt: 'Fãs organizam uma vaquinha para a org.', ops: [{ t: 'Aceitar R$ 10 mil', f: 'caixa', v: 10000 }] },
+  ];
+  function seguidores(m) { S.social.seg = Math.max(500, Math.round(S.social.seg * m)); }
+  const rendaSocial = () => Math.round(S.social.seg * 0.02);
+  const custoFoco = () => S.foco === 'midia' ? 3000 : 0;
+  function ofertas() {
+    if (!S.ofertas.length) S.ofertas = [0, 1, 2].map(() => ({ id: 'p' + Math.floor(rnd() * 1e9), n: MARCAS[Math.floor(rnd() * MARCAS.length)], pay: Math.round(8000 * Math.pow(S.org.rep, 1.2) * (0.8 + rnd() * 0.6) / 500) * 500, sem: [26, 52, 78][Math.floor(rnd() * 3)] }));
+    return S.ofertas;
+  }
+  const rendaPatro = () => S.patro.reduce((a, x) => a + x.pay, 0);
+  function aceitarPatro(id) {
+    const o = ofertas().find(x => x.id === id); if (!o) return { ok: false, msg: 'Oferta expirou.' };
+    if (S.patro.length >= 3) return { ok: false, msg: 'Máximo de 3 patrocinadores.' };
+    S.ofertas = S.ofertas.filter(x => x !== o); S.patro.push({ id: o.id, n: o.n, pay: o.pay, sem: o.sem }); log(`Patrocínio: ${o.n} (${money(o.pay)}/sem)`); save();
+    return { ok: true, msg: `${o.n} fechado: ${money(o.pay)} por semana.` };
+  }
+  function setFoco(f) { if (!['nenhum', 'treino', 'midia'].includes(f)) return { ok: false, msg: 'Foco inválido.' }; S.foco = f; save(); return { ok: true, msg: 'Foco da semana definido.' }; }
+  function escolherEvento(i) {
+    const ev = S.evento; if (!ev) return { ok: false, msg: 'Sem evento.' };
+    const e = EVENTOS.find(x => x.id === ev.id), op = e.ops[i]; if (!op) return { ok: false, msg: 'Opção inválida.' };
+    if (op.c && S.org.caixa < op.c) return { ok: false, msg: 'Caixa insuficiente.' };
+    if (op.c) S.org.caixa -= op.c;
+    if (op.f === 'seg') seguidores(op.v); else if (op.f === 'buff') S.buff = { f: op.v, sem: 8 }; else if (op.f === 'caixa') S.org.caixa += op.v;
+    else if (op.f === 'risco' && rnd() < 0.5) S.org.caixa -= 30000;
+    S.evento = null; log(`Evento: ${e.txt.replace(/\.$/, '')} → ${op.t.split(' (')[0]}`); save();
+    return { ok: true, msg: 'Decisão tomada.' };
+  }
+  function semanalOrg() { // roda uma vez por semana, fora dos jogos
+    let r = rendaPatro() + rendaSocial() - custoFoco();
+    S.patro.forEach(x => x.sem--); const fim = S.patro.filter(x => x.sem <= 0); S.patro = S.patro.filter(x => x.sem > 0); fim.forEach(x => log(`Patrocínio com ${x.n} terminou`));
+    seguidores(1 + 0.002 + 0.0004 * S.org.rep + (S.foco === 'midia' ? 0.02 : 0));
+    if (S.buff && --S.buff.sem <= 0) S.buff = null;
+    if (++S.ofertaSem >= 6) { S.ofertaSem = 0; S.ofertas = []; ofertas(); }
+    if (S.evento && --S.evento.sem <= 0) { S.evento = null; log('Evento expirou sem decisão'); }
+    if (!S.evento && rnd() < 0.12) { const e = EVENTOS[Math.floor(rnd() * EVENTOS.length)]; S.evento = { id: e.id, sem: 4 }; log('Novo evento: ' + e.txt); }
+    S.org.caixa += r;
+  }
   function renovar(game, sq, slot) {
     const p = S.games[game].squads[sq].slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
     const c = Math.round(fee(p.o) * 0.5 / 1000) * 1000; if (S.org.caixa < c) return { ok: false, msg: 'Caixa insuficiente.' };
@@ -199,8 +244,9 @@
   const prontos = (game, sq) => { const q = S.games[game].squads[sq]; return q.on && titulares(game, sq).every(Boolean); };
   function forca(game, sq) { // média dos titulares (vaga vazia vale 55) + bônus da estrutura
     const st = titulares(game, sq);
-    return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus();
+    return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus() + bonusTemp();
   }
+  const bonusTemp = () => (S.foco === 'treino' ? 1 : 0) + (S.buff ? S.buff.f : 0);
   const mediaTime = pl => pl && pl.length ? pl.reduce((a, p) => a + p[1], 0) / pl.length : 70;
 
   /* ---------- Competições (só LoL por enquanto) ---------- */
@@ -264,6 +310,7 @@
     if (a === eu || b === eu) {
       const op = a === eu ? b : a, meus = a === eu ? wa : wb, deles = a === eu ? wb : wa;
       c.last.unshift({ s: S.org.semana, y: S.org.ano, op: nomeT(T[op]), v: venc === eu, pl: `${meus}-${deles}`, f: fase }); c.last.length = Math.min(c.last.length, 8);
+      seguidores(venc === eu ? 1.012 : 0.997);
       if (bonus && venc === eu) S.org.caixa += Math.round(SQUADS[c.sq].premio * 0.01);
       ctx.jogou = true;
     }
@@ -292,7 +339,7 @@
   function finalizar(c, campeao, eu) {
     const po = c.po; po.lugar[campeao] = 'campeao';
     const vice = +Object.keys(po.lugar).find(k => po.lugar[k] === 'vice');
-    const meu = po.lugar[eu];
+    const meu = po.lugar[eu]; if (meu === 'campeao') seguidores(1.25);
     if (meu) {
       const bolsa = Math.round(SQUADS[c.sq].premio * PREMIO_PCT[meu]); S.org.caixa += bolsa;
       S.org.rep = clamp(S.org.rep + ({ campeao: 0.3, vice: 0.15, semi: 0.08, quartas: 0.04 })[meu] * (c.sq === 't1' ? 1 : 0.3), 0.5, 10);
@@ -342,7 +389,7 @@
   }
   function finalizarIntl(c, intl) {
     const I = intlDef(c.game)[intl.tipo], camp = intl.alive[0], eu = intl.teams.findIndex(t => t.eu); intl.lugar[camp] = 'campeao';
-    const meu = intl.lugar[eu];
+    const meu = intl.lugar[eu]; if (meu === 'campeao') seguidores(1.5);
     if (meu) {
       const bolsa = Math.round(I.bolsa * PCT_INTL[meu]); S.org.caixa += bolsa; S.org.rep = clamp(S.org.rep + I.rep * PCT_INTL[meu] * 2, 0.5, 10);
       log(`${GAMES[c.game].curto} ${I.nome}: ${({ campeao: 'CAMPEÃO', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas', oitavas: 'eliminado nas oitavas' })[meu]} (+${money(bolsa)})`);
@@ -397,7 +444,7 @@
         const p = projecao(g); r += p.receita; d += p.despesa;
         for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; }
       }
-      S.org.caixa += r - d; contratos();
+      S.org.caixa += r - d; contratos(); semanalOrg();
       S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
     }
     save(); return jogou;
@@ -414,6 +461,6 @@
   }
 
   root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
-    infraNivel, infraBonus, infraCusto, upkeepSemanal, comprarInfra, ativarSquad, contratar, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
+    infraNivel, infraBonus, infraCusto, upkeepSemanal, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);
