@@ -89,6 +89,10 @@ S.patro.forEach(x => x.sem = 1); O.avancar(2); ok(S.patro.length === 0, 'patroc�
 O.set(O.novoJogo()); S = O.get(); S.seed = 21; S.org.caixa = 5e6; let viu = false, resolveu = false;
 for (let i = 0; i < 120 && !resolveu; i++) { O.avancar(1); if (S.evento) { viu = true; const r = O.escolherEvento(0); if (r.ok) { resolveu = true; ok(S.evento === null, 'evento resolvido'); } } }
 ok(viu, 'eventos aparecem'); ok(Number.isFinite(S.org.caixa) && Number.isFinite(S.social.seg), 'valores finitos');
+// economia: time sem titulares completos não rende patrocínio; manutenção não multiplica por jogo
+O.set(O.novoJogo()); S = O.get(); ok(O.projecao('cs2').receita === 0, 'sem titulares, sem receita-base');
+S.infra.casa = 3; const up = O.upkeepSemanal(); ok(O.projecaoOrg().despesa === up, 'manutenção cobrada uma vez só (' + up + ')');
+O.set(O.novoJogo()); S = O.get(); S.seed = 5; const cx0 = S.org.caixa; O.avancar(26); ok(S.org.caixa - cx0 < 1.5e6, 'sem elenco o caixa não explode (' + Math.round((S.org.caixa - cx0) / 1000) + 'k)');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

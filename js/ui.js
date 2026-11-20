@@ -26,18 +26,19 @@
 
   /* ---------- Abas ---------- */
   function vOrg() {
-    const S = O.get(), p = O.projecao(UI.game);
+    const S = O.get(), p = O.projecao(UI.game), po = O.projecaoOrg();
     const ev = vEvento();
     const regs = Object.entries(DG() ? DG().leagues : {}).map(([k, v]) => `<option value="${k}" ${k === O.regiaoDe(UI.game) ? 'selected' : ''}>${v.nome} · ${v.regiao}</option>`).join('');
     return ev + `<section class="card"><h2>Sua organização</h2>
       <label class="fld">Nome da org<input id="orgnome" value="${esc(S.org.nome)}" maxlength="24"></label>
       <label class="fld">Região de ${O.GAMES[UI.game].curto} (trocar reinicia as competições deste jogo)<select id="regiao">${regs}</select></label>
-      <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Patrocínios + redes (por semana)</span><b class="pos">${O.money(O.rendaPatro() + O.rendaSocial() - O.custoFoco())}</b></div>
+      <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Patrocínios + redes (por semana)</span><b class="pos">${O.money(O.rendaPatro() + O.rendaSocial())}</b></div>
     </section>
-    <section class="card"><h2>Semana (${O.GAMES[UI.game].curto})</h2>
-      <div class="kv"><span>Receita prevista</span><b class="pos">${O.money(p.receita)}</b></div>
-      <div class="kv"><span>Despesa prevista</span><b class="neg">${O.money(p.despesa)}</b></div>
-      <div class="kv"><span>Saldo</span><b class="${p.saldo >= 0 ? 'pos' : 'neg'}">${O.money(p.saldo)}</b></div>
+    <section class="card"><h2>Semana da org</h2>
+      <div class="kv"><span>Receita prevista</span><b class="pos">${O.money(po.receita)}</b></div>
+      <div class="kv"><span>Despesa prevista</span><b class="neg">${O.money(po.despesa)}</b></div>
+      <div class="kv"><span>Saldo</span><b class="${po.saldo >= 0 ? 'pos' : 'neg'}">${O.money(po.saldo)}</b></div>
+      <div class="kv"><span>Só ${O.GAMES[UI.game].curto}: receita / folha</span><b>${O.money(p.receita)} / ${O.money(p.despesa)}</b></div>
       <div class="row2"><button class="btn" data-act="avancar" data-n="1">Avançar 1 semana</button><button class="btn alt" data-act="avancar" data-n="4">Avançar 4</button></div>
       <button class="btn" style="margin-top:8px" data-act="proximo">Ir até a próxima partida</button>
     </section>

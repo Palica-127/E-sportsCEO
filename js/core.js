@@ -42,7 +42,7 @@
   const PREMIO_PCT = { campeao: 1, vice: 0.5, semi: 0.25, quartas: 0.1 };
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const fee = o => Math.round(15000 * Math.pow(1.3, o - 70) / 1000) * 1000;   // custo de contratação por nota
-  const salary = o => Math.round(fee(o) / 80);                                  // salário semanal
+  const salary = o => Math.round(fee(o) / 50);                                  // salário semanal
   const money = n => {
     const a = Math.abs(n), s = n < 0 ? '-' : '';
     if (a >= 1e6) return s + 'R$ ' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2).replace('.', ',') + ' mi';
@@ -182,14 +182,12 @@
     return { ok: true, msg: 'Decisão tomada.' };
   }
   function semanalOrg() { // roda uma vez por semana, fora dos jogos
-    let r = rendaPatro() + rendaSocial() - custoFoco();
     S.patro.forEach(x => x.sem--); const fim = S.patro.filter(x => x.sem <= 0); S.patro = S.patro.filter(x => x.sem > 0); fim.forEach(x => log(`Patrocínio com ${x.n} terminou`));
     seguidores(1 + 0.002 + 0.0004 * S.org.rep + (S.foco === 'midia' ? 0.02 : 0));
     if (S.buff && --S.buff.sem <= 0) S.buff = null;
     if (++S.ofertaSem >= 6) { S.ofertaSem = 0; S.ofertas = []; ofertas(); }
     if (S.evento && --S.evento.sem <= 0) { S.evento = null; log('Evento expirou sem decisão'); }
     if (!S.evento && rnd() < 0.12) { const e = EVENTOS[Math.floor(rnd() * EVENTOS.length)]; S.evento = { id: e.id, sem: 4 }; log('Novo evento: ' + e.txt); }
-    S.org.caixa += r;
   }
   function renovar(game, sq, slot) {
     const p = S.games[game].squads[sq].slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
@@ -426,25 +424,26 @@
   }
 
   /* ---------- Economia semanal e avanço do tempo ---------- */
-  function projecao(game) { // receita fixa (patrocínio) e despesas semanais dos times ativos do jogo
-    let receita = 0, despesa = upkeepSemanal();
+  function projecao(game) { // receita de patrocínio-base (só de times com titulares completos) e folha do jogo
+    let receita = 0, despesa = 0;
     for (const sq in SQUADS) {
       const q = S.games[game].squads[sq]; if (!q.on) continue;
-      receita += Math.round(25000 * S.org.rep * (sq === 't1' ? 1 : 0.2));
+      if (prontos(game, sq)) receita += Math.round(18000 * S.org.rep * (sq === 't1' ? 1 : 0.2));
       despesa += folha(game, sq);
     }
+    return { receita, despesa, saldo: receita - despesa };
+  }
+  function projecaoOrg() { // total semanal da org: todos os jogos + patrocínios + redes - foco - manutenção
+    let receita = rendaPatro() + rendaSocial(), despesa = upkeepSemanal() + custoFoco();
+    for (const g in GAMES) if (GAMES[g].ativo) { const p = projecao(g); receita += p.receita; despesa += p.despesa; }
     return { receita, despesa, saldo: receita - despesa };
   }
   function avancar(semanas) {
     let jogou = false;
     for (let i = 0; i < semanas; i++) {
-      let r = 0, d = 0;
-      for (const g in GAMES) {
-        if (!GAMES[g].ativo) continue;
-        const p = projecao(g); r += p.receita; d += p.despesa;
-        for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; }
-      }
-      S.org.caixa += r - d; contratos(); semanalOrg();
+      S.org.caixa += projecaoOrg().saldo;
+      for (const g in GAMES) { if (!GAMES[g].ativo) continue; for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; } }
+      contratos(); semanalOrg();
       S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
     }
     save(); return jogou;
@@ -461,6 +460,6 @@
   }
 
   root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
-    infraNivel, infraBonus, infraCusto, upkeepSemanal, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
+    infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);
