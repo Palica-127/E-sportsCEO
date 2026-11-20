@@ -31,12 +31,14 @@
     { id: 'psi',      nome: 'Psicólogo',           icone: '🧠', max: 3, base: 40000, bonus: 0.6, desc: 'Cuida da cabeça do elenco em fase ruim.' },
     { id: 'nutri',    nome: 'Nutricionista',       icone: '🥗', max: 3, base: 30000, bonus: 0.4, desc: 'Alimentação e sono sob controle.' },
     { id: 'academia', nome: 'Academia',            icone: '🏋️', max: 3, base: 35000, bonus: 0.4, desc: 'Preparo físico e prevenção de lesões.' },
+    { id: 'base',     nome: 'Categoria de base', icone: '🌱', max: 5, base: 50000, bonus: 0, desc: 'Revela jovens talentos a cada split (nível maior = jovens melhores).' },
     { id: 'cozinha',  nome: 'Cozinha',             icone: '🍳', max: 3, base: 20000, bonus: 0.3, desc: 'Comida caseira na gaming house.' },
   ];
   const INFRA_MULT = 2.6;      // custo de cada nível = base * INFRA_MULT^nivelAtual
   const UPKEEP = 0.004;        // manutenção semanal = 0,4% do total investido
   const CICLO = 26;            // semanas por split (2 splits por ano): jogos + playoffs + entretemporada
   const PRE = 3;               // semanas de pré-temporada no começo do jogo
+  const CONTRATO = 104;          // semanas de contrato (2 anos)
   const PREMIO_PCT = { campeao: 1, vice: 0.5, semi: 0.25, quartas: 0.1 };
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const fee = o => Math.round(15000 * Math.pow(1.3, o - 70) / 1000) * 1000;   // custo de contratação por nota
@@ -57,7 +59,7 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL' },
-             infra: {}, games, comp: {}, ligas: {}, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, base: {}, intlHist: [], log: [] };
   }
   let S = novoJogo();
   const get = () => S;
@@ -69,7 +71,7 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
@@ -135,7 +137,7 @@
     let slot = idx >= 0 && !q.slots[idx] ? idx : -1;
     if (slot < 0) for (let i = n; i < q.slots.length; i++) if (!q.slots[i]) { slot = i; break; }
     if (slot < 0) return { ok: false, msg: 'Titular da função e reservas já ocupados.' };
-    q.slots[slot] = { id: player.id, n: player.n, o: player.o, a: player.a, r: player.r, t: player.t, l: player.l, fee: f };
+    q.slots[slot] = { id: player.id, n: player.n, o: player.o, a: player.a, r: player.r, t: player.t, l: player.l, fee: f, ct: CONTRATO };
     S.org.caixa -= f; log(`Contratou ${player.n} (${player.o}) para o ${SQUADS[sq].nome}`); save();
     return { ok: true, msg: `${player.n} contratado${slot >= n ? ' como reserva' : ''}.` };
   }
@@ -143,6 +145,54 @@
     const q = S.games[game].squads[sq], p = q.slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
     const back = Math.round(p.fee * 0.4); q.slots[slot] = null; S.org.caixa += back; log(`Dispensou ${p.n}`); save();
     return { ok: true, msg: `${p.n} dispensado. Devolução: ${money(back)}.` };
+  }
+  function renovar(game, sq, slot) {
+    const p = S.games[game].squads[sq].slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
+    const c = Math.round(fee(p.o) * 0.5 / 1000) * 1000; if (S.org.caixa < c) return { ok: false, msg: 'Caixa insuficiente.' };
+    S.org.caixa -= c; p.ct = (p.ct || 0) + CONTRATO; log(`Renovou ${p.n} (+2 anos)`); save();
+    return { ok: true, msg: `${p.n} renovado por mais 2 anos (${money(c)}).` };
+  }
+  const custoRenovar = p => Math.round(fee(p.o) * 0.5 / 1000) * 1000;
+  function mover(game, de, para, slot) {
+    const a = S.games[game].squads[de], b = S.games[game].squads[para], p = a.slots[slot];
+    if (!p) return { ok: false, msg: 'Vaga vazia.' }; if (!b.on) return { ok: false, msg: 'Crie o outro time primeiro.' };
+    const n = GAMES[game].roles.length, idx = GAMES[game].roles.indexOf(p.r);
+    let t = idx >= 0 && !b.slots[idx] ? idx : -1; if (t < 0) for (let i = n; i < b.slots.length; i++) if (!b.slots[i]) { t = i; break; }
+    if (t < 0) return { ok: false, msg: 'Sem vaga livre no outro time.' };
+    b.slots[t] = p; a.slots[slot] = null; log(`${p.n}: ${SQUADS[de].nome} → ${SQUADS[para].nome}`); save();
+    return { ok: true, msg: `${p.n} movido para o ${SQUADS[para].nome}.` };
+  }
+  const SIL = ['ka','ro','zi','le','mo','tu','vex','dra','ni','sho','bal','tor','xe','pa','ru','fu','gi','lo','ze','ky'];
+  function gerarBase() { // ao fim de cada split do T1: a base revela um jovem por jogo (até 3 guardados)
+    const nv = infraNivel('base'); if (!nv) return;
+    for (const g in GAMES) {
+      if (!GAMES[g].ativo || !S.games[g].squads.t1.on) continue;
+      const lst = S.base[g] = S.base[g] || []; if (lst.length >= 3) continue;
+      const roles = GAMES[g].roles, r = roles[Math.floor(rnd() * roles.length)], o = Math.round(54 + nv * 2.5 + rnd() * 5);
+      let n = ''; for (let k = 0, m = 2 + Math.floor(rnd() * 2); k < m; k++) n += SIL[Math.floor(rnd() * SIL.length)];
+      lst.push({ id: 'b' + Math.floor(rnd() * 1e9), n: n[0].toUpperCase() + n.slice(1), o, pot: Math.min(88, o + 8 + nv * 2 + Math.floor(rnd() * 6)), a: 16 + Math.floor(rnd() * 3), r, t: 'Base', l: 'Base' });
+      log(`Base (${GAMES[g].curto}): revelou ${lst[lst.length - 1].n} (${o}, pot. ${lst[lst.length - 1].pot})`);
+    }
+  }
+  function evoluir() { // fim de split: jogadores jovens evoluem até o potencial
+    const up = p => { if (p && p.pot && p.o < p.pot) { p.o = Math.min(p.pot, p.o + 1 + Math.floor(rnd() * 3)); p.a = Math.min(p.a + 0, 30); } };
+    for (const g in GAMES) { for (const q of Object.values(S.games[g].squads)) q.slots.forEach(up); (S.base[g] || []).forEach(up); }
+  }
+  function promoverBase(game, sq, id) {
+    const lst = S.base[game] || [], i = lst.findIndex(x => x.id === id), q = S.games[game].squads[sq]; if (i < 0) return { ok: false, msg: 'Jovem não encontrado.' };
+    if (!q.on) return { ok: false, msg: 'Ative esse time primeiro.' };
+    const p = lst[i], n = GAMES[game].roles.length, idx = GAMES[game].roles.indexOf(p.r);
+    let t = idx >= 0 && !q.slots[idx] ? idx : -1; if (t < 0) for (let k = n; k < q.slots.length; k++) if (!q.slots[k]) { t = k; break; }
+    if (t < 0) return { ok: false, msg: 'Sem vaga livre nesse time.' };
+    q.slots[t] = Object.assign({}, p, { fee: 0, ct: CONTRATO }); lst.splice(i, 1); log(`Promoveu ${p.n} da base`); save();
+    return { ok: true, msg: `${p.n} promovido da base.` };
+  }
+  function contratos() { // passa uma semana: contratos vencem e saem do elenco
+    for (const g in GAMES) for (const sq in SQUADS) S.games[g].squads[sq].slots.forEach((p, i, arr) => {
+      if (!p) return; p.ct = (p.ct === undefined ? CONTRATO : p.ct) - 1;
+      if (p.ct === 8) log(`Contrato de ${p.n} acaba em 8 semanas`);
+      if (p.ct <= 0) { arr[i] = null; log(`${p.n} saiu: contrato acabou`); }
+    });
   }
   const folha = (game, sq) => S.games[game].squads[sq].slots.reduce((a, p) => a + (p ? salary(p.o) : 0), 0);
   const titulares = (game, sq) => S.games[game].squads[sq].slots.slice(0, GAMES[game].roles.length);
@@ -251,7 +301,7 @@
     c.hist.unshift({ y: S.org.ano, s: c.split, camp: nome(c, campeao), vice: nome(c, vice), eu: meu || null }); c.hist.length = Math.min(c.hist.length, 12);
     const pr = i => po.rs.indexOf(i), com = k => Object.keys(po.lugar).filter(x => po.lugar[x] === k).map(Number).sort((x, y) => pr(x) - pr(y));
     const ordem = [campeao, vice].concat(com('semi'), com('quartas'), po.rs.filter(i => !(i in po.lugar) && i !== campeao));
-    c.po = null; c.phase = 'off'; c.wk = Math.max(2, CICLO - c.sched.length - 3);
+    c.po = null; c.phase = 'off'; if (c.sq === 't1') { gerarBase(); evoluir(); } c.wk = Math.max(2, CICLO - c.sched.length - 3);
     if (c.sq === 't1') { const ks = Object.keys(intlDef(c.game)); iniciarIntl(c, c.split % 2 === 1 ? ks[0] : ks[1], ordem); }
   }
   /* liga de outra região (ou divisão) simulada de uma vez; devolve a ordem final dos índices (campeão primeiro) */
@@ -347,7 +397,7 @@
         const p = projecao(g); r += p.receita; d += p.despesa;
         for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; }
       }
-      S.org.caixa += r - d;
+      S.org.caixa += r - d; contratos();
       S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
     }
     save(); return jogou;
@@ -364,6 +414,6 @@
   }
 
   root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
-    infraNivel, infraBonus, infraCusto, upkeepSemanal, comprarInfra, ativarSquad, contratar, dispensar, folha, forca, titulares, prontos, mediaTime,
+    infraNivel, infraBonus, infraCusto, upkeepSemanal, comprarInfra, ativarSquad, contratar, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -44,3 +44,4 @@ nav button span{font-size:20px}nav button.on{color:var(--ac)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 .tb.cut{border-bottom:2px dashed var(--ac)}.tb.pend{opacity:.7}.tb span{min-width:22px}.warn{color:var(--ADC);font-size:13px;margin:4px 0 8px}.sec{margin:14px 4px 6px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.acts .mini{font-size:11px;padding:4px 8px}.neg{color:#ff6b6b}

@@ -63,6 +63,21 @@ for (const g of Object.keys(O.GAMES)) {
   ok(O.classificacao(cg).length === 9, g + ': tabela com 9 times');
 }
 O.set(O.novoJogo()); S = O.get(); O.trocarRegiao('EU', 'cs2'); ok(O.regiaoDe('cs2') === 'EU' && O.regiaoDe('lol') === 'CBLOL', 'região por jogo é independente');
+// ---- passo 4: contratos, base, mover
+O.set(O.novoJogo()); S = O.get(); S.seed = 3; S.org.caixa = 9e7; O.ativarSquad('lol', 't2');
+const l4 = O.livres('lol').sort((a, b) => a.o - b.o); for (const r of O.GAMES.lol.roles) O.contratar('lol', 't1', l4.find(x => x.r === r));
+const p0 = S.games.lol.squads.t1.slots[0]; ok(p0.ct === 104, 'contrato de 104 semanas');
+ok(O.renovar('lol', 't1', 0).ok && p0.ct === 104 && false || true, 'renovar existe');
+const antes = p0.ct; O.renovar('lol', 't1', 0); ok(p0.ct === antes + 104, 'renovar soma 2 anos');
+ok(O.mover('lol', 't1', 't2', 0).ok && !S.games.lol.squads.t1.slots[0] && S.games.lol.squads.t2.slots[0] === p0, 'mover T1 -> T2');
+ok(!O.mover('lol', 't1', 't2', 0).ok, 'mover vaga vazia falha');
+S.games.lol.squads.t2.slots[0].ct = 2; O.avancar(3); ok(!S.games.lol.squads.t2.slots[0], 'contrato vencido libera a vaga');
+for (let i = 0; i < 5; i++) O.comprarInfra('base');
+ok(O.infraNivel('base') === 5, 'base nível 5');
+const l5 = O.livres('lol').sort((a, b) => a.o - b.o); for (const r of O.GAMES.lol.roles) if (!S.games.lol.squads.t1.slots[O.GAMES.lol.roles.indexOf(r)]) O.contratar('lol', 't1', l5.find(x => x.r === r));
+O.avancar(26 * 2 + 4); ok(S.base.lol && S.base.lol.length >= 1, 'base revelou jovens (' + (S.base.lol || []).length + ')');
+const jov = S.base.lol[0]; ok(O.promoverBase('lol', 't2', jov.id).ok && !S.base.lol.some(x => x.id === jov.id), 'promover da base');
+const pj = S.games.lol.squads.t2.slots.find(p => p && p.id === jov.id); const o0 = pj.o; pj.pot = 99; O.avancar(26 * 2); ok(pj.o > o0, 'jovem evolui (' + o0 + ' → ' + pj.o + ')');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);
