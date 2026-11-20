@@ -4,6 +4,8 @@ Jogo de gerenciamento de uma organização de esports, em site estático (sem bu
 
 **Layout:** feito principalmente para PC (barra lateral + cards em colunas a partir de 900px) e também funciona no celular.
 
+**Começo de jogo:** você cria a org (nome e logo), escolhe UM jogo e região para começar e tenta convencer uma estrela a assinar (3 convites; a chance cai com a nota: ~87% na 70, ~22% na 80, ~1% na 91). Os outros jogos abrem com o tempo (o 1º após 26 semanas, o 2º após 52...) pagando licença.
+
 ## O que já tem (esqueleto)
 - **Org**: caixa, reputação, semana/ano, região (liga de origem), avançar 1 ou 4 semanas, histórico.
 - **Jogos**: os 8 estão ativos (LoL, CS2, Dota 2, Valorant, Free Fire, Rainbow Six Siege, EA FC, Wild Rift), cada um com elenco e funções próprias (ex.: Free Fire 4+2, EA FC 1+1) e 3 regiões com T1 e T2, liga, playoffs e 2 torneios internacionais por ano. LoL usa dados do BrasLOL (`tools/gen_lol.py`). Nos outros jogos os nomes das orgs são reais (aproximados), mas **jogadores, notas e idades são gerados/fictícios** (`tools/gen_outros.py`). Cada jogo tem sua própria região.

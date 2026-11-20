@@ -93,6 +93,21 @@ ok(viu, 'eventos aparecem'); ok(Number.isFinite(S.org.caixa) && Number.isFinite(
 O.set(O.novoJogo()); S = O.get(); ok(O.projecao('cs2').receita === 0, 'sem titulares, sem receita-base');
 S.infra.casa = 3; const up = O.upkeepSemanal(); ok(O.projecaoOrg().despesa === up, 'manutenção cobrada uma vez só (' + up + ')');
 O.set(O.novoJogo()); S = O.get(); S.seed = 5; const cx0 = S.org.caixa; O.avancar(26); ok(S.org.caixa - cx0 < 1.5e6, 'sem elenco o caixa não explode (' + Math.round((S.org.caixa - cx0) / 1000) + 'k)');
+// ---- começo de jogo: logo, jogo inicial, estrela
+O.comecar(); S = O.get(); ok(S.setup === 'config', 'novo jogo começa no assistente');
+ok(O.iniciar({ nome: 'Pantera', logo: { s: '🦅', c: '#fff', f: 'hex' }, game: 'cs2', regiao: 'AM' }).ok && S.setup === 'estrela', 'cria org com CS2');
+ok(S.org.nome === 'Pantera' && S.org.logo.s === '🦅' && O.regiaoDe('cs2') === 'AM', 'nome, logo e região salvos');
+ok(S.games.cs2.squads.t1.on && !S.games.lol.squads.t1.on && !O.aberto('lol'), 'só o jogo inicial começa aberto');
+ok(O.chanceEstrela(91) < 0.02 && O.chanceEstrela(60) > 0.95 && O.chanceEstrela(80) > 0.15 && O.chanceEstrela(80) < 0.3, 'chances: 91 <2%, 60 >95%, 80 ~22%');
+const top = O.pool('cs2').sort((a, b) => b.o - a.o)[0], baixo = O.pool('cs2').sort((a, b) => a.o - b.o)[0];
+S.org.caixa = 9e6; let aceitou = 0; for (let i = 0; i < 400; i++) { S.setup = 'estrela'; S.tent = 1; S.games.cs2.squads.t1.slots.fill(null); S.org.caixa = 9e6; if (O.convidarEstrela(top).ok) aceitou++; }
+ok(aceitou < 40, 'astro raramente aceita (' + aceitou + '/400)');
+O.comecar(); S = O.get(); O.iniciar({ nome: 'A', game: 'cs2', regiao: 'AM' }); S.tent = 0; ok(!O.convidarEstrela(top).ok, 'sem convites, astro não é aceito');
+const r0 = O.convidarEstrela(baixo); ok(r0.ok && S.setup === null && S.estrela && S.games.cs2.squads.t1.slots.some(p => p && p.estrela), 'jogador acessível aceita sempre (' + baixo.n + ')');
+ok(!O.dispensar('cs2', 't1', S.games.cs2.squads.t1.slots.findIndex(p => p && p.estrela)).ok, 'estrela não pode ser dispensada');
+ok(!O.abrirJogo('lol').ok && !O.ativarSquad('lol', 't2').ok, 'jogo trancado não abre antes da hora');
+S.org.caixa = 5e6; O.avancar(26); ok(O.abrirJogo('lol').ok && S.games.lol.squads.t1.on, 'primeiro jogo extra abre após 26 semanas (custa licença)');
+ok(O.desbloqueio('lol').sem === 26 && O.desbloqueio('wr').sem > 26, 'desbloqueios escalonados');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

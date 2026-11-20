@@ -14,7 +14,7 @@
     fifa:     { id: 'fifa',     nome: 'EA FC (FIFA)',        curto: 'EA FC',    icone: '⚽', get ativo() { return !!dataOf(this.id); }, subs: 1, roles: ['JOG'] },
     wr:       { id: 'wr',       nome: 'Wild Rift',           curto: 'Wild Rift', icone: '📱', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['TOP', 'JNG', 'MID', 'ADC', 'SUP'] },
   };
-  const dataOf = g => g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null;
+  const dataOf = g => { const d = g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null; if (d && !d.inicio) d.inicio = d.leagues.CBLOL ? 'CBLOL' : Object.keys(d.leagues)[0]; return d; };
   const slotsDe = g => GAMES[g].roles.length + GAMES[g].subs;
   /* premio = bolsa do campeonato do nível; licenca = custo para criar o time */
   const SQUADS = {
@@ -58,7 +58,7 @@
       const mk = () => ({ on: false, slots: Array(slotsDe(g)).fill(null) });
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
-    return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL' },
+    return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
              infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, evento: null, intlHist: [], log: [] };
   }
   let S = novoJogo();
@@ -71,13 +71,48 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
     return false;
   }
-  function reset() { S = novoJogo(); save(); }
+  function reset() { comecar(); }
+  /* ---------- Começo de jogo: logo, nome, jogo inicial e estrela ---------- */
+  const aberto = g => S.games[g].aberto !== false;
+  const desbloqueio = g => { const i = Math.max(0, S.ordem.indexOf(g)); return { sem: 26 * (i + 1), custo: 150000 * (i + 1) }; };
+  function comecar() { S = novoJogo(); S.setup = 'config'; save(); }
+  function iniciar(cfg) { // passo de configuração: nome, logo, jogo inicial e região
+    const g = cfg.game; if (!GAMES[g] || !GAMES[g].ativo) return { ok: false, msg: 'Jogo inválido.' };
+    S.org.nome = (cfg.nome || '').trim().slice(0, 24) || 'Minha Org'; S.org.logo = cfg.logo || S.org.logo; S.org.caixa = 600000;
+    const reg = cfg.regiao && dataOf(g).leagues[cfg.regiao] ? cfg.regiao : dataOf(g).inicio;
+    S.inicio = g; if (g === 'lol') S.org.regiao = reg; else S.games[g].regiao = reg;
+    S.ordem = Object.keys(GAMES).filter(x => x !== g);
+    for (const x in GAMES) { S.games[x].aberto = x === g; S.games[x].squads.t1.on = x === g; }
+    S.setup = 'estrela'; S.tent = 3; save(); return { ok: true, msg: 'Org criada.' };
+  }
+  const chanceEstrela = o => Math.max(0.003, 1 / (1 + Math.exp((o - 76) / 3.2))); // nota 70: 87%, 80: 22%, 85: 5%, 91: 1%
+  function convidarEstrela(p) {
+    if (S.setup !== 'estrela') return { ok: false, msg: 'Fora da hora.' };
+    const f = fee(p.o), ch = chanceEstrela(p.o); // estrela entra sem taxa de contratação, por 40% do salário (acredita no projeto)
+    if (S.tent <= 0) { if (ch < 0.8) return { ok: false, msg: 'Sem tentativas: escolha alguém mais acessível.' }; }
+    else { S.tent--; if (rnd() >= ch) {
+      const t = ch < 0.03 ? [`${p.n} riu e desligou a chamada.`, `${p.n} nem respondeu: sua org ainda não existe pro mundo.`, `${p.n}: "quando vocês forem campeões, a gente conversa."`]
+        : ch < 0.3 ? [`${p.n} recusou: prefere um projeto mais estabelecido.`, `${p.n} recusou: já tem proposta melhor.`] : [`${p.n} recusou: a proposta não bateu.`, `${p.n} pediu mais tempo e acabou recusando.`];
+      save(); return { ok: false, recusou: true, msg: t[Math.floor(rnd() * t.length)] }; } }
+    S.org.caixa += f; const r = contratar(S.inicio, 't1', p); S.org.caixa -= f; if (!r.ok) return r;
+    const sl = S.games[S.inicio].squads.t1.slots.find(x => x && x.id === p.id); sl.estrela = true; sl.fee = 0;
+    S.estrela = { id: p.id, n: p.n, o: p.o }; S.social.seg = 5000 + Math.max(0, p.o - 55) * 500; S.org.rep += Math.max(0, (p.o - 70) / 40);
+    S.setup = null; log(`${p.n} aceitou ser a estrela da org!`); save();
+    return { ok: true, msg: `${p.n} aceitou ser a estrela da ${S.org.nome}!` };
+  }
+  function semEstrela() { if (S.setup === 'estrela') { S.setup = null; save(); } return { ok: true, msg: 'Começando sem estrela.' }; }
+  function abrirJogo(g) {
+    if (aberto(g)) return { ok: false, msg: 'Já aberto.' }; const d = desbloqueio(g);
+    if (S.tempo < d.sem) return { ok: false, msg: `Disponível em ${d.sem - S.tempo} semanas.` }; if (S.org.caixa < d.custo) return { ok: false, msg: 'Caixa insuficiente.' };
+    S.org.caixa -= d.custo; S.games[g].aberto = true; S.games[g].squads.t1.on = true; log(`Abriu o time de ${GAMES[g].curto}`); save();
+    return { ok: true, msg: `Time de ${GAMES[g].nome} aberto!` };
+  }
   function log(msg) { S.log.unshift(`S${S.org.semana}/${S.org.ano}: ${msg}`); S.log.length = Math.min(S.log.length, 40); }
   function rnd() { // mulberry32 com estado salvo no jogo (resultados reproduzíveis)
     let t = (S.seed = (S.seed + 0x6D2B79F5) | 0);
@@ -124,6 +159,7 @@
   }
   function ativarSquad(game, sq) {
     const q = S.games[game].squads[sq], d = SQUADS[sq];
+    if (!aberto(game)) return { ok: false, msg: 'Abra este jogo primeiro.' };
     if (q.on) return { ok: false, msg: 'Já ativo.' };
     if (d.semDados) return { ok: false, msg: 'Ainda sem dados desta divisão.' };
     if (S.org.caixa < d.licenca) return { ok: false, msg: 'Caixa insuficiente.' };
@@ -143,6 +179,7 @@
   }
   function dispensar(game, sq, slot) {
     const q = S.games[game].squads[sq], p = q.slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
+    if (p.estrela) return { ok: false, msg: 'A estrela da org não pode ser dispensada.' };
     const back = Math.round(p.fee * 0.4); q.slots[slot] = null; S.org.caixa += back; log(`Dispensou ${p.n}`); save();
     return { ok: true, msg: `${p.n} dispensado. Devolução: ${money(back)}.` };
   }
@@ -160,7 +197,7 @@
   const rendaSocial = () => Math.round(S.social.seg * 0.02);
   const custoFoco = () => S.foco === 'midia' ? 3000 : 0;
   function ofertas() {
-    if (!S.ofertas.length) S.ofertas = [0, 1, 2].map(() => ({ id: 'p' + Math.floor(rnd() * 1e9), n: MARCAS[Math.floor(rnd() * MARCAS.length)], pay: Math.round(8000 * Math.pow(S.org.rep, 1.2) * (0.8 + rnd() * 0.6) / 500) * 500, sem: [26, 52, 78][Math.floor(rnd() * 3)] }));
+    if (!S.ofertas.length) S.ofertas = [0, 1, 2].map(() => ({ id: 'p' + Math.floor(rnd() * 1e9), n: MARCAS[Math.floor(rnd() * MARCAS.length)], pay: Math.round(8000 * Math.pow(S.org.rep, 1.2) * (1 + (S.estrela ? Math.max(0, S.estrela.o - 70) / 100 : 0)) * (0.8 + rnd() * 0.6) / 500) * 500, sem: [26, 52, 78][Math.floor(rnd() * 3)] }));
     return S.ofertas;
   }
   const rendaPatro = () => S.patro.reduce((a, x) => a + x.pay, 0);
@@ -183,7 +220,7 @@
   }
   function semanalOrg() { // roda uma vez por semana, fora dos jogos
     S.patro.forEach(x => x.sem--); const fim = S.patro.filter(x => x.sem <= 0); S.patro = S.patro.filter(x => x.sem > 0); fim.forEach(x => log(`Patrocínio com ${x.n} terminou`));
-    seguidores(1 + 0.002 + 0.0004 * S.org.rep + (S.foco === 'midia' ? 0.02 : 0));
+    seguidores(1 + 0.002 + 0.0004 * S.org.rep + (S.estrela ? Math.max(0, S.estrela.o - 60) * 0.00004 : 0) + (S.foco === 'midia' ? 0.02 : 0));
     if (S.buff && --S.buff.sem <= 0) S.buff = null;
     if (++S.ofertaSem >= 6) { S.ofertaSem = 0; S.ofertas = []; ofertas(); }
     if (S.evento && --S.evento.sem <= 0) { S.evento = null; log('Evento expirou sem decisão'); }
@@ -234,10 +271,11 @@
     for (const g in GAMES) for (const sq in SQUADS) S.games[g].squads[sq].slots.forEach((p, i, arr) => {
       if (!p) return; p.ct = (p.ct === undefined ? CONTRATO : p.ct) - 1;
       if (p.ct === 8) log(`Contrato de ${p.n} acaba em 8 semanas`);
-      if (p.ct <= 0) { arr[i] = null; log(`${p.n} saiu: contrato acabou`); }
+      if (p.ct <= 0) { if (p.estrela) S.estrela = null; arr[i] = null; log(`${p.n} saiu: contrato acabou`); }
     });
   }
-  const folha = (game, sq) => S.games[game].squads[sq].slots.reduce((a, p) => a + (p ? salary(p.o) : 0), 0);
+  const salarioDe = p => Math.round(salary(p.o) * (p.estrela ? 0.4 : 1));
+  const folha = (game, sq) => S.games[game].squads[sq].slots.reduce((a, p) => a + (p ? salarioDe(p) : 0), 0);
   const titulares = (game, sq) => S.games[game].squads[sq].slots.slice(0, GAMES[game].roles.length);
   const prontos = (game, sq) => { const q = S.games[game].squads[sq]; return q.on && titulares(game, sq).every(Boolean); };
   function forca(game, sq) { // média dos titulares (vaga vazia vale 55) + bônus da estrutura
@@ -443,7 +481,7 @@
     for (let i = 0; i < semanas; i++) {
       S.org.caixa += projecaoOrg().saldo;
       for (const g in GAMES) { if (!GAMES[g].ativo) continue; for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; } }
-      contratos(); semanalOrg();
+      contratos(); semanalOrg(); S.tempo++;
       S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
     }
     save(); return jogou;
@@ -460,6 +498,6 @@
   }
 
   root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
-    infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
+    infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -14,13 +14,47 @@
   }
   const res = r => { toast(r.msg); render(); };
 
+  const SIMBOLOS = ['🐺', '🦅', '🐉', '🦁', '🐍', '🦈', '🐻', '🦊', '🔥', '⚡', '👑', '💀', '🚀', '🌊', '⭐', '🛡️', '⚔️', '🎯', '🧠', '🌋'];
+  const CORES = ['#7c8cff', '#ef6b57', '#4cc38a', '#f0a53c', '#b077f0', '#5aa0ff', '#ff6fa8', '#e9edf5', '#22d3ee', '#a3e635'];
+  const FORMAS = [['escudo', 'Escudo'], ['circulo', 'Círculo'], ['hex', 'Hexágono'], ['quad', 'Quadrado']];
+  const logo = (l, sz) => `<span class="logo f-${l.f}" style="--c:${l.c};--sz:${sz || 40}px">${l.s}</span>`;
+  function logoEditor(l) {
+    return `<div class="lg-prev">${logo(l, 72)}</div><div class="chips">${SIMBOLOS.map(x => `<button class="chip sym ${l.s === x ? 'on' : ''}" data-act="lg" data-k="s" data-id="${x}">${x}</button>`).join('')}</div>`
+      + `<div class="chips">${CORES.map(c => `<button class="chip cor ${l.c === c ? 'on' : ''}" style="background:${c}" data-act="lg" data-k="c" data-id="${c}" aria-label="cor ${c}"></button>`).join('')}</div>`
+      + `<div class="chips">${FORMAS.map(([f, n]) => `<button class="chip ${l.f === f ? 'on' : ''}" data-act="lg" data-k="f" data-id="${f}">${n}</button>`).join('')}</div>`;
+  }
+  const SU = { step: 1, nome: '', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' }, game: 'lol', regiao: null, role: '', q: '', n: 24 };
+  function vSetup() {
+    const S = O.get();
+    if (S.setup === 'config') {
+      if (SU.step === 1) return `<section class="card wiz"><h2>Crie sua organização</h2><label class="fld">Nome da org<input id="su-nome" value="${esc(SU.nome)}" maxlength="24" placeholder="Ex.: Pantera Esports"></label>${logoEditor(SU.logo)}<button class="btn" style="margin-top:12px" data-act="su-next">Continuar</button></section>`;
+      const gs = Object.values(O.GAMES), D = O.dataOf(SU.game), regs = Object.entries(D.leagues);
+      if (!SU.regiao || !D.leagues[SU.regiao]) SU.regiao = D.inicio;
+      return `<section class="card wiz"><h2>${logo(SU.logo, 34)} ${esc(SU.nome || 'Sua org')}: onde começar?</h2><p class="hint">Você começa em UM jogo. Os outros vão abrindo com o tempo (e custam licença).</p>
+        <div class="chips">${gs.map(g => `<button class="chip ${SU.game === g.id ? 'on' : ''}" data-act="su-game" data-id="${g.id}">${g.icone} ${g.curto}</button>`).join('')}</div>
+        <h3>Região</h3><div class="chips">${regs.map(([k, v]) => `<button class="chip ${SU.regiao === k ? 'on' : ''}" data-act="su-reg" data-id="${k}">${v.nome}</button>`).join('')}</div>
+        <div class="row2"><button class="btn alt" data-act="su-back">Voltar</button><button class="btn" data-act="su-go">Criar org</button></div></section>`;
+    }
+    // estrela
+    const g = S.inicio, roles = O.GAMES[g].roles; let lista = O.pool(g).slice().sort((a, b) => b.o - a.o);
+    if (SU.role) lista = lista.filter(p => p.r === SU.role); if (SU.q) lista = lista.filter(p => p.n.toLowerCase().includes(SU.q.toLowerCase()));
+    if (S.tent <= 0) lista = lista.filter(p => O.chanceEstrela(p.o) >= 0.8);
+    const pc = c => c >= 0.995 ? '100%' : c < 0.01 ? '<1%' : Math.round(c * 100) + '%';
+    return `<section class="card wiz"><h2>⭐ Escolha a estrela da org</h2><p class="hint">Um jogador famoso vira a cara da ${esc(S.org.nome)}: dá seguidores, reputação e patrocínios melhores. Quem aceita entra sem taxa de contratação e por 40% do salário (acredita no projeto), mas jogador bom costuma recusar org nova. ${S.tent > 0 ? `Você tem <b>${S.tent}</b> convite(s) (cada recusa gasta um).` : 'Convites acabaram: só aceitam os mais acessíveis.'} </p>
+      <div class="chips"><button class="chip ${!SU.role ? 'on' : ''}" data-act="su-role" data-id="">Todas</button>${roles.map(r => `<button class="chip ${SU.role === r ? 'on' : ''}" data-act="su-role" data-id="${r}">${r}</button>`).join('')}</div>
+      <input id="su-q" placeholder="Buscar jogador" value="${esc(SU.q)}"><button class="btn ghost" style="margin-top:8px" data-act="su-sem">Começar sem estrela</button></section>`
+      + `<section class="card"><h2>${lista.length} jogadores</h2>` + lista.slice(0, SU.n).map(p => { const ch = O.chanceEstrela(p.o), f = O.fee(p.o);
+        return `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · aceita: ${pc(ch)}</small></div><span class="ovr">${p.o}</span><button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
+      + (lista.length > SU.n ? '<button class="btn alt" data-act="su-mais">Mostrar mais</button>' : '') + '</section>';
+  }
   const DG = () => O.dataOf(UI.game);
   /* ---------- Cabeçalho ---------- */
   function header() {
     const S = O.get();
-    $('top').innerHTML = `<div class="top-l"><b>${esc(S.org.nome)}</b><span>Semana ${S.org.semana} · ${S.org.ano}</span></div><div class="cash">${O.money(S.org.caixa)}</div>`;
+    const pre = S.setup === 'config'; $('top').innerHTML = `${logo(pre ? SU.logo : S.org.logo, 38)}<div class="top-l"><b>${esc(pre ? (SU.nome || 'Sua org') : S.org.nome)}</b><span>Semana ${S.org.semana} · ${S.org.ano}</span></div><div class="cash">${O.money(S.org.caixa)}</div>`;
+    document.body.classList.toggle('setup', !!S.setup);
     $('games').innerHTML = Object.values(O.GAMES).map(g =>
-      `<button class="chip ${g.id === UI.game ? 'on' : ''}" data-act="game" data-id="${g.id}" ${g.ativo ? '' : 'aria-disabled="true"'}>${g.icone} ${g.curto}${g.ativo ? '' : ' <i>em breve</i>'}</button>`).join('');
+      `<button class="chip ${g.id === UI.game ? 'on' : ''}" data-act="game" data-id="${g.id}">${g.icone} ${g.curto}${O.aberto(g.id) ? '' : ' 🔒'}</button>`).join('');
     $('nav').innerHTML = TABS.map(([id, ic, nm]) => `<button class="${id === UI.tab ? 'on' : ''}" data-act="tab" data-id="${id}"><span>${ic}</span>${nm}</button>`).join('');
   }
 
@@ -29,10 +63,10 @@
     const S = O.get(), p = O.projecao(UI.game), po = O.projecaoOrg();
     const ev = vEvento();
     const regs = Object.entries(DG() ? DG().leagues : {}).map(([k, v]) => `<option value="${k}" ${k === O.regiaoDe(UI.game) ? 'selected' : ''}>${v.nome} · ${v.regiao}</option>`).join('');
-    return ev + `<section class="card"><h2>Sua organização</h2>
+    return ev + `<section class="card"><h2>Sua organização</h2>${S.estrela ? `<p class="hint">⭐ Estrela: <b>${esc(S.estrela.n)}</b> (${S.estrela.o})</p>` : ''}
       <label class="fld">Nome da org<input id="orgnome" value="${esc(S.org.nome)}" maxlength="24"></label>
       <label class="fld">Região de ${O.GAMES[UI.game].curto} (trocar reinicia as competições deste jogo)<select id="regiao">${regs}</select></label>
-      <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Patrocínios + redes (por semana)</span><b class="pos">${O.money(O.rendaPatro() + O.rendaSocial())}</b></div>
+      <details><summary class="hint">Editar logo</summary>${logoEditor(S.org.logo)}</details><div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Patrocínios + redes (por semana)</span><b class="pos">${O.money(O.rendaPatro() + O.rendaSocial())}</b></div>
     </section>
     <section class="card"><h2>Semana da org</h2>
       <div class="kv"><span>Receita prevista</span><b class="pos">${O.money(po.receita)}</b></div>
@@ -52,6 +86,10 @@
     return `<div class="chips">${SQ_IDS.map(id => `<button class="chip ${id === UI.squad ? 'on' : ''}" data-act="squad" data-id="${id}">${O.SQUADS[id].nome.replace(/ \(.*\)/, '')}${S.games[UI.game].squads[id].on ? '' : ' 🔒'}</button>`).join('')}</div>`;
   }
   function gameGuard() {
+    const S = O.get();
+    if (!O.aberto(UI.game)) { const d = O.desbloqueio(UI.game), falta = d.sem - S.tempo, G = O.GAMES[UI.game];
+      return `<section class="card empty"><h2>🔒 ${G.icone} ${G.nome}</h2><p>Você começou em outro jogo. Abrir um time aqui custa ${O.money(d.custo)}${falta > 0 ? ` e fica disponível em ${falta} semana(s).` : ' e já está disponível.'}</p>`
+        + `<button class="btn" data-act="abrirjogo" ${falta > 0 || S.org.caixa < d.custo ? 'disabled' : ''}>Abrir time de ${G.curto}</button></section>`; }
     if (O.GAMES[UI.game].ativo) return '';
     return `<section class="card empty"><h2>${O.GAMES[UI.game].icone} ${O.GAMES[UI.game].nome}</h2><p>Sem dados para este jogo.</p></section>`;
   }
@@ -68,7 +106,7 @@
       <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
       const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
-      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div><span class="ovr">${p.o}</span><button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`
+      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div><span class="ovr">${p.o}</span>${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     const bs = (S.base || {})[UI.game] || [];
@@ -154,12 +192,23 @@
 
   /* ---------- Render e eventos ---------- */
   const VIEWS = { negocios: vNegocios, org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas };
-  function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = VIEWS[UI.tab](); $('main').scrollTop = sc; }
+  function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = O.get().setup ? vSetup() : VIEWS[UI.tab](); $('main').scrollTop = sc; }
 
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
-    if (a === 'tab') { UI.tab = id; UI.resetArm = false; $('main').scrollTop = 0; render(); }
+    if (a === 'lg') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l[b.dataset.k] = id; O.save(); render(); }
+    else if (a === 'su-next') { SU.nome = ($('su-nome') || {}).value || SU.nome; SU.step = 2; render(); }
+    else if (a === 'su-back') { SU.step = 1; render(); }
+    else if (a === 'su-game') { SU.game = id; SU.regiao = null; render(); }
+    else if (a === 'su-reg') { SU.regiao = id; render(); }
+    else if (a === 'su-go') { const r = O.iniciar({ nome: SU.nome, logo: SU.logo, game: SU.game, regiao: SU.regiao }); UI.game = SU.game; UI.squad = 't1'; res(r); }
+    else if (a === 'su-role') { SU.role = id; SU.n = 24; render(); }
+    else if (a === 'su-mais') { SU.n += 24; render(); }
+    else if (a === 'su-sem') { res(O.semEstrela()); UI.tab = 'org'; }
+    else if (a === 'su-convite') { const p = O.pool(S.inicio).find(x => x.id === id); if (p) { const r = O.convidarEstrela(p); res(r); if (r.ok) UI.tab = 'org'; } }
+    else if (a === 'abrirjogo') res(O.abrirJogo(UI.game));
+    else if (a === 'tab') { UI.tab = id; UI.resetArm = false; $('main').scrollTop = 0; render(); }
     else if (a === 'game') { UI.game = id; UI.ligaVer = null; UI.aberto = null; UI.mk = { role: '', liga: '', q: '', n: 30, pay: false, asc: false }; render(); }
     else if (a === 'squad') { UI.squad = id; render(); }
     else if (a === 'ativar') res(O.ativarSquad(UI.game, UI.squad));
@@ -180,7 +229,7 @@
     else if (a === 'mais') { UI.mk.n += 30; render(); }
     else if (a === 'liga') { UI.ligaVer = id; UI.aberto = null; render(); }
     else if (a === 'time') { UI.aberto = UI.aberto === id ? null : id; render(); }
-    else if (a === 'reset') { if (UI.resetArm) { O.reset(); UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
+    else if (a === 'reset') { if (UI.resetArm) { O.reset(); SU.step = 1; SU.nome = ''; UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
   });
   document.addEventListener('change', e => {
     if (e.target.id === 'regiao') { O.trocarRegiao(e.target.value, UI.game); UI.ligaVer = null; toast('Região trocada: competições deste jogo reiniciadas.'); render(); }
@@ -188,10 +237,13 @@
     else if (e.target.id === 'orgnome') { O.get().org.nome = e.target.value.trim() || 'Minha Org'; O.save(); header(); }
   });
   document.addEventListener('input', e => {
-    if (e.target.id === 'mq') { UI.mk.q = e.target.value; UI.mk.n = 30; const pos = e.target.selectionStart; render(); const el = $('mq'); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }
+    if (e.target.id === 'su-nome') { SU.nome = e.target.value; header(); }
+    else if (e.target.id === 'su-q') { SU.q = e.target.value; SU.n = 24; const pos = e.target.selectionStart; render(); const el = $('su-q'); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }
+    else if (e.target.id === 'mq') { UI.mk.q = e.target.value; UI.mk.n = 30; const pos = e.target.selectionStart; render(); const el = $('mq'); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }
   });
 
-  O.load();
+  if (!O.load()) O.comecar();
+  UI.game = O.get().inicio || 'lol';
   render();
   window.OrgUI = UI;
 })();
