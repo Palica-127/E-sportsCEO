@@ -14,6 +14,7 @@
   }
   const res = r => { toast(r.msg); render(); };
 
+  const DG = () => O.dataOf(UI.game);
   /* ---------- Cabeçalho ---------- */
   function header() {
     const S = O.get();
@@ -26,10 +27,10 @@
   /* ---------- Abas ---------- */
   function vOrg() {
     const S = O.get(), p = O.projecao(UI.game);
-    const regs = Object.entries(window.LOL.leagues).map(([k, v]) => `<option value="${k}" ${k === S.org.regiao ? 'selected' : ''}>${v.nome} · ${v.regiao}</option>`).join('');
+    const regs = Object.entries(DG() ? DG().leagues : {}).map(([k, v]) => `<option value="${k}" ${k === O.regiaoDe(UI.game) ? 'selected' : ''}>${v.nome} · ${v.regiao}</option>`).join('');
     return `<section class="card"><h2>Sua organização</h2>
       <label class="fld">Nome da org<input id="orgnome" value="${esc(S.org.nome)}" maxlength="24"></label>
-      <label class="fld">Região (liga de origem; trocar reinicia as competições)<select id="regiao">${regs}</select></label>
+      <label class="fld">Região de ${O.GAMES[UI.game].curto} (trocar reinicia as competições deste jogo)<select id="regiao">${regs}</select></label>
       <div class="kv"><span>Reputação</span><b>${S.org.rep.toFixed(2)}</b></div>
     </section>
     <section class="card"><h2>Semana (${O.GAMES[UI.game].curto})</h2>
@@ -50,7 +51,7 @@
   }
   function gameGuard() {
     if (O.GAMES[UI.game].ativo) return '';
-    return `<section class="card empty"><h2>${O.GAMES[UI.game].icone} ${O.GAMES[UI.game].nome}</h2><p>Esqueleto pronto, falta preencher os dados deste jogo (ligas, times e jogadores). Por enquanto só o LoL está ativo.</p></section>`;
+    return `<section class="card empty"><h2>${O.GAMES[UI.game].icone} ${O.GAMES[UI.game].nome}</h2><p>Sem dados para este jogo.</p></section>`;
   }
   function vElenco() {
     const g = gameGuard(); if (g) return g;
@@ -79,7 +80,7 @@
     if (m.pay) lista = lista.filter(p => O.fee(p.o) <= S.org.caixa);
     if (m.q) lista = lista.filter(p => p.n.toLowerCase().includes(m.q.toLowerCase()));
     lista.sort((a, b) => m.asc ? a.o - b.o : b.o - a.o); const tot = lista.length;
-    const ligas = Object.keys(window.LOL.leagues);
+    const ligas = Object.keys(DG().leagues);
     return squadTabs() + `<section class="card"><div class="chips">
       <button class="chip ${m.pay ? 'on' : ''}" data-act="mpay">💰 Posso pagar</button><button class="chip ${m.asc ? 'on' : ''}" data-act="masc">${m.asc ? '↑ Mais baratos' : '↓ Melhores'}</button><button class="chip ${!m.role ? 'on' : ''}" data-act="mrole" data-id="">Todas</button>${roles.map(r => `<button class="chip ${m.role === r ? 'on' : ''}" data-act="mrole" data-id="${r}">${r}</button>`).join('')}</div>
       <div class="row2"><select id="mliga"><option value="">Todas as ligas</option>${ligas.map(l => `<option ${m.liga === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
@@ -96,13 +97,13 @@
         return `<section class="card infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small><div class="bar"><i style="width:${n / it.max * 100}%"></i></div><small>Nível ${n}/${it.max} · +${it.bonus} de força por nível</small></div>
           <button class="mini buy" data-act="infra" data-id="${it.id}" ${max || S.org.caixa < c ? 'disabled' : ''}>${max ? 'MAX' : O.money(c)}</button></section>`; }).join('');
   }
-  const FASE = { off: c => `Entretemporada: ${c.wk} sem. para o próximo split`, wait: () => 'Aguardando inscrição: complete os titulares', reg: c => `Próxima: rodada ${c.round + 1} de ${c.sched.length}`, po: () => 'Playoffs', intl: c => `${O.INTL[c.intl.tipo].nome}: ${c.intl.alive.length} times vivos` };
+  const FASE = { off: c => `Entretemporada: ${c.wk} sem. para o próximo split`, wait: () => 'Aguardando inscrição: complete os titulares', reg: c => `Próxima: rodada ${c.round + 1} de ${c.sched.length}`, po: () => 'Playoffs', intl: c => `${O.intlDef(c.game)[c.intl.tipo].nome}: ${c.intl.alive.length} times vivos` };
   function vComp() {
     const S = O.get(), q = S.games[UI.game].squads[UI.squad], d = O.SQUADS[UI.squad];
     if (!q.on) return `<section class="card empty"><h2>${d.nome}</h2><p>${d.semDados ? 'Ainda sem dados desta divisão.' : 'Crie este time na aba Elenco para entrar na competição.'}</p></section>`;
     const c = O.compFor(UI.game, UI.squad); if (!c) return '';
     const rows = O.classificacao(c), nome = i => esc(O.nome(c, i)), est = ['Quartas', 'Semifinal', 'Final'];
-    let h = `<section class="card"><h2>${c.split ? 'Split ' + c.split : 'Pré-temporada'} · ${window.LOL.leagues[c.reg].nome} ${O.SQUADS[UI.squad].nome}</h2><p class="hint">${FASE[c.phase](c)}</p>`;
+    let h = `<section class="card"><h2>${c.split ? 'Split ' + c.split : 'Pré-temporada'} · ${DG().leagues[c.reg].nome} ${O.SQUADS[UI.squad].nome}</h2><p class="hint">${FASE[c.phase](c)}</p>`;
     if (c.phase === 'wait') h += `<p class="warn">Faltam titulares: contrate no Mercado.</p>`;
     h += rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''} ${r.pos === 6 ? 'cut' : ''}"><span>${r.pos}</span><b>${esc(r.n)}</b><em>${r.w}V ${r.l}D</em></div>`).join('') + '<p class="hint">Os 6 primeiros vão aos playoffs.</p></section>';
     if (c.phase === 'po' && c.po) {
@@ -111,25 +112,25 @@
     }
     if (c.phase === 'intl' && c.intl) {
       const I = c.intl, nm = i => esc(O.nomeT(I.teams[i]));
-      h += `<section class="card"><h2>🌍 ${O.INTL[I.tipo].nome}</h2><p class="hint">${I.teams.length} times · bolsa ${O.money(O.INTL[I.tipo].bolsa)}</p>` + I.res.slice(-8).map(r => `<div class="tb"><span>${r.st}</span><b>${nm(r.a)} x ${nm(r.b)}</b><em>${nm(r.w)}</em></div>`).join('')
+      h += `<section class="card"><h2>🌍 ${O.intlDef(c.game)[I.tipo].nome}</h2><p class="hint">${I.teams.length} times · bolsa ${O.money(O.intlDef(c.game)[I.tipo].bolsa)}</p>` + I.res.slice(-8).map(r => `<div class="tb"><span>${r.st}</span><b>${nm(r.a)} x ${nm(r.b)}</b><em>${nm(r.w)}</em></div>`).join('')
         + (I.alive.length > 1 ? I.alive.map((a, k) => k % 2 ? '' : `<div class="tb pend"><span>a jogar</span><b>${nm(a)} x ${nm(I.alive[k + 1])}</b><em>${I.teams[a].eu || I.teams[I.alive[k + 1]].eu ? 'você' : ''}</em></div>`).join('') : '') + '</section>';
     }
     if (c.last.length) h += `<section class="card"><h2>Seus últimos jogos</h2>` + c.last.slice(0, 6).map(m => `<div class="tb"><span>${m.v ? '✅' : '❌'}</span><b>vs ${esc(m.op)}</b><em>${m.pl} · ${esc(m.f)}</em></div>`).join('') + '</section>';
-    if (S.intlHist && S.intlHist.length && UI.squad === 't1') h += `<section class="card"><h2>Títulos internacionais</h2>` + S.intlHist.slice(0, 6).map(x => `<div class="tb"><span>${x.y}</span><b>🌍 ${x.tipo === 'MSI' ? 'MSI' : 'Mundial'}: ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : esc(x.reg || '')}</em></div>`).join('') + '</section>';
+    const ih = (S.intlHist || []).filter(x => (x.g || 'lol') === UI.game); if (ih.length && UI.squad === 't1') h += `<section class="card"><h2>Títulos internacionais</h2>` + ih.slice(0, 6).map(x => `<div class="tb"><span>${x.y}</span><b>🌍 ${esc(x.nome || (x.tipo === 'MSI' ? 'MSI' : 'Mundial'))}: ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : esc(x.reg || '')}</em></div>`).join('') + '</section>';
     if (c.hist.length) h += `<section class="card"><h2>Campeões</h2>` + c.hist.slice(0, 5).map(x => `<div class="tb"><span>${x.y}</span><b>🏆 ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : ''}</em></div>`).join('') + '</section>';
     return h;
   }
   function vLigas() {
     const g = gameGuard(); if (g) return g;
-    const S = O.get(), L = window.LOL.leagues, ver = UI.ligaVer || S.org.regiao;
+    const S = O.get(), L = DG().leagues, mineK = O.regiaoDe(UI.game), ver = UI.ligaVer && L[UI.ligaVer] ? UI.ligaVer : mineK;
     const sel = `<div class="chips">${Object.keys(L).map(k => `<button class="chip ${k === ver ? 'on' : ''}" data-act="liga" data-id="${k}">${L[k].nome}</button>`).join('')}</div>`;
     return squadTabs() + vComp() + '<h3 class="sec">Explorar ligas</h3>' + sel
-      + `<section class="card"><h2>${L[ver].nome} · ${L[ver].regiao}</h2>` + (() => { const mine = ver === S.org.regiao, Lg = mine ? O.ligaSync() : null, t1 = mine ? Lg.d1 : L[ver].t1, t2 = mine ? Lg.d2 : L[ver].t2; return '<h3>T1</h3>' + t1.map(t => timeRow(ver, 1, t)).join('') + '<h3>T2</h3>' + (t2.map(t => timeRow(ver, 2, t)).join('') || '<p class="hint">Sem times.</p>'); })() + '</section>';
+      + `<section class="card"><h2>${L[ver].nome} · ${L[ver].regiao}</h2>` + (() => { const mine = ver === mineK, Lg = mine ? O.ligaSync(UI.game) : null, t1 = mine ? Lg.d1 : L[ver].t1, t2 = mine ? Lg.d2 : L[ver].t2; return '<h3>T1</h3>' + t1.map(t => timeRow(ver, 1, t)).join('') + '<h3>T2</h3>' + (t2.map(t => timeRow(ver, 2, t)).join('') || '<p class="hint">Sem times.</p>'); })() + '</section>';
   }
   function timeRow(lg, tier, t) {
     const key = lg + tier + t.n, open = UI.aberto === key;
     const f = t.p ? (t.p.reduce((a, p) => a + p[1], 0) / t.p.length).toFixed(1) : '—';
-    const roles = window.LOL.roles;
+    const roles = DG().roles;
     return `<div class="team"><button data-act="time" data-id="${esc(key)}"><b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${esc(p[0])} <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}</div>` : ''}</div>`;
   }
 
@@ -141,11 +142,11 @@
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
     if (a === 'tab') { UI.tab = id; UI.resetArm = false; $('main').scrollTop = 0; render(); }
-    else if (a === 'game') { if (O.GAMES[id].ativo) UI.game = id; else { UI.game = id; toast('Este jogo ainda é só esqueleto.'); } render(); }
+    else if (a === 'game') { UI.game = id; UI.ligaVer = null; UI.aberto = null; UI.mk = { role: '', liga: '', q: '', n: 30, pay: false, asc: false }; render(); }
     else if (a === 'squad') { UI.squad = id; render(); }
     else if (a === 'ativar') res(O.ativarSquad(UI.game, UI.squad));
     else if (a === 'dispensar') res(O.dispensar(UI.game, UI.squad, +b.dataset.slot));
-    else if (a === 'contratar') { const p = O.poolLol().find(x => x.id === id); if (p) res(O.contratar(UI.game, UI.squad, p)); }
+    else if (a === 'contratar') { const p = O.pool(UI.game).find(x => x.id === id); if (p) res(O.contratar(UI.game, UI.squad, p)); }
     else if (a === 'infra') res(O.comprarInfra(id));
     else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
     else if (a === 'proximo') { const n = O.avancarAteJogo(); toast(`${n} semana(s) até a próxima partida.`); render(); }
@@ -158,7 +159,7 @@
     else if (a === 'reset') { if (UI.resetArm) { O.reset(); UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
   });
   document.addEventListener('change', e => {
-    if (e.target.id === 'regiao') { O.trocarRegiao(e.target.value); UI.ligaVer = null; toast('Região trocada: competições reiniciadas.'); render(); }
+    if (e.target.id === 'regiao') { O.trocarRegiao(e.target.value, UI.game); UI.ligaVer = null; toast('Região trocada: competições deste jogo reiniciadas.'); render(); }
     else if (e.target.id === 'mliga') { UI.mk.liga = e.target.value; UI.mk.n = 30; render(); }
     else if (e.target.id === 'orgnome') { O.get().org.nome = e.target.value.trim() || 'Minha Org'; O.save(); header(); }
   });

@@ -5,15 +5,16 @@
   /* ---------- Jogos ---------- */
   /* roles = titulares (o tamanho do time vem daqui), subs = reservas. Só o LoL tem dados e competições por enquanto. */
   const GAMES = {
-    lol:      { id: 'lol',      nome: 'League of Legends',   curto: 'LoL',      icone: '⚔️', ativo: true,  subs: 2, roles: ['TOP', 'JNG', 'MID', 'ADC', 'SUP'] },
-    cs2:      { id: 'cs2',      nome: 'Counter-Strike 2',    curto: 'CS2',      icone: '🔫', ativo: false, subs: 2, roles: ['IGL', 'AWP', 'ENT', 'LUR', 'SUP'] },
-    dota2:    { id: 'dota2',    nome: 'Dota 2',              curto: 'Dota 2',   icone: '🛡️', ativo: false, subs: 2, roles: ['POS1', 'POS2', 'POS3', 'POS4', 'POS5'] },
-    valorant: { id: 'valorant', nome: 'Valorant',            curto: 'Valorant', icone: '🎯', ativo: false, subs: 2, roles: ['DUE', 'INI', 'CTR', 'SEN', 'FLX'] },
-    ff:       { id: 'ff',       nome: 'Free Fire',           curto: 'Free Fire', icone: '🔥', ativo: false, subs: 2, roles: ['IGL', 'RUSH', 'SNP', 'SUP'] },
-    r6:       { id: 'r6',       nome: 'Rainbow Six Siege',   curto: 'R6',       icone: '🛰️', ativo: false, subs: 2, roles: ['ENT', 'FLX', 'ANC', 'ROM', 'SUP'] },
-    fifa:     { id: 'fifa',     nome: 'EA FC (FIFA)',        curto: 'EA FC',    icone: '⚽', ativo: false, subs: 1, roles: ['JOG'] },
-    wr:       { id: 'wr',       nome: 'Wild Rift',           curto: 'Wild Rift', icone: '📱', ativo: false, subs: 2, roles: ['TOP', 'JNG', 'MID', 'ADC', 'SUP'] },
+    lol:      { id: 'lol',      nome: 'League of Legends',   curto: 'LoL',      icone: '⚔️', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['TOP', 'JNG', 'MID', 'ADC', 'SUP'] },
+    cs2:      { id: 'cs2',      nome: 'Counter-Strike 2',    curto: 'CS2',      icone: '🔫', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['IGL', 'AWP', 'ENT', 'LUR', 'SUP'] },
+    dota2:    { id: 'dota2',    nome: 'Dota 2',              curto: 'Dota 2',   icone: '🛡️', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['POS1', 'POS2', 'POS3', 'POS4', 'POS5'] },
+    valorant: { id: 'valorant', nome: 'Valorant',            curto: 'Valorant', icone: '🎯', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['DUE', 'INI', 'CTR', 'SEN', 'FLX'] },
+    ff:       { id: 'ff',       nome: 'Free Fire',           curto: 'Free Fire', icone: '🔥', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['IGL', 'RUSH', 'SNP', 'SUP'] },
+    r6:       { id: 'r6',       nome: 'Rainbow Six Siege',   curto: 'R6',       icone: '🛰️', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['ENT', 'FLX', 'ANC', 'ROM', 'SUP'] },
+    fifa:     { id: 'fifa',     nome: 'EA FC (FIFA)',        curto: 'EA FC',    icone: '⚽', get ativo() { return !!dataOf(this.id); }, subs: 1, roles: ['JOG'] },
+    wr:       { id: 'wr',       nome: 'Wild Rift',           curto: 'Wild Rift', icone: '📱', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['TOP', 'JNG', 'MID', 'ADC', 'SUP'] },
   };
+  const dataOf = g => g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null;
   const slotsDe = g => GAMES[g].roles.length + GAMES[g].subs;
   /* premio = bolsa do campeonato do nível; licenca = custo para criar o time */
   const SQUADS = {
@@ -56,7 +57,7 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL' },
-             infra: {}, games, comp: {}, liga: null, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, intlHist: [], log: [] };
   }
   let S = novoJogo();
   const get = () => S;
@@ -68,7 +69,7 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
@@ -83,25 +84,27 @@
   }
 
   /* ---------- Dados ---------- */
-  const LOL = () => root.LOL;
-  const region = () => LOL().leagues[S.org.regiao];
-  let _pool = null;
-  function poolLol() { // todos os jogadores do dataset (T1 de todas as ligas + T2 que tiverem elenco)
-    if (_pool) return _pool;
-    const out = []; const roles = LOL().roles;
-    for (const lg in LOL().leagues) {
-      const L = LOL().leagues[lg];
-      L.t1.forEach((t, ti) => t.p.forEach((p, i) => out.push({ id: `${lg}-1-${ti}-${i}`, n: p[0], o: p[1], a: p[2], r: roles[i], t: t.n, l: lg, tier: 'T1' })));
-      L.t2.forEach((t, ti) => (t.p || []).forEach((p, i) => p && out.push({ id: `${lg}-2-${ti}-${i}`, n: p[0], o: p[1], a: p[2], r: roles[i], t: t.n, l: lg, tier: 'T2' })));
+  const D = g => dataOf(g);
+  const regiaoDe = g => g === 'lol' ? S.org.regiao : (S.games[g].regiao && D(g).leagues[S.games[g].regiao] ? S.games[g].regiao : D(g).inicio);
+  const region = (g = 'lol') => D(g).leagues[regiaoDe(g)];
+  const _pool = {};
+  function pool(g) { // todos os jogadores do dataset do jogo (T1 de todas as ligas + T2 que tiverem elenco)
+    if (_pool[g]) return _pool[g];
+    const out = [], roles = D(g).roles, id0 = g === 'lol' ? '' : g + '-';
+    for (const lg in D(g).leagues) {
+      const L = D(g).leagues[lg];
+      L.t1.forEach((t, ti) => t.p.forEach((p, i) => out.push({ id: `${id0}${lg}-1-${ti}-${i}`, n: p[0], o: p[1], a: p[2], r: roles[i], t: t.n, l: lg, tier: 'T1' })));
+      L.t2.forEach((t, ti) => (t.p || []).forEach((p, i) => p && out.push({ id: `${id0}${lg}-2-${ti}-${i}`, n: p[0], o: p[1], a: p[2], r: roles[i], t: t.n, l: lg, tier: 'T2' })));
     }
-    return (_pool = out);
+    return (_pool[g] = out);
   }
+  const poolLol = () => pool('lol');
   function contratados(game) {
     const ids = new Set();
     for (const sq of Object.values(S.games[game].squads)) sq.slots.forEach(p => p && ids.add(p.id));
     return ids;
   }
-  function livres(game) { if (game !== 'lol') return []; const used = contratados(game); return poolLol().filter(p => !used.has(p.id)); }
+  function livres(game) { if (!D(game)) return []; const used = contratados(game); return pool(game).filter(p => !used.has(p.id)); }
 
   /* ---------- Org: estrutura, times, elenco ---------- */
   const infraNivel = id => S.infra[id] || 0;
@@ -176,20 +179,20 @@
     return rounds;
   }
   /* membros de cada divisão na região da org: d1 = T1, d2 = T2, d3 = Academy (times "Academy" gerados dos T1) */
-  function ligaSync() {
-    const k = S.org.regiao; if (S.liga && S.liga.reg === k) return S.liga;
-    const L = region(), cp = t => ({ n: t.n, b: mediaTime(t.p), p: t.p || null });
-    return (S.liga = { reg: k, d1: L.t1.map(cp), d2: L.t2.map(cp), d3: L.t1.map(t => ({ n: t.n + ' Academy', b: Math.max(60, mediaTime(t.p) - 8), p: null })) });
+  function ligaSync(g = 'lol') {
+    const k = regiaoDe(g); S.ligas = S.ligas || {}; if (S.ligas[g] && S.ligas[g].reg === k) return S.ligas[g];
+    const L = region(g), cp = t => ({ n: t.n, b: mediaTime(t.p), p: t.p || null });
+    return (S.ligas[g] = { reg: k, d1: L.t1.map(cp), d2: L.t2.map(cp), d3: L.t1.map(t => ({ n: t.n + ' Academy', b: Math.max(60, mediaTime(t.p) - 8), p: null })) });
   }
-  const divDe = sq => { const Lg = ligaSync(); return sq === 't1' ? Lg.d1 : sq === 't2' ? Lg.d2 : Lg.d3; };
-  const timesDe = sq => divDe(sq).map(t => ({ n: t.n, b: t.b, f: t.b, eu: false })).concat([{ n: null, b: 0, f: 0, eu: true }]);
+  const divDe = (g, sq) => { const Lg = ligaSync(g); return sq === 't1' ? Lg.d1 : sq === 't2' ? Lg.d2 : Lg.d3; };
+  const timesDe = (g, sq) => divDe(g, sq).map(t => ({ n: t.n, b: t.b, f: t.b, eu: false })).concat([{ n: null, b: 0, f: 0, eu: true }]);
   function novaComp(game, sq) {
-    return { reg: S.org.regiao, game, sq, teams: timesDe(sq), phase: 'off', wk: PRE, split: 0, round: 0, sched: [], w: [], l: [], po: null, intl: null, last: [], hist: [], aviso: false };
+    return { reg: regiaoDe(game), game, sq, teams: timesDe(game, sq), phase: 'off', wk: PRE, split: 0, round: 0, sched: [], w: [], l: [], po: null, intl: null, last: [], hist: [], aviso: false };
   }
   function compFor(game, sq) {
-    if (game !== 'lol') return null; const q = S.games[game].squads[sq]; if (!q || !q.on || SQUADS[sq].semDados) return null;
+    if (!D(game)) return null; const q = S.games[game].squads[sq]; if (!q || !q.on || SQUADS[sq].semDados) return null;
     const k = game + '-' + sq; let c = S.comp[k];
-    if (c && c.reg === S.org.regiao) return c;
+    if (c && c.reg === regiaoDe(game)) return c;
     return (S.comp[k] = novaComp(game, sq));
   }
   const nomeT = t => t.eu ? S.org.nome : t.n;
@@ -201,10 +204,10 @@
     return rows;
   }
   function iniciarSplit(c) {
-    c.split++; c.teams = timesDe(c.sq); c.teams.forEach(t => { if (!t.eu) t.f = t.b + (rnd() * 3 - 1.5); }); // forma do split
+    c.split++; c.teams = timesDe(c.game, c.sq); c.teams.forEach(t => { if (!t.eu) t.f = t.b + (rnd() * 3 - 1.5); }); // forma do split
     c.sched = roundRobin(c.teams.length); c.round = 0; c.phase = 'reg'; c.po = null;
     c.w = c.teams.map(() => 0); c.l = c.teams.map(() => 0); c.aviso = false;
-    log(`${SQUADS[c.sq].nome} (${S.org.regiao}): split ${c.split} começou`);
+    log(`${GAMES[c.game].curto} ${SQUADS[c.sq].nome} (${c.reg}): split ${c.split} começou`);
   }
   function jogo(c, T, a, b, n, fase, ctx, bonus) { // joga uma série entre T[a] e T[b]; registra se o usuário participou; devolve o vencedor
     const [wa, wb] = serie(n, fT(c, T[a]), fT(c, T[b])), venc = wa > wb ? a : b, eu = T.findIndex(t => t.eu);
@@ -243,13 +246,13 @@
     if (meu) {
       const bolsa = Math.round(SQUADS[c.sq].premio * PREMIO_PCT[meu]); S.org.caixa += bolsa;
       S.org.rep = clamp(S.org.rep + ({ campeao: 0.3, vice: 0.15, semi: 0.08, quartas: 0.04 })[meu] * (c.sq === 't1' ? 1 : 0.3), 0.5, 10);
-      log(`${SQUADS[c.sq].nome}: ${({ campeao: 'CAMPEÃO', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas' })[meu]} (+${money(bolsa)})`);
-    } else { S.org.rep = clamp(S.org.rep - 0.03 * (c.sq === 't1' ? 1 : 0.3), 0.5, 10); log(`${SQUADS[c.sq].nome}: fora dos playoffs`); }
+      log(`${GAMES[c.game].curto} ${SQUADS[c.sq].nome}: ${({ campeao: 'CAMPEÃO', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas' })[meu]} (+${money(bolsa)})`);
+    } else { S.org.rep = clamp(S.org.rep - 0.03 * (c.sq === 't1' ? 1 : 0.3), 0.5, 10); log(`${GAMES[c.game].curto} ${SQUADS[c.sq].nome}: fora dos playoffs`); }
     c.hist.unshift({ y: S.org.ano, s: c.split, camp: nome(c, campeao), vice: nome(c, vice), eu: meu || null }); c.hist.length = Math.min(c.hist.length, 12);
     const pr = i => po.rs.indexOf(i), com = k => Object.keys(po.lugar).filter(x => po.lugar[x] === k).map(Number).sort((x, y) => pr(x) - pr(y));
     const ordem = [campeao, vice].concat(com('semi'), com('quartas'), po.rs.filter(i => !(i in po.lugar) && i !== campeao));
     c.po = null; c.phase = 'off'; c.wk = Math.max(2, CICLO - c.sched.length - 3);
-    if (c.sq === 't1') iniciarIntl(c, c.split % 2 === 1 ? 'MSI' : 'WORLDS', ordem);
+    if (c.sq === 't1') { const ks = Object.keys(intlDef(c.game)); iniciarIntl(c, c.split % 2 === 1 ? ks[0] : ks[1], ordem); }
   }
   /* liga de outra região (ou divisão) simulada de uma vez; devolve a ordem final dos índices (campeão primeiro) */
   function simRapida(times) {
@@ -264,43 +267,44 @@
     const dentro = new Set([camp, vice, ...semis, ...quartas]);
     return [camp, vice, ...semis, ...quartas, ...rs.filter(i => !dentro.has(i))];
   }
+  const intlDef = g => g === 'lol' ? INTL : D(g).intl;
   function sortear(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function iniciarIntl(c, tipo, ordem) {
-    const I = INTL[tipo], q = [];
+    const I = intlDef(c.game)[tipo], q = [];
     for (const reg in I.vagas) {
       if (reg === c.reg) ordem.slice(0, I.vagas[reg]).forEach(i => { const t = c.teams[i]; q.push(t.eu ? { n: null, f: 0, eu: true, reg } : { n: t.n, f: t.f, eu: false, reg }); });
       else {
-        const times = LOL().leagues[reg].t1.map(t => ({ n: t.n, f: mediaTime(t.p) + rnd() * 3 - 1.5 }));
+        const times = D(c.game).leagues[reg].t1.map(t => ({ n: t.n, f: mediaTime(t.p) + rnd() * 3 - 1.5 }));
         simRapida(times).slice(0, I.vagas[reg]).forEach(i => q.push({ n: times[i].n, f: times[i].f, eu: false, reg }));
       }
     }
     const T = sortear(q), intl = { tipo, teams: T, alive: T.map((_, i) => i), res: [], lugar: {} };
-    if (T.some(t => t.eu)) { c.intl = intl; c.phase = 'intl'; log(`${SQUADS[c.sq].nome}: classificado para o ${I.nome}!`); return; }
+    if (T.some(t => t.eu)) { c.intl = intl; c.phase = 'intl'; log(`${GAMES[c.game].curto}: classificado para o ${I.nome}!`); return; }
     c.intl = intl; while (intl.alive.length > 1) etapaIntl(c, intl, { jogou: false }); finalizarIntl(c, intl);
   }
   function etapaIntl(c, intl, ctx) {
-    const n = intl.alive.length, fase = n === 2 ? 'Final' : n === 4 ? 'Semifinal' : n === 8 ? 'Quartas' : 'Oitavas', bo = n <= 4 ? 5 : 3, venc = [];
+    const n = intl.alive.length, I = intlDef(c.game)[intl.tipo], fase = n === 2 ? 'Final' : n === 4 ? 'Semifinal' : n === 8 ? 'Quartas' : 'Oitavas', bo = n <= 4 ? 5 : 3, venc = [];
     for (let k = 0; k < n; k += 2) {
-      const a = intl.alive[k], b = intl.alive[k + 1], w = jogo(c, intl.teams, a, b, bo, INTL[intl.tipo].nome + ' · ' + fase, ctx, false);
+      const a = intl.alive[k], b = intl.alive[k + 1], w = jogo(c, intl.teams, a, b, bo, I.nome + ' · ' + fase, ctx, false);
       venc.push(w); intl.res.push({ st: fase, a, b, w }); intl.lugar[w === a ? b : a] = n === 2 ? 'vice' : n === 4 ? 'semi' : n === 8 ? 'quartas' : 'oitavas';
     }
     intl.alive = venc;
   }
   function finalizarIntl(c, intl) {
-    const I = INTL[intl.tipo], camp = intl.alive[0], eu = intl.teams.findIndex(t => t.eu); intl.lugar[camp] = 'campeao';
+    const I = intlDef(c.game)[intl.tipo], camp = intl.alive[0], eu = intl.teams.findIndex(t => t.eu); intl.lugar[camp] = 'campeao';
     const meu = intl.lugar[eu];
     if (meu) {
       const bolsa = Math.round(I.bolsa * PCT_INTL[meu]); S.org.caixa += bolsa; S.org.rep = clamp(S.org.rep + I.rep * PCT_INTL[meu] * 2, 0.5, 10);
-      log(`${I.nome}: ${({ campeao: 'CAMPEÃO MUNDIAL', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas', oitavas: 'eliminado nas oitavas' })[meu]} (+${money(bolsa)})`.replace('CAMPEÃO MUNDIAL', intl.tipo === 'MSI' ? 'CAMPEÃO' : 'CAMPEÃO MUNDIAL'));
-    } else log(`${I.nome} ${S.org.ano}: campeão ${nomeT(intl.teams[camp])}`);
-    S.intlHist = S.intlHist || []; S.intlHist.unshift({ y: S.org.ano, tipo: intl.tipo, camp: nomeT(intl.teams[camp]), reg: intl.teams[camp].reg, eu: meu || null }); S.intlHist.length = Math.min(S.intlHist.length, 12);
+      log(`${GAMES[c.game].curto} ${I.nome}: ${({ campeao: 'CAMPEÃO', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas', oitavas: 'eliminado nas oitavas' })[meu]} (+${money(bolsa)})`);
+    } else log(`${GAMES[c.game].curto} ${I.nome} ${S.org.ano}: campeão ${nomeT(intl.teams[camp])}`);
+    S.intlHist = S.intlHist || []; S.intlHist.unshift({ g: c.game, nome: I.nome, y: S.org.ano, tipo: intl.tipo, camp: nomeT(intl.teams[camp]), reg: intl.teams[camp].reg, eu: meu || null }); S.intlHist.length = Math.min(S.intlHist.length, 30);
     c.intl = null; c.phase = 'off'; c.wk = Math.max(2, CICLO - c.sched.length - 3 - I.semanas);
-    if (intl.tipo === 'WORLDS') promoRebaixa(c);
+    if (intl.tipo === Object.keys(intlDef(c.game))[1]) promoRebaixa(c);
   }
   function promoRebaixa(c) { // fim do ano: pior time da IA do T1 cai; o melhor do T2 (IA) sobe
-    const Lg = ligaSync(); if (!Lg.d2.length) return;
+    const Lg = ligaSync(c.game); if (!Lg.d2.length) return;
     const rs = c.teams.length ? classificacao(c).map(r => r.i) : [], pior = rs.slice().reverse().map(i => c.teams[i]).find(t => !t.eu);
-    let sobe = null; const c2 = S.comp['lol-t2'];
+    let sobe = null; const c2 = S.comp[c.game + '-t2'];
     if (c2 && c2.hist.length && c2.hist[0].y === S.org.ano && Lg.d2.some(t => t.n === c2.hist[0].camp)) sobe = c2.hist[0].camp;
     if (!sobe) { const times = Lg.d2.map(t => ({ n: t.n, f: t.b + rnd() * 3 - 1.5 })); sobe = times[simRapida(times)[0]].n; }
     const out = pior && Lg.d1.find(t => t.n === pior.n), up = Lg.d2.find(t => t.n === sobe);
@@ -353,9 +357,13 @@
     while (n < 60) { n++; if (avancar(1)) break; }
     return n;
   }
-  function trocarRegiao(k) { S.org.regiao = k; S.comp = {}; S.liga = null; save(); }
+  function trocarRegiao(k, g = 'lol') {
+    if (g === 'lol') S.org.regiao = k; else S.games[g].regiao = k;
+    for (const key in S.comp) if (key.startsWith(g + '-')) delete S.comp[key];
+    S.ligas = S.ligas || {}; delete S.ligas[g]; save();
+  }
 
-  root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, livres,
+  root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
     infraNivel, infraBonus, infraCusto, upkeepSemanal, comprarInfra, ativarSquad, contratar, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);

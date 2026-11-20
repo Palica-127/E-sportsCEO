@@ -34,8 +34,11 @@ async def main():
             antes = await pg.locator('#top').inner_text()
             await pg.reload(); await pg.wait_for_timeout(200)
             ok(antes == await pg.locator('#top').inner_text(), f'{w}: save persiste após recarregar')
-            await pg.click('[data-act=game][data-id=cs2]', force=True); await pg.click('[data-act=tab][data-id=elenco]')
-            ok('Esqueleto' in await pg.locator('#main').inner_text(), f'{w}: jogo em breve mostra esqueleto')
+            await pg.click('[data-act=game][data-id=cs2]'); await pg.click('[data-act=tab][data-id=mercado]'); await pg.wait_for_timeout(100)
+            ok('jogadores' in await pg.locator('#main').inner_text(), f'{w}: CS2 tem mercado')
+            await pg.click('[data-act=tab][data-id=ligas]'); await pg.wait_for_timeout(100)
+            ok('Américas' in await pg.locator('#main').inner_text(), f'{w}: CS2 mostra liga das Américas')
+            await pg.click('[data-act=game][data-id=lol]')
             for gid in ['ff', 'r6', 'fifa', 'wr']:
                 ok(await pg.locator(f'[data-act=game][data-id={gid}]').count() == 1, f'{w}: jogo {gid} aparece no seletor')
             sw = await pg.evaluate('document.documentElement.scrollWidth <= window.innerWidth')

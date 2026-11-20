@@ -1,5 +1,5 @@
 // Testes da lógica (sem navegador): node tests/core.js
-global.window = global; require('../js/data/lol.js'); require('../js/core.js');
+global.window = global; require('../js/data/lol.js'); require('../js/data/outros.js'); require('../js/core.js');
 let falhas = 0; const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) falhas++; };
 const O = Org;
 // jogos novos no esqueleto
@@ -48,7 +48,21 @@ const vagasMSI = Object.values(O.INTL.MSI.vagas).reduce((a, b) => a + b, 0), vag
 ok(vagasMSI === 8 && vagasW === 16, 'vagas: 8 no MSI e 16 no Mundial');
 ok(O.simRapida(O.ligaSync().d1.map(t => ({ n: t.n, f: t.b }))).length === n1, 'simRapida devolve ordem completa');
 O.set(O.novoJogo()); S = O.get(); S.org.caixa = 5e7; ok(O.ativarSquad('lol', 'acad').ok, 'cria Academy'); ok(O.compFor('lol', 'acad').teams.length === 9, 'Academy com 8 times + a org');
-O.trocarRegiao('LCK'); ok(O.get().liga === null && O.ligaSync().reg === 'LCK', 'trocar região recria a liga');
+O.trocarRegiao('LCK'); ok(!O.get().ligas.lol && O.ligaSync().reg === 'LCK', 'trocar região recria a liga');
+// ---- passo 3: todos os jogos com campeonatos
+for (const g of Object.keys(O.GAMES)) {
+  ok(O.GAMES[g].ativo, g + ' ativo');
+  O.set(O.novoJogo()); S = O.get(); S.seed = 5; S.org.caixa = 9e7;
+  const roles = O.GAMES[g].roles, liv = O.livres(g).sort((a, b) => a.o - b.o);
+  ok(liv.length > 100 || g === 'fifa' && liv.length > 40, g + ': mercado com jogadores (' + liv.length + ')');
+  for (const r of roles) { const res = O.contratar(g, 't1', liv.find(x => x.r === r)); ok(res.ok, g + ' contrata ' + r); }
+  ok(O.prontos(g, 't1'), g + ': titulares completos');
+  O.avancar(26 * 2); const cg = O.compFor(g, 't1'), ihg = O.get().intlHist.filter(x => x.g === g);
+  ok(cg && cg.hist.length >= 2, g + ': splits disputados (' + (cg && cg.hist.length) + ')');
+  ok(ihg.length >= 2 && ihg.every(x => x.camp), g + ': internacionais (' + ihg.map(x => x.nome).join(', ') + ')');
+  ok(O.classificacao(cg).length === 9, g + ': tabela com 9 times');
+}
+O.set(O.novoJogo()); S = O.get(); O.trocarRegiao('EU', 'cs2'); ok(O.regiaoDe('cs2') === 'EU' && O.regiaoDe('lol') === 'CBLOL', 'região por jogo é independente');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

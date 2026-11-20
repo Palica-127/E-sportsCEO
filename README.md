@@ -4,7 +4,7 @@ Jogo de gerenciamento de uma organização de esports, em site estático (sem bu
 
 ## O que já tem (esqueleto)
 - **Org**: caixa, reputação, semana/ano, região (liga de origem), avançar 1 ou 4 semanas, histórico.
-- **Jogos**: LoL ativo. CS2, Dota 2, Valorant, Free Fire, Rainbow Six Siege, EA FC (FIFA) e Wild Rift já existem no modelo, cada um com o tamanho de elenco e as funções próprias (ex.: Free Fire 4+2, EA FC 1+1, LoL 5+2), mas ainda sem dados nem competições.
+- **Jogos**: os 8 estão ativos (LoL, CS2, Dota 2, Valorant, Free Fire, Rainbow Six Siege, EA FC, Wild Rift), cada um com elenco e funções próprias (ex.: Free Fire 4+2, EA FC 1+1) e 3 regiões com T1 e T2, liga, playoffs e 2 torneios internacionais por ano. LoL usa dados do BrasLOL (`tools/gen_lol.py`). Nos outros jogos os nomes das orgs são reais (aproximados), mas **jogadores, notas e idades são gerados/fictícios** (`tools/gen_outros.py`). Cada jogo tem sua própria região.
 - **Elenco**: por jogo, 3 times (T1, T2, Academy): 5 titulares (um por função) + 2 reservas. T1 já nasce ativo, T2 custa licença, Academy liberada no LoL.
 - **Mercado**: todos os jogadores do BrasLOL (T1 das 6 ligas + T2 com elenco), filtros por função, liga, nome, "posso pagar" e ordem por preço.
 - **Estrutura**: gaming house, teclados/mouses, fones/monitores, psicólogo, nutricionista, academia e cozinha, com níveis e bônus de força.
@@ -22,7 +22,7 @@ Jogo de gerenciamento de uma organização de esports, em site estático (sem bu
 ## Próximos passos sugeridos
 1. ~~Calendário e partidas simples~~ (feito para o LoL: tabela, playoffs, premiação).
 2. ✓ Torneios internacionais (MSI com 8 times após o split 1, Mundial com 16 após o split 2), promoção e rebaixamento entre T2 e T1 (times da IA) e Academy do LoL.
-3. Dados e competições dos outros jogos (CS2, Dota 2, Valorant, Free Fire, R6, EA FC, Wild Rift).
+3. ✓ Dados e competições dos outros jogos (CS2, Dota 2, Valorant, Free Fire, R6, EA FC, Wild Rift).
 4. Contratos (duração, salário, renovação), base/revelação de jogadores, transferências entre times da org.
 5. Patrocínios, redes sociais e eventos.
 6. ✓ Nome do jogo: eSports CEO (o repositório você renomeia no GitHub).
