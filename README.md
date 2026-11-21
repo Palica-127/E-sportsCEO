@@ -45,3 +45,4 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - Bola de Ouro do LoL (top 10 por ano) na aba Campeões.
 - `js/data/hist.js`: histórico real dos outros jogos (aba Campeões genérica: torneios, títulos por time, MVPs). Preenchido: Majors de CS (2013–2026). Só entra dado conferido na web.
 - CS2 completo (`tools/gen_hist_cs2.py` → `js/data/hist.js`): 89 torneios (Majors, IEM, ESL Pro League S1–S23, BLAST), MVPs, line-ups dos Majors (só as conferidas), Bola de Ouro = Top 10 anual da HLTV (2013–2025) e Lendas calculadas. Filtro por tipo de torneio.
+- Valorant (`tools/gen_hist_val.py` → `js/data/hist_val.js`): Champions 2021–2026, Masters (12), Esports World Cup 2025–26 e campeões das ligas VCT; MVPs só onde as fontes concordam (MVP de Masters não é oficial); sem Bola de Ouro (a Riot não tem ranking anual).

@@ -57,6 +57,6 @@ TOP={2013:'GeT_RiGhT:SE,f0rest:SE,shox:FR,Dosia:RU,NBK-:FR,Xizt:SE,ScreaM:BE,JW:
 2024:'donk:RU,m0NESY:RU,ZywOo:FR,NiKo:BA,jL:LT,sh1ro:RU,flameZ:IL,broky:LV,b1t:UA,frozen:SK',
 2025:'ZywOo:FR,donk:RU,ropz:EE,m0NESY:RU,sh1ro:RU,molodoy:KZ,flameZ:IL,frozen:SK,KSCERATO:BR,Spinx:IL'}
 bo={str(y):[x.split(':') for x in v.split(',')] for y,v in TOP.items()}
-H={'cs2':{'nome':'Counter-Strike','torneios':T,'bo':bo}}
+H={'cs2':{'nome':'Counter-Strike','main':'Major','tipos':{'Major':'Majors','IEM':'IEM','EPL':'ESL Pro League','BLAST':'BLAST'},'torneios':T,'bo':bo}}
 open('js/data/hist.js','w').write('/* Histórico real por jogo, pesquisado na web (gerado por tools/gen_hist_cs2.py). Torneio: n, a (ano), tp (tipo), c (campeão), v (vice), p (placar), mvp [nick,time,país], r (line-up, só quando certa). bo: Top 10 anual da HLTV como Bola de Ouro: ano -> [[nick, país ISO2]]. Ausente = não conferido. */\nwindow.HIST = '+json.dumps(H,ensure_ascii=False,separators=(',',':'))+';\n')
 print(len(T))
