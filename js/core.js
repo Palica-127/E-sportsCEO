@@ -255,7 +255,7 @@
     }
   }
   function evoluir() { // fim de split: jogadores jovens evoluem até o potencial
-    const up = p => { if (p && p.pot && p.o < p.pot) { p.o = Math.min(p.pot, p.o + 1 + Math.floor(rnd() * 3)); p.a = Math.min(p.a + 0, 30); } };
+    const up = p => { if (p && p.pot && p.o < p.pot) { p.o = Math.min(p.pot, p.o + 1 + Math.floor(rnd() * 3)); if (p.a != null) p.a = Math.min(p.a + 0, 30); } };
     for (const g in GAMES) { for (const q of Object.values(S.games[g].squads)) q.slots.forEach(up); (S.base[g] || []).forEach(up); }
   }
   function promoverBase(game, sq, id) {

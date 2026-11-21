@@ -1,4 +1,5 @@
 /* Interface: barra superior, seletor de jogo, 5 abas e navegação inferior. Re-renderiza a aba atual a cada mudança. */
+const ANOS = a => a == null ? '—' : a + ' anos';
 (function () {
   'use strict';
   const O = window.Org;
@@ -44,7 +45,7 @@
       <div class="chips"><button class="chip ${!SU.role ? 'on' : ''}" data-act="su-role" data-id="">Todas</button>${roles.map(r => `<button class="chip ${SU.role === r ? 'on' : ''}" data-act="su-role" data-id="${r}">${r}</button>`).join('')}</div>
       <input id="su-q" placeholder="Buscar jogador" value="${esc(SU.q)}"><button class="btn ghost" style="margin-top:8px" data-act="su-sem">Começar sem estrela</button></section>`
       + `<section class="card"><h2>${lista.length} jogadores</h2>` + lista.slice(0, SU.n).map(p => { const ch = O.chanceEstrela(p.o), f = O.fee(p.o);
-        return `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · aceita: ${pc(ch)}</small></div><span class="ovr">${p.o}</span><button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
+        return `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · aceita: ${pc(ch)}</small></div><span class="ovr">${p.o}</span><button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
       + (lista.length > SU.n ? '<button class="btn alt" data-act="su-mais">Mostrar mais</button>' : '') + '</section>';
   }
   const hue = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
@@ -82,7 +83,7 @@
   function achaJog(nick) { const L = (O.dataOf('lol') || {}).leagues || {}; for (const k in L) for (const tier of ['t1', 't2']) for (const t of (L[k][tier] || [])) { const i = (t.p || []).findIndex(p => p && p[0] === nick); if (i >= 0) return { p: t.p[i], i, time: t.n, liga: L[k].nome }; } return null; }
   function fichaJog(nick) {
     const x = X(), j = achaJog(nick), roles = (O.GAMES.lol || {}).roles || [], hon = x.hon[nick] || {}, tit = x.rtit[nick] || [], car = x.rcar[nick] || [], c = x.nat[nick], now = new Date().getFullYear();
-    let h = `<div class="mh">${avatar(nick)}<div><h2>${esc(nick)} </h2><small>${bandeira(nick)} ${c ? esc(x.natN[c] || c) : ''}${j ? ' · ' + roles[j.i] + ' · ' + j.p[2] + ' anos' : ''}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
+    let h = `<div class="mh">${avatar(nick)}<div><h2>${esc(nick)} </h2><small>${bandeira(nick)} ${c ? esc(x.natN[c] || c) : ''}${j ? ' · ' + roles[j.i] + ' · ' + ANOS(j.p[2]) : ''}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
     if (j) h += `<div class="kvs"><div><small>Nota</small><b>${j.p[1]}</b></div><div><small>Time</small><b class="sm">${esc(j.time)}</b></div><div><small>Liga</small><b class="sm">${esc(j.liga)}</b></div><div><small>Salário</small><b class="sm">${O.money(O.salary(j.p[1]))}/sem</b></div></div>`;
     const w = tit.filter(t => t[1] === 'w').length, m = tit.filter(t => t[1] === 'm').length || (hon.msi || []).length, l = tit.filter(t => t[1] === 'l').length;
     if (tit.length || hon.wc) h += `<div class="kvs"><div><small>Mundiais</small><b>${Math.max(w, (hon.wc || []).length)}</b></div><div><small>MSI</small><b>${m}</b></div><div><small>Ligas</small><b>${Math.max(l, hon.lg || 0)}</b></div><div><small>Copas</small><b>${tit.filter(t => t[1] === 'c' || t[1] === 'f').length}</b></div></div>`;
@@ -97,9 +98,9 @@
     const f = achaTime(nome), tt = titulos(nome), x = X(), roles = (O.GAMES.lol || {}).roles || [];
     let h = `<div class="mh">${crest(nome, 'lg')}<div><h2>${esc(nome)}</h2><small>${f ? esc(f.liga) + ' · ' + f.tier : 'Time'}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
     if (f && f.t.p) {
-      const ovr = (f.t.p.reduce((a, p) => a + p[1], 0) / f.t.p.length).toFixed(1), idade = (f.t.p.reduce((a, p) => a + p[2], 0) / f.t.p.length).toFixed(1);
+      const ovr = (f.t.p.reduce((a, p) => a + p[1], 0) / f.t.p.length).toFixed(1), idade = f.t.p.some(p => p[2] == null) ? '—' : (f.t.p.reduce((a, p) => a + p[2], 0) / f.t.p.length).toFixed(1);
       h += `<div class="kvs"><div><small>Força</small><b>${ovr}</b></div><div><small>Idade média</small><b>${idade}</b></div><div><small>Mundiais</small><b>${tt.wc.length}</b></div><div><small>MSI</small><b>${tt.msi.length}</b></div></div>`;
-      h += `<h3>Line-up</h3><div class="lineup">` + f.t.p.map((p, i) => `<div class="lp">${avatar(p[0])}<i class="role ri${i}">${roles[i] || ''}</i><b><a href="#" data-act="ficha" data-id="p:${esc(p[0])}">${esc(p[0])}</a></b>${bandeira(p[0])}<small>${p[2]} anos</small><span class="ovr">${p[1]}</span></div>`).join('') + '</div>';
+      h += `<h3>Line-up</h3><div class="lineup">` + f.t.p.map((p, i) => `<div class="lp">${avatar(p[0])}<i class="role ri${i}">${roles[i] || ''}</i><b><a href="#" data-act="ficha" data-id="p:${esc(p[0])}">${esc(p[0])}</a></b>${bandeira(p[0])}<small>${ANOS(p[2])}</small><span class="ovr">${p[1]}</span></div>`).join('') + '</div>';
     }
     const co = x && x.coach[nome]; if (co) h += `<h3>Técnico</h3><div class="lp">${avatar(co[0])}<b>${esc(co[0])}</b>${bandeira(co[0]) || (x.iso[co[1]] ? `<img class="flag" src="flags/${x.iso[co[1]]}.svg" alt="${esc(x.natN[co[1]] || co[1])}" title="${esc(x.natN[co[1]] || co[1])}" onerror="this.remove()">` : '')}<small>${(x.natN[co[1]] || '')}${co[2] ? ' · ' + (new Date().getFullYear() - +co[2].slice(0, 4)) + ' anos' : ''}</small></div>`;
     if (x && (tt.wc.length || tt.msi.length || (tt.wcv || []).length)) {
@@ -206,12 +207,12 @@
       <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
       const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
-      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div><span class="ovr">${p.o}</span>${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
+      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div><span class="ovr">${p.o}</span>${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     const bs = (S.base || {})[UI.game] || [];
     h += `<section class="card"><h2>🌱 Base</h2>` + (O.infraNivel('base') ? '' : '<p class="hint">Compre a Categoria de base na aba Estrutura para revelar jovens.</p>')
-      + bs.map(p => `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${p.a} anos · potencial ${p.pot}</small></div><span class="ovr">${p.o}</span><button class="mini buy" data-act="base" data-id="${p.id}">Promover</button></div>`).join('') + '</section>';
+      + bs.map(p => `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${ANOS(p.a)} · potencial ${p.pot}</small></div><span class="ovr">${p.o}</span><button class="mini buy" data-act="base" data-id="${p.id}">Promover</button></div>`).join('') + '</section>';
     return h;
   }
   function vMercado() {
@@ -229,7 +230,7 @@
       <div class="row2"><select id="mliga"><option value="">Todas as ligas</option>${ligas.map(l => `<option ${m.liga === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <input id="mq" placeholder="Buscar nome" value="${esc(m.q)}"></div></section>
       <section class="card"><h2>${tot} jogadores</h2>` + lista.slice(0, m.n).map(p => `<div class="slot"><span class="role ri${roles.indexOf(p.r)}">${p.r}</span>
-        <div class="who"><b>${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · ${O.money(O.salary(p.o))}/sem</small></div><span class="ovr">${p.o}</span>
+        <div class="who"><b>${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · ${O.money(O.salary(p.o))}/sem</small></div><span class="ovr">${p.o}</span>
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
   }
@@ -335,7 +336,7 @@
     const key = lg + tier + t.n, open = UI.aberto === key;
     const f = t.p ? (t.p.reduce((a, p) => a + p[1], 0) / t.p.length).toFixed(1) : '—';
     const roles = DG().roles;
-    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${bandeira(p[0])}${esc(p[0])} <small>${p[2]}a</small> <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}${UI.game === 'lol' ? `<button class="mini" data-act="ficha" data-id="${esc(t.n)}">📋 Ficha do time</button>` : ''}</div>` : ''}</div>`;
+    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${bandeira(p[0])}${esc(p[0])} <small>${p[2] == null ? '—' : p[2] + 'a'}</small> <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}${UI.game === 'lol' ? `<button class="mini" data-act="ficha" data-id="${esc(t.n)}">📋 Ficha do time</button>` : ''}</div>` : ''}</div>`;
   }
 
   /* ---------- Render e eventos ---------- */
