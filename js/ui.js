@@ -17,9 +17,9 @@
   const SIMBOLOS = ['🐺', '🦅', '🐉', '🦁', '🐍', '🦈', '🐻', '🦊', '🔥', '⚡', '👑', '💀', '🚀', '🌊', '⭐', '🛡️', '⚔️', '🎯', '🧠', '🌋'];
   const CORES = ['#7c8cff', '#ef6b57', '#4cc38a', '#f0a53c', '#b077f0', '#5aa0ff', '#ff6fa8', '#e9edf5', '#22d3ee', '#a3e635'];
   const FORMAS = [['escudo', 'Escudo'], ['circulo', 'Círculo'], ['hex', 'Hexágono'], ['quad', 'Quadrado']];
-  const logo = (l, sz) => `<span class="logo f-${l.f}" style="--c:${l.c};--sz:${sz || 40}px">${l.s}</span>`;
+  const logo = (l, sz) => l.img ? `<span class="logo f-${l.f} img" style="--c:${l.c};--sz:${sz || 40}px;background-image:url(${l.img})" role="img" aria-label="Logo"></span>` : `<span class="logo f-${l.f}" style="--c:${l.c};--sz:${sz || 40}px">${l.s}</span>`;
   function logoEditor(l) {
-    return `<div class="lg-prev">${logo(l, 72)}</div><div class="chips">${SIMBOLOS.map(x => `<button class="chip sym ${l.s === x ? 'on' : ''}" data-act="lg" data-k="s" data-id="${x}">${x}</button>`).join('')}</div>`
+    return `<div class="lg-prev">${logo(l, 72)}</div><div class="chips"><label class="chip up">📷 ${l.img ? 'Trocar imagem' : 'Enviar imagem'}<input type="file" id="logo-file" accept="image/*" hidden></label>${l.img ? '<button class="chip" data-act="lg-rm">Remover imagem</button>' : ''}</div><div class="chips">${SIMBOLOS.map(x => `<button class="chip sym ${l.s === x ? 'on' : ''}" data-act="lg" data-k="s" data-id="${x}">${x}</button>`).join('')}</div>`
       + `<div class="chips">${CORES.map(c => `<button class="chip cor ${l.c === c ? 'on' : ''}" style="background:${c}" data-act="lg" data-k="c" data-id="${c}" aria-label="cor ${c}"></button>`).join('')}</div>`
       + `<div class="chips">${FORMAS.map(([f, n]) => `<button class="chip ${l.f === f ? 'on' : ''}" data-act="lg" data-k="f" data-id="${f}">${n}</button>`).join('')}</div>`;
   }
@@ -233,7 +233,8 @@
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
-    if (a === 'lg') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l[b.dataset.k] = id; O.save(); render(); }
+    if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; O.save(); render(); }
+    else if (a === 'lg') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l[b.dataset.k] = id; O.save(); render(); }
     else if (a === 'su-next') { SU.nome = ($('su-nome') || {}).value || SU.nome; SU.step = 2; render(); }
     else if (a === 'su-back') { SU.step = 1; render(); }
     else if (a === 'su-game') { SU.game = id; SU.regiao = null; render(); }
@@ -267,7 +268,20 @@
     else if (a === 'time') { UI.aberto = UI.aberto === id ? null : id; render(); }
     else if (a === 'reset') { if (UI.resetArm) { O.reset(); SU.step = 1; SU.nome = ''; UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
   });
+  function lerLogo(file) { // reduz para 128x128 (corte quadrado centralizado) e guarda como data URL no save
+    if (!file || !/^image\//.test(file.type)) { toast('Escolha um arquivo de imagem.'); return; }
+    if (file.size > 8e6) { toast('Imagem grande demais (máx. 8 MB).'); return; }
+    const fr = new FileReader();
+    fr.onload = () => { const im = new Image(); im.onload = () => {
+      const c = document.createElement('canvas'), n = 128; c.width = c.height = n; const x = c.getContext('2d'), m = Math.min(im.width, im.height);
+      x.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, n, n);
+      const l = O.get().setup === 'config' ? SU.logo : O.get().org.logo; l.img = c.toDataURL('image/webp', 0.85); if (!l.img.startsWith('data:image/webp')) l.img = c.toDataURL('image/png');
+      O.save(); render(); toast('Logo atualizado.'); };
+      im.onerror = () => toast('Não consegui abrir essa imagem.'); im.src = fr.result; };
+    fr.readAsDataURL(file);
+  }
   document.addEventListener('change', e => {
+    if (e.target.id === 'logo-file') { lerLogo(e.target.files[0]); e.target.value = ''; return; }
     if (e.target.id === 'regiao') { O.trocarRegiao(e.target.value, UI.game); UI.ligaVer = null; toast('Região trocada: competições deste jogo reiniciadas.'); render(); }
     else if (e.target.id === 'mliga') { UI.mk.liga = e.target.value; UI.mk.n = 30; render(); }
     else if (e.target.id === 'orgnome') { O.get().org.nome = e.target.value.trim() || 'Minha Org'; O.save(); header(); }

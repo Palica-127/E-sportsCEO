@@ -2,7 +2,7 @@
 
 Jogo de gerenciamento de uma organização de esports, em site estático (sem build, sem backend). Abra `index.html` ou publique no Vercel (Framework "Other", sem build command).
 
-**Visual:** inspirado no BrasLOL (azul-marinho e dourado, fontes Barlow, painéis com cantos dourados, escudos por time, trilha de etapas). Aba Calendário com próxima partida, chance de vitória, mês e agenda. Os escudos dos times são gerados (iniciais + cor), não são os logos reais.
+**Visual:** inspirado no BrasLOL (azul-marinho e dourado, fontes Barlow, painéis com cantos dourados, escudos por time, trilha de etapas). Logo: símbolos prontos ou imagem enviada por você (reduzida para 128x128 e salva no navegador). Aba Calendário com próxima partida, chance de vitória, mês e agenda. Os escudos dos times são gerados (iniciais + cor), não são os logos reais.
 
 **Layout:** feito principalmente para PC (barra lateral + cards em colunas a partir de 900px) e também funciona no celular.
 
