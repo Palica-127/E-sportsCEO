@@ -98,6 +98,9 @@ func log_(msg: String) -> void:
 	S.logN = int(S.get("logN", 0)) + 1
 	S.log.push_front("S%d/%d: %s" % [S.org.semana, S.org.ano, msg])
 	if S.log.size() > 40: S.log.resize(40)
+	if msg.begins_with("Proposta de ") or msg.begins_with("Novo evento") or msg.begins_with("Evento"): return   # já chegam pela caixa de entrada
+	if ": campeão" in msg: feed(msg, "", "titulo", 3)
+	else: feed(msg, "", "org", 1)
 
 # ---------- Org: estrutura, times, elenco ----------
 func infra_nivel(id, g) -> int: return int(S.infra.get(g, {}).get(id, 0))
@@ -245,7 +248,7 @@ func semanal_org() -> void:
 		S.evento.sem -= 1
 		if S.evento.sem <= 0: S.evento = null; log_("Evento expirou sem decisão")
 	if S.evento == null and rnd() < 0.12:
-		var e = EVENTOS[floori(rnd() * EVENTOS.size())]; S.evento = {"id": e.id, "sem": 4}; log_("Novo evento: " + e.txt)
+		var e = EVENTOS[floori(rnd() * EVENTOS.size())]; S.evento = {"id": e.id, "sem": 4}; log_("Novo evento: " + e.txt); _msg_evento(e)
 func bonus_temp(g) -> float:
 	var t = (1.0 if S.foco == "treino" else 0.0) + (S.buff.f if S.buff != null else 0.0)
 	for x in S.itens:
@@ -284,3 +287,8 @@ func comprar_loja(id, g) -> Dictionary:
 	if it.tipo != "buff": S.loja = S.loja.filter(func(x): return x != id)
 	log_("Loja: %s%s" % [it.nome, (" (" + GAMES[g].curto + ")") if it.tipo == "buff" else ""]); save()
 	return {"ok": true, "msg": it.nome + " comprado."}
+
+func _msg_evento(e: Dictionary) -> void:
+	var ops = []
+	for i in e.ops.size(): ops.append({"t": e.ops[i].t, "k": "evento", "a": i, "eid": e.id})
+	msg("evento", "Evento", e.txt + " (decida em até 4 semanas)", ops)

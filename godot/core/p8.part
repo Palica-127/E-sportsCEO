@@ -60,6 +60,7 @@ func dir_virada(ano_ant: int) -> void:   # chamado quando o ano vira; avalia o a
 	if conf <= 15.0: S.org.rep = cl(S.org.rep - 0.1, 0.5, 10)
 	var h: Array = S.dir.get("hist", []); h.push_front({"ano": ano_ant, "oks": oks, "total": S.dir.objs.size(), "conf": int(conf), "premio": premio})
 	log_("Diretoria %d: %d de %d objetivos cumpridos%s. Confiança %d%%." % [ano_ant, oks, S.dir.objs.size(), (" (bônus " + money(premio) + ")") if premio > 0 else "", int(conf)])
+	msg("diretoria", "Balanço da diretoria %d" % ano_ant, "%d de %d objetivos cumpridos. Confiança da diretoria: %d%% (%s).%s" % [oks, S.dir.objs.size(), int(conf), dir_rotulo(conf), (" Bônus de " + money(premio) + ".") if premio > 0 else ""])
 	S.dir = {"ano": S.org.ano, "conf": conf, "objs": [], "hist": h.slice(0, 10)}
 	dir_gerar()
 func dir_rotulo(conf: float) -> String:
@@ -210,6 +211,7 @@ func propostas_tick() -> void:
 			var tm = L.t1[floori(rnd() * L.t1.size())].n
 			pr.append({"g": g2, "sq": c[1], "id": p2.id, "nick": p2.n, "o": p2.o, "time": tm, "valor": jr(valor_venda(p2) * (1.15 + rnd() * 0.5) / 500.0) * 500, "sem": 3})
 			log_("Proposta de %s por %s: %s" % [tm, p2.n, money(pr[pr.size() - 1].valor)])
+			msg("proposta", "Proposta por %s" % p2.n, "O %s quer contratar %s (nota %d) por %s. A oferta vale por 3 semanas." % [tm, p2.n, p2.o, money(pr[pr.size() - 1].valor)], [{"t": "Vender por " + money(pr[pr.size() - 1].valor), "k": "prop_sim", "pid": p2.id}, {"t": "Recusar", "k": "prop_nao", "pid": p2.id}], g2)
 	S["propostas"] = pr
 func aceitar_proposta(i) -> Dictionary:
 	var pr: Array = S.get("propostas", [])

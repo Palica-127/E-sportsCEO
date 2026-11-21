@@ -1,0 +1,47 @@
+
+# ---------- Central de informação: caixa de entrada, notícias e notificações (novo no Godot) ----------
+const FEED_MAX := 150
+const INBOX_MAX := 60
+func feed(txt: String, g = "", tipo = "info", imp := 1) -> void:
+	var f: Array = S.get("feed", [])
+	f.push_front({"s": S.org.semana, "y": S.org.ano, "g": g, "t": txt, "k": tipo, "i": imp})
+	if f.size() > FEED_MAX: f.resize(FEED_MAX)
+	S["feed"] = f
+func msg(tipo: String, titulo: String, txt: String, ops: Array = [], g = "") -> void:
+	var ib: Array = S.get("inbox", [])
+	S["inbox_n"] = int(S.get("inbox_n", 0)) + 1
+	ib.push_front({"id": S.inbox_n, "tp": tipo, "ti": titulo, "tx": txt, "s": S.org.semana, "y": S.org.ano, "lida": false, "ops": ops, "g": g, "res": ""})
+	if ib.size() > INBOX_MAX: ib.resize(INBOX_MAX)
+	S["inbox"] = ib
+func inbox_nao_lidas() -> int:
+	var n = 0
+	for m in S.get("inbox", []):
+		if not m.lida: n += 1
+	return n
+func msg_achar(id) -> Variant:
+	for m in S.get("inbox", []):
+		if int(m.id) == int(id): return m
+	return null
+func msg_ler(id) -> void:
+	var m = msg_achar(id)
+	if m != null and not m.lida: m.lida = true
+func msg_todas_lidas() -> void:
+	for m in S.get("inbox", []): m.lida = true
+	save()
+func msg_agir(id, i) -> Dictionary:
+	var m = msg_achar(id)
+	if m == null or m.res != "": return {"ok": false, "msg": "Esta mensagem já foi respondida."}
+	var op: Dictionary = m.ops[i]; var r: Dictionary = {"ok": false, "msg": "Ação indisponível."}
+	match op.k:
+		"prop_sim", "prop_nao":
+			var pr: Array = S.get("propostas", []); var ix = -1
+			for k in pr.size():
+				if pr[k].id == op.pid: ix = k
+			if ix < 0: r = {"ok": false, "msg": "A proposta expirou."}
+			elif op.k == "prop_sim": r = aceitar_proposta(ix)
+			else: recusar_proposta(ix); r = {"ok": true, "msg": "Proposta recusada."}
+		"evento":
+			if S.evento != null and S.evento.id == op.eid: r = escolher_evento(int(op.a))
+			else: r = {"ok": false, "msg": "O evento já expirou."}
+	m.res = op.t if r.ok else "Expirou"
+	m.lida = true; save(); return r

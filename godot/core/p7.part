@@ -215,7 +215,8 @@ func mundo_virar_ano() -> void:
 	for x in apos_log.slice(0, 3): log_("%s se aposentou aos %d anos (%s)" % [x.nick, x.a, GAMES[x.g].curto])
 func mundo_tick() -> void:
 	mundo_sync()
-	while S.mundo.y < S.org.ano: mundo_virar_ano()
+	while S.mundo.y < S.org.ano:
+		var n0 = S.mundo.apos.size(); mundo_virar_ano(); _feed_mundo(n0)
 func mundo_refrescar_liga(Lg, g) -> void:
 	var d = raw_data(g); var L = d.leagues.get(Lg.reg) if d != null else null; Lg.mv = S.mundo.n
 	if L == null: return
@@ -235,3 +236,14 @@ func aposentados(g = null) -> Array:
 	for x in S.mundo.apos:
 		if g == null or x[1] == g: out.append({"ano": x[0], "g": x[1], "nick": x[2], "idade": x[3], "o": x[4], "flag": x[5]})
 	return out
+
+func _feed_mundo(_n0) -> void:
+	var y: int = S.mundo.y
+	for x in S.mundo.apos:
+		if x[0] == y and x[4] >= 80: feed("%s (%s) anuncia a aposentadoria aos %d anos, com pico de %d" % [x[2], GAMES[x[1]].curto, x[3], x[4]], x[1], "aposent", 2)
+	for g in S.mundo.ov:
+		var best = null
+		for id in S.mundo.ov[g]:
+			var e: Array = S.mundo.ov[g][id]
+			if e.size() > 6 and e[3] and e[6] == y and (best == null or e[2] > best[2]): best = e
+		if best != null: feed("Nova revelação em %s: %s (%da, potencial %d)" % [GAMES[g].curto, best[4], best[1], best[2]], g, "talento", 2)

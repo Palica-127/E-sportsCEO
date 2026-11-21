@@ -141,6 +141,7 @@ func finalizar(c, campeao, eu) -> void:
 	else:
 		S.org.rep = cl(S.org.rep - 0.03 * (1.0 if c.sq == "t1" else 0.3), 0.5, 10); log_("%s %s: fora dos playoffs" % [GAMES[c.game].curto, SQUADS[c.sq].nome])
 	c.hist.push_front({"y": S.org.ano, "s": c.split, "camp": nome(c, campeao), "vice": nome(c, vice), "eu": meu})
+	feed("%s é campeão da liga principal de %s (%s)" % [nome(c, campeao), GAMES[c.game].curto, SQUADS[c.sq].nome] if vice < 0 else "%s bate %s e é campeão de %s" % [nome(c, campeao), nome(c, vice), GAMES[c.game].curto], c.game, "titulo", 3 if int(campeao) == int(eu) else 2)
 	if c.hist.size() > 12: c.hist.resize(12)
 	reg_final(c, campeao, vice, po, meu)
 	var pr = func(i): return po.rs.find(i)

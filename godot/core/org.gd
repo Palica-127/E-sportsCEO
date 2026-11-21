@@ -286,6 +286,9 @@ func log_(msg: String) -> void:
 	S.logN = int(S.get("logN", 0)) + 1
 	S.log.push_front("S%d/%d: %s" % [S.org.semana, S.org.ano, msg])
 	if S.log.size() > 40: S.log.resize(40)
+	if msg.begins_with("Proposta de ") or msg.begins_with("Novo evento") or msg.begins_with("Evento"): return   # já chegam pela caixa de entrada
+	if ": campeão" in msg: feed(msg, "", "titulo", 3)
+	else: feed(msg, "", "org", 1)
 
 # ---------- Org: estrutura, times, elenco ----------
 func infra_nivel(id, g) -> int: return int(S.infra.get(g, {}).get(id, 0))
@@ -433,7 +436,7 @@ func semanal_org() -> void:
 		S.evento.sem -= 1
 		if S.evento.sem <= 0: S.evento = null; log_("Evento expirou sem decisão")
 	if S.evento == null and rnd() < 0.12:
-		var e = EVENTOS[floori(rnd() * EVENTOS.size())]; S.evento = {"id": e.id, "sem": 4}; log_("Novo evento: " + e.txt)
+		var e = EVENTOS[floori(rnd() * EVENTOS.size())]; S.evento = {"id": e.id, "sem": 4}; log_("Novo evento: " + e.txt); _msg_evento(e)
 func bonus_temp(g) -> float:
 	var t = (1.0 if S.foco == "treino" else 0.0) + (S.buff.f if S.buff != null else 0.0)
 	for x in S.itens:
@@ -472,6 +475,11 @@ func comprar_loja(id, g) -> Dictionary:
 	if it.tipo != "buff": S.loja = S.loja.filter(func(x): return x != id)
 	log_("Loja: %s%s" % [it.nome, (" (" + GAMES[g].curto + ")") if it.tipo == "buff" else ""]); save()
 	return {"ok": true, "msg": it.nome + " comprado."}
+
+func _msg_evento(e: Dictionary) -> void:
+	var ops = []
+	for i in e.ops.size(): ops.append({"t": e.ops[i].t, "k": "evento", "a": i, "eid": e.id})
+	msg("evento", "Evento", e.txt + " (decida em até 4 semanas)", ops)
 
 # ---------- Treino, desenvolvimento e base ----------
 var FOCOS = {
@@ -927,6 +935,7 @@ func finalizar(c, campeao, eu) -> void:
 	else:
 		S.org.rep = cl(S.org.rep - 0.03 * (1.0 if c.sq == "t1" else 0.3), 0.5, 10); log_("%s %s: fora dos playoffs" % [GAMES[c.game].curto, SQUADS[c.sq].nome])
 	c.hist.push_front({"y": S.org.ano, "s": c.split, "camp": nome(c, campeao), "vice": nome(c, vice), "eu": meu})
+	feed("%s é campeão da liga principal de %s (%s)" % [nome(c, campeao), GAMES[c.game].curto, SQUADS[c.sq].nome] if vice < 0 else "%s bate %s e é campeão de %s" % [nome(c, campeao), nome(c, vice), GAMES[c.game].curto], c.game, "titulo", 3 if int(campeao) == int(eu) else 2)
 	if c.hist.size() > 12: c.hist.resize(12)
 	reg_final(c, campeao, vice, po, meu)
 	var pr = func(i): return po.rs.find(i)
@@ -1766,7 +1775,8 @@ func mundo_virar_ano() -> void:
 	for x in apos_log.slice(0, 3): log_("%s se aposentou aos %d anos (%s)" % [x.nick, x.a, GAMES[x.g].curto])
 func mundo_tick() -> void:
 	mundo_sync()
-	while S.mundo.y < S.org.ano: mundo_virar_ano()
+	while S.mundo.y < S.org.ano:
+		var n0 = S.mundo.apos.size(); mundo_virar_ano(); _feed_mundo(n0)
 func mundo_refrescar_liga(Lg, g) -> void:
 	var d = raw_data(g); var L = d.leagues.get(Lg.reg) if d != null else null; Lg.mv = S.mundo.n
 	if L == null: return
@@ -1786,6 +1796,17 @@ func aposentados(g = null) -> Array:
 	for x in S.mundo.apos:
 		if g == null or x[1] == g: out.append({"ano": x[0], "g": x[1], "nick": x[2], "idade": x[3], "o": x[4], "flag": x[5]})
 	return out
+
+func _feed_mundo(_n0) -> void:
+	var y: int = S.mundo.y
+	for x in S.mundo.apos:
+		if x[0] == y and x[4] >= 80: feed("%s (%s) anuncia a aposentadoria aos %d anos, com pico de %d" % [x[2], GAMES[x[1]].curto, x[3], x[4]], x[1], "aposent", 2)
+	for g in S.mundo.ov:
+		var best = null
+		for id in S.mundo.ov[g]:
+			var e: Array = S.mundo.ov[g][id]
+			if e.size() > 6 and e[3] and e[6] == y and (best == null or e[2] > best[2]): best = e
+		if best != null: feed("Nova revelação em %s: %s (%da, potencial %d)" % [GAMES[g].curto, best[4], best[1], best[2]], g, "talento", 2)
 
 # ---------- Diretoria: objetivos anuais e confiança (novo no Godot) ----------
 var dir_off = false   # os testes de paridade com o JS desligam isto
@@ -1848,6 +1869,7 @@ func dir_virada(ano_ant: int) -> void:   # chamado quando o ano vira; avalia o a
 	if conf <= 15.0: S.org.rep = cl(S.org.rep - 0.1, 0.5, 10)
 	var h: Array = S.dir.get("hist", []); h.push_front({"ano": ano_ant, "oks": oks, "total": S.dir.objs.size(), "conf": int(conf), "premio": premio})
 	log_("Diretoria %d: %d de %d objetivos cumpridos%s. Confiança %d%%." % [ano_ant, oks, S.dir.objs.size(), (" (bônus " + money(premio) + ")") if premio > 0 else "", int(conf)])
+	msg("diretoria", "Balanço da diretoria %d" % ano_ant, "%d de %d objetivos cumpridos. Confiança da diretoria: %d%% (%s).%s" % [oks, S.dir.objs.size(), int(conf), dir_rotulo(conf), (" Bônus de " + money(premio) + ".") if premio > 0 else ""])
 	S.dir = {"ano": S.org.ano, "conf": conf, "objs": [], "hist": h.slice(0, 10)}
 	dir_gerar()
 func dir_rotulo(conf: float) -> String:
@@ -1998,6 +2020,7 @@ func propostas_tick() -> void:
 			var tm = L.t1[floori(rnd() * L.t1.size())].n
 			pr.append({"g": g2, "sq": c[1], "id": p2.id, "nick": p2.n, "o": p2.o, "time": tm, "valor": jr(valor_venda(p2) * (1.15 + rnd() * 0.5) / 500.0) * 500, "sem": 3})
 			log_("Proposta de %s por %s: %s" % [tm, p2.n, money(pr[pr.size() - 1].valor)])
+			msg("proposta", "Proposta por %s" % p2.n, "O %s quer contratar %s (nota %d) por %s. A oferta vale por 3 semanas." % [tm, p2.n, p2.o, money(pr[pr.size() - 1].valor)], [{"t": "Vender por " + money(pr[pr.size() - 1].valor), "k": "prop_sim", "pid": p2.id}, {"t": "Recusar", "k": "prop_nao", "pid": p2.id}], g2)
 	S["propostas"] = pr
 func aceitar_proposta(i) -> Dictionary:
 	var pr: Array = S.get("propostas", [])
@@ -2012,3 +2035,50 @@ func aceitar_proposta(i) -> Dictionary:
 func recusar_proposta(i) -> void:
 	var pr: Array = S.get("propostas", [])
 	if i < pr.size(): pr.remove_at(i); S["propostas"] = pr; save()
+
+# ---------- Central de informação: caixa de entrada, notícias e notificações (novo no Godot) ----------
+const FEED_MAX := 150
+const INBOX_MAX := 60
+func feed(txt: String, g = "", tipo = "info", imp := 1) -> void:
+	var f: Array = S.get("feed", [])
+	f.push_front({"s": S.org.semana, "y": S.org.ano, "g": g, "t": txt, "k": tipo, "i": imp})
+	if f.size() > FEED_MAX: f.resize(FEED_MAX)
+	S["feed"] = f
+func msg(tipo: String, titulo: String, txt: String, ops: Array = [], g = "") -> void:
+	var ib: Array = S.get("inbox", [])
+	S["inbox_n"] = int(S.get("inbox_n", 0)) + 1
+	ib.push_front({"id": S.inbox_n, "tp": tipo, "ti": titulo, "tx": txt, "s": S.org.semana, "y": S.org.ano, "lida": false, "ops": ops, "g": g, "res": ""})
+	if ib.size() > INBOX_MAX: ib.resize(INBOX_MAX)
+	S["inbox"] = ib
+func inbox_nao_lidas() -> int:
+	var n = 0
+	for m in S.get("inbox", []):
+		if not m.lida: n += 1
+	return n
+func msg_achar(id) -> Variant:
+	for m in S.get("inbox", []):
+		if int(m.id) == int(id): return m
+	return null
+func msg_ler(id) -> void:
+	var m = msg_achar(id)
+	if m != null and not m.lida: m.lida = true
+func msg_todas_lidas() -> void:
+	for m in S.get("inbox", []): m.lida = true
+	save()
+func msg_agir(id, i) -> Dictionary:
+	var m = msg_achar(id)
+	if m == null or m.res != "": return {"ok": false, "msg": "Esta mensagem já foi respondida."}
+	var op: Dictionary = m.ops[i]; var r: Dictionary = {"ok": false, "msg": "Ação indisponível."}
+	match op.k:
+		"prop_sim", "prop_nao":
+			var pr: Array = S.get("propostas", []); var ix = -1
+			for k in pr.size():
+				if pr[k].id == op.pid: ix = k
+			if ix < 0: r = {"ok": false, "msg": "A proposta expirou."}
+			elif op.k == "prop_sim": r = aceitar_proposta(ix)
+			else: recusar_proposta(ix); r = {"ok": true, "msg": "Proposta recusada."}
+		"evento":
+			if S.evento != null and S.evento.id == op.eid: r = escolher_evento(int(op.a))
+			else: r = {"ok": false, "msg": "O evento já expirou."}
+	m.res = op.t if r.ok else "Expirou"
+	m.lida = true; save(); return r

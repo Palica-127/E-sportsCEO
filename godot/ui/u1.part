@@ -3,7 +3,7 @@ extends Control
 
 const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const NAV_MAIN := [["org", "Painel"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"]]
-const NAV_MORE := [["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
+const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
 const BG := Color("0a0d16"); const SURF := Color("131929"); const SURF2 := Color("1b2338"); const LINE := Color("27314a")
 const CARD := SURF; const ACC := Color("4f8cff"); const ACC2 := Color("22d3ee"); const TXT := Color("eef1ff"); const DIM := Color("8a94b8")
 const OK := Color("3ddc97"); const BAD := Color("ff5d6c"); const GOLD := Color("ffc857")
@@ -171,6 +171,9 @@ func render() -> void:
 	topsub.text = "Semana %d · %d" % [S.org.semana, S.org.ano]
 	pill(topchips, "Caixa " + O.money(S.org.caixa), OK if S.org.caixa >= 0 else BAD, true)
 	pill(topchips, "Rep %.1f" % S.org.rep, GOLD); pill(topchips, _fmt_n(S.social.seg) + " seg.", ACC2)
+	var nl: int = O.inbox_nao_lidas()
+	if nl > 0:
+		var ib = Button.new(); ib.text = "Msgs %d" % nl; ib.custom_minimum_size.y = 34; ib.add_theme_font_size_override("font_size", 20); chip_style(ib, BAD, true); ib.pressed.connect(func(): tab = "inbox"; render()); topchips.add_child(ib)
 	for g in O.GAMES:
 		if not O.ativo(g): continue
 		if O.aberto(g):
@@ -186,6 +189,8 @@ func render() -> void:
 		"mercado": vmercado()
 		"cal": vcal()
 		"ligas": vligas()
+		"inbox": vinbox()
+		"noticias": vnoticias()
 		"fin": vfin()
 		"neg": vneg()
 		"hall": vhall()

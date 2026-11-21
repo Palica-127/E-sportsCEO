@@ -3,7 +3,7 @@ extends Control
 
 const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const NAV_MAIN := [["org", "Painel"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"]]
-const NAV_MORE := [["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
+const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
 const BG := Color("0a0d16"); const SURF := Color("131929"); const SURF2 := Color("1b2338"); const LINE := Color("27314a")
 const CARD := SURF; const ACC := Color("4f8cff"); const ACC2 := Color("22d3ee"); const TXT := Color("eef1ff"); const DIM := Color("8a94b8")
 const OK := Color("3ddc97"); const BAD := Color("ff5d6c"); const GOLD := Color("ffc857")
@@ -171,6 +171,9 @@ func render() -> void:
 	topsub.text = "Semana %d · %d" % [S.org.semana, S.org.ano]
 	pill(topchips, "Caixa " + O.money(S.org.caixa), OK if S.org.caixa >= 0 else BAD, true)
 	pill(topchips, "Rep %.1f" % S.org.rep, GOLD); pill(topchips, _fmt_n(S.social.seg) + " seg.", ACC2)
+	var nl: int = O.inbox_nao_lidas()
+	if nl > 0:
+		var ib = Button.new(); ib.text = "Msgs %d" % nl; ib.custom_minimum_size.y = 34; ib.add_theme_font_size_override("font_size", 20); chip_style(ib, BAD, true); ib.pressed.connect(func(): tab = "inbox"; render()); topchips.add_child(ib)
 	for g in O.GAMES:
 		if not O.ativo(g): continue
 		if O.aberto(g):
@@ -186,6 +189,8 @@ func render() -> void:
 		"mercado": vmercado()
 		"cal": vcal()
 		"ligas": vligas()
+		"inbox": vinbox()
+		"noticias": vnoticias()
 		"fin": vfin()
 		"neg": vneg()
 		"hall": vhall()
@@ -1021,3 +1026,45 @@ func vtransf() -> void:
 			var l2 = Label.new(); l2.text = "%s · %sa · %s · pot %d" % [p.r, str(p.get("a", "?")), p.t, pv.est]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
 			var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 28); ov.add_theme_color_override("font_color", nota_col(p.o)); rr.add_child(ov)
 			ignore_mouse(rb[0])
+
+# ---------- Central de informação (UI) ----------
+var inbox_open = -1; var inbox_filtro = "todas"; var news_filtro = "todas"
+const TP_COR := {"proposta": Color("3ddc97"), "evento": Color("ffc857"), "diretoria": Color("4f8cff"), "info": Color("8a94b8")}
+func vinbox() -> void:
+	var ib: Array = O.S.get("inbox", [])
+	var c0 = card()
+	chips(c0, [["todas", "Todas"], ["naolidas", "Não lidas (%d)" % O.inbox_nao_lidas()]], inbox_filtro, func(id): inbox_filtro = id; render())
+	if O.inbox_nao_lidas() > 0: btn(c0, "Marcar todas como lidas", func(): O.msg_todas_lidas(); render())
+	var vis = ib.filter(func(m): return inbox_filtro == "todas" or not m.lida)
+	if vis.is_empty():
+		var ce = card(); lbl(ce, "Nenhuma mensagem. Propostas, eventos e balanços da diretoria chegam aqui.", 22, DIM)
+	for m in vis.slice(0, 30):
+		var col: Color = TP_COR.get(m.tp, DIM)
+		var c = card("", null, col)
+		var h = hrow(c)
+		if not m.lida: pill(h, "NOVA", col, true)
+		pill(h, str(m.tp).capitalize(), col)
+		var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(sl); lbl(h, "S%d/%d" % [m.s, m.y], 19, DIM, false)
+		var tb = Button.new(); tb.flat = true; tb.alignment = HORIZONTAL_ALIGNMENT_LEFT; tb.text = m.ti; tb.add_theme_font_size_override("font_size", 27); tb.pressed.connect(func(): inbox_open = -1 if inbox_open == int(m.id) else int(m.id); O.msg_ler(m.id); render()); c.add_child(tb)
+		if inbox_open == int(m.id) or (m.res == "" and m.ops.size() and not m.lida):
+			lbl(c, m.tx, 23, TXT)
+			if m.res != "": pill(c, "Respondida: " + m.res, OK)
+			else:
+				for i in m.ops.size():
+					var ii = i; btn(c, m.ops[i].t, func(): res(O.msg_agir(m.id, ii)), false, i == 0)
+func vnoticias() -> void:
+	var c0 = card()
+	var its = [["todas", "Todas"], ["org", "Minha org"], ["titulo", "Títulos"]]
+	for g in O.GAMES:
+		if O.ativo(g): its.append([g, gname(g)])
+	chips(c0, its, news_filtro, func(id): news_filtro = id; render())
+	var fd: Array = O.S.get("feed", []).filter(func(x): return news_filtro == "todas" or (news_filtro == "org" and x.k == "org") or (news_filtro == "titulo" and x.k == "titulo") or x.g == news_filtro)
+	var c = card("Central de notícias", null, ACC2)
+	if fd.is_empty(): lbl(c, "Sem notícias ainda. Avance algumas semanas.", 22, DIM)
+	for x in fd.slice(0, 40):
+		var h = hrow(c)
+		var cor = GOLD if x.i >= 3 else ACC if x.i == 2 else DIM
+		var bar_ = ColorRect.new(); bar_.color = cor; bar_.custom_minimum_size = Vector2(4, 0); h.add_child(bar_)
+		var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 0); h.add_child(v)
+		lbl(v, x.t, 23 if x.i >= 2 else 21, TXT if x.i >= 2 else DIM)
+		lbl(v, "S%d/%d%s" % [x.s, x.y, (" · " + gname(x.g)) if x.g != "" else ""], 17, DIM, false)
