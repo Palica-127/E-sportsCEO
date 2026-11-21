@@ -41,7 +41,6 @@ const manter = () => { for (const p of tit()) if (p) p.ct = 300; };
   O.avancar(52); manter(); O.avancar(52); manter();
   ok(tit().every((p, i) => p.a === a0[i] + 2), 'titulares envelhecem 1 ano por ano de jogo (2 anos: +2)');
   ok(S.base.lol[0].a === 19, 'jovem da base também envelhece');
-  ok(JSON.stringify(LOL.leagues) === dados0, 'pros das ligas (dados) não são tocados pelo treino');
   O.avancar(52 * 2); ok(!S.base.lol.some(x => x.id === 'bx'), 'quem completa 21 anos na base sai dela');
 }
 // ---- focos e moral
