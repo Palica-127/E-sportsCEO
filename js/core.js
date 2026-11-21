@@ -14,7 +14,7 @@
     fifa:     { id: 'fifa',     nome: 'EA FC (FIFA)',        curto: 'EA FC',    icone: '⚽', get ativo() { return !!dataOf(this.id); }, subs: 1, roles: ['JOG'] },
     wr:       { id: 'wr',       nome: 'Wild Rift',           curto: 'Wild Rift', icone: '📱', get ativo() { return !!dataOf(this.id); }, subs: 2, roles: ['TOP', 'JNG', 'MID', 'ADC', 'SUP'] },
   };
-  const dataOf = g => { const d = g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null; if (d && !d.inicio) d.inicio = d.leagues.CBLOL ? 'CBLOL' : Object.keys(d.leagues)[0]; return d; };
+  const dataOf = g => { mundoSync(); const d = g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null; if (d && !d.inicio) d.inicio = d.leagues.CBLOL ? 'CBLOL' : Object.keys(d.leagues)[0]; return d; };
   const slotsDe = g => GAMES[g].roles.length + GAMES[g].subs;
   /* premio = bolsa do campeonato do nível; licenca = custo para criar o time */
   const SQUADS = {
@@ -71,8 +71,9 @@
       const mk = () => ({ on: false, slots: Array(slotsDe(g)).fill(null) });
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
-    return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
+    const J = { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
              infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, aporte: 0, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
+    J.mundo = novoMundo(J.org.ano); return J;
   }
   let S = novoJogo();
   const get = () => S;
@@ -85,7 +86,7 @@
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
         s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; if (Object.values(s.infra).some(v => typeof v === 'number')) { const old = s.infra; s.infra = {}; for (const g in base.games) s.infra[g] = Object.assign({}, old); }; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
-        S = s; return true;
+        ajustarMundo(s); S = s; return true;
       }
     } catch (e) {}
     return false;
@@ -143,8 +144,8 @@
     const out = [], roles = D(g).roles, id0 = g === 'lol' ? '' : g + '-';
     for (const lg in D(g).leagues) {
       const L = D(g).leagues[lg];
-      L.t1.forEach((t, ti) => t.p.forEach((p, i) => out.push({ id: `${id0}${lg}-1-${ti}-${i}`, n: p[0], o: p[1], a: p[2], c: p[3], r: roles[i], t: t.n, l: lg, tier: 'T1' })));
-      L.t2.forEach((t, ti) => (t.p || []).forEach((p, i) => p && out.push({ id: `${id0}${lg}-2-${ti}-${i}`, n: p[0], o: p[1], a: p[2], c: p[3], r: roles[i], t: t.n, l: lg, tier: 'T2' })));
+      L.t1.forEach((t, ti) => t.p.forEach((p, i) => out.push({ id: `${id0}${lg}-1-${ti}-${i}${p[4] ? '~' + p[4] : ''}`, n: p[0], o: p[1], a: p[2], c: p[3], r: roles[i], t: t.n, l: lg, tier: 'T1' })));
+      L.t2.forEach((t, ti) => (t.p || []).forEach((p, i) => p && out.push({ id: `${id0}${lg}-2-${ti}-${i}${p[4] ? '~' + p[4] : ''}`, n: p[0], o: p[1], a: p[2], c: p[3], r: roles[i], t: t.n, l: lg, tier: 'T2' })));
     }
     return (_pool[g] = out);
   }
@@ -353,9 +354,10 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
   }
   /* membros de cada divisão na região da org: d1 = T1, d2 = T2, d3 = Academy (times "Academy" gerados dos T1) */
   function ligaSync(g = 'lol') {
-    const k = regiaoDe(g); S.ligas = S.ligas || {}; if (S.ligas[g] && S.ligas[g].reg === k) return S.ligas[g];
+    mundoSync(); const k = regiaoDe(g); S.ligas = S.ligas || {};
+    if (S.ligas[g] && S.ligas[g].reg === k) { if (S.ligas[g].mv !== S.mundo.n) mundoRefrescarLiga(S.ligas[g], g); return S.ligas[g]; }
     const L = region(g), cp = t => ({ n: t.n, b: mediaTime(t.p), p: t.p || null });
-    return (S.ligas[g] = { reg: k, d1: L.t1.map(cp), d2: L.t2.map(cp), d3: L.t1.map(t => ({ n: t.n + ' Academy', b: Math.max(60, mediaTime(t.p) - 8), p: null })) });
+    return (S.ligas[g] = { reg: k, mv: S.mundo.n, d1: L.t1.map(cp), d2: L.t2.map(cp), d3: L.t1.map(t => ({ n: t.n + ' Academy', b: Math.max(60, mediaTime(t.p) - 8), p: null })) });
   }
   const divDe = (g, sq) => { const Lg = ligaSync(g); return sq === 't1' ? Lg.d1 : sq === 't2' ? Lg.d2 : Lg.d3; };
   const timesDe = (g, sq) => divDe(g, sq).map(t => ({ n: t.n, b: t.b, f: t.b, eu: false })).concat([{ n: null, b: 0, f: 0, eu: true }]);
@@ -556,6 +558,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       for (const g in GAMES) { if (!GAMES[g].ativo) continue; for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; } }
       contratos(); semanalOrg(); S.tempo++;
       S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
+      mundoTick();
     }
     save(); return jogou;
   }
@@ -582,7 +585,182 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     S.ligas = S.ligas || {}; delete S.ligas[g]; save();
   }
 
+  /* ---------- Mundo que envelhece ----------
+     A cada virada de ano do jogo, TODOS os pros de TODOS os jogos (ativos ou não) envelhecem, evoluem pela curva de idade, os veteranos
+     se aposentam e cada vaga é reposta por um "regen" (jovem talento). Estado persistente e compacto em S.mundo:
+       y = último ano processado, n = nº de viradas, s = semente própria (mulberry32, independente do rnd() das partidas),
+       ov[jogo][idDoSlot] = [ovr, idade, pot, geração, nick, bandeira, anoDeEstreia] (só os 3 primeiros p/ quem nunca se aposentou),
+       apos = aposentadorias de lendas (as últimas 60). O talento dos regens acompanha a média original de cada liga/divisão (termostato).
+     Os arrays estáticos (window.LOL / window.DATA) são reescritos NO LUGAR por mundoSync() sempre que o estado muda (novo jogo, load, virada),
+     então pool(), ligas, fichas e mercado leem idade/ovr atuais sem custo extra por render. Linha do jogador = [nick, ovr, idade, bandeira, geração, pot]. */
+  function novoMundo(ano) { return { y: ano, n: 0, s: null, ov: {}, apos: [] }; }
+  function ajustarMundo(s) { // migração de saves antigos (sem S.mundo): o mundo começa no estado dos dados, no ano atual do save
+    const m = s.mundo, ano = (s.org && s.org.ano) || 2026;
+    if (!m || typeof m !== 'object') { s.mundo = novoMundo(ano); return; }
+    m.y = m.y || ano; m.n = m.n | 0; m.ov = m.ov || {}; m.apos = m.apos || []; if (m.s === undefined) m.s = null;
+  }
+  /* curva por jogo: pk = idade em que acaba o crescimento, dec0 = idade em que começa o declínio, dec = queda/ano (acelera),
+     r50 = idade em que a chance anual de aposentar é 50%, rs = largura, rmin = idade mínima p/ aposentar, max = aposentadoria certa, m = idade média p/ idades ausentes */
+  const PERF = {
+    lol:      { pk: 23, dec0: 26, dec: 1.0, r50: 29.5, rs: 1.4, rmin: 23, max: 36, m: 22.5 },
+    cs2:      { pk: 25, dec0: 28, dec: 0.9, r50: 31.5, rs: 1.7, rmin: 24, max: 40, m: 25 },
+    dota2:    { pk: 25, dec0: 29, dec: 0.7, r50: 32,   rs: 1.8, rmin: 25, max: 40, m: 24 },
+    valorant: { pk: 24, dec0: 27, dec: 1.0, r50: 30,   rs: 1.5, rmin: 24, max: 37, m: 23.5 },
+    ff:       { pk: 23, dec0: 28, dec: 0.6, r50: 30,   rs: 1.7, rmin: 23, max: 38, m: 23.5 },
+    r6:       { pk: 25, dec0: 28, dec: 0.8, r50: 31,   rs: 1.7, rmin: 24, max: 38, m: 24 },
+    fifa:     { pk: 24, dec0: 30, dec: 0.4, r50: 33,   rs: 2,   rmin: 25, max: 40, m: 23 },
+    wr:       { pk: 23, dec0: 26, dec: 0.9, r50: 29,   rs: 1.4, rmin: 23, max: 35, m: 23 },
+  };
+  const MU_OFF = 3, MU_GANHO = 0.8, MU_REV = 0.3;               // regens: centro do potencial = média do grupo + MU_OFF (+ termostato)
+  const MU = { idx: {}, ap: null, apN: -1, nicks0: null, nicks: new Set(), natAdd: [], isoRev: null };
+  const muHash = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const muHf = (str, k) => muHash(str + '|' + k) / 4294967296;
+  function mrnd() { // mulberry32 com estado em S.mundo.s
+    const M = S.mundo; if (M.s == null) M.s = (muHash(String(S.seed) + 'mundo') | 0) || 777;
+    let t = (M.s = (M.s + 0x6D2B79F5) | 0), r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  }
+  const mgau = () => (mrnd() + mrnd() + mrnd() - 1.5) * 2;                  // ~N(0,1)
+  const rawData = g => g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null;
+  const FLAG_REG = { CBLOL: ['BR'], LCS: ['US', 'CA', 'KR'], LEC: ['DE', 'FR', 'ES', 'DK', 'SE', 'PL'], LCK: ['KR'], LPL: ['CN'], LCP: ['TW', 'VN', 'JP', 'AU', 'HK'] };
+  /* índice dos slots (cada posição de jogador nos dados), com a linha original guardada para restaurar */
+  function muIndice(g) {
+    if (MU.idx[g] !== undefined) return MU.idx[g];
+    const d = rawData(g); if (!d) return (MU.idx[g] = null);
+    const id0 = g === 'lol' ? '' : g + '-', slots = [], grp = {}, flags = {}, todas = {}, X = root.LOLX;
+    if (!MU.nicks0) MU.nicks0 = new Set();
+    for (const lg in d.leagues) {
+      const L = d.leagues[lg]; flags[lg] = [];
+      [['t1', 1], ['t2', 2]].forEach(([tk, k]) => (L[tk] || []).forEach((t, ti) => {
+        const rows = (t.p || []).filter(Boolean), base = rows.length ? rows.reduce((a, r) => a + r[1], 0) / rows.length : 0, tm = { base, nome: t.n };
+        (t.p || []).forEach((row, i) => {
+          if (!row) return; MU.nicks0.add(String(row[0]).toLowerCase());
+          const s = { id: `${id0}${lg}-${k}-${ti}-${i}`, row, orig: row.slice(), lg, tier: k === 1 ? 'T1' : 'T2', tm, i }, gk = lg + '|' + s.tier, G = grp[gk] = grp[gk] || { n: 0, soma: 0 };
+          G.n++; G.soma += row[1]; slots.push(s);
+          const fl = row[3] || (X && X.nat && X.iso && X.iso[X.nat[row[0]]]) || null; if (fl) { flags[lg].push(String(fl).toUpperCase()); todas[String(fl).toUpperCase()] = 1; }
+        });
+      }));
+    }
+    for (const k in grp) grp[k].alvo = grp[k].soma / grp[k].n;
+    if (X) for (const tb of ['nat', 'hon', 'rtit']) for (const n in (X[tb] || {})) MU.nicks0.add(n.toLowerCase());
+    return (MU.idx[g] = { d, slots, grp, flags, todas: Object.keys(todas), byId: null });
+  }
+  /* escreve a linha do slot a partir do override (ou restaura o original) */
+  function muEscreve(s, e) {
+    const row = s.row; row.length = 0; for (const v of s.orig) row.push(v);
+    if (!e) return;
+    row[1] = e[0]; row[2] = e[1]; row[3] = s.orig[3]; row[4] = 0; row[5] = e[2];
+    if (e[3]) { row[0] = e[4]; row[3] = e[5]; row[4] = e[3]; MU.nicks.add(String(e[4]).toLowerCase()); muNat(e[4], e[5]); }
+  }
+  function muNat(nick, flag) { // LoL guarda nacionalidade em LOLX.nat (código de 3 letras); regens entram lá para a ficha mostrar a bandeira
+    const X = root.LOLX; if (!X || !X.nat || !X.iso || !flag) return;
+    if (!MU.isoRev) { MU.isoRev = {}; for (const c in X.iso) if (!MU.isoRev[X.iso[c]]) MU.isoRev[X.iso[c]] = c; }
+    const c = MU.isoRev[String(flag).toLowerCase()]; if (c && !(nick in X.nat)) { X.nat[nick] = c; MU.natAdd.push(nick); }
+  }
+  function mundoSync() { // reaplica o estado do mundo nos dados estáticos quando S.mundo mudou (novo jogo, load, set)
+    if (!S.mundo) ajustarMundo(S); const M = S.mundo;
+    if (MU.ap === M && MU.apN === M.n) return;
+    MU.ap = M; MU.apN = M.n;
+    const X = root.LOLX; if (X && X.nat) { MU.natAdd.forEach(n => { delete X.nat[n]; }); } MU.natAdd = [];
+    for (const g in GAMES) { if (MU.idx[g] === undefined) muIndice(g); }
+    MU.nicks = new Set(MU.nicks0 || []);
+    for (const g in GAMES) { const I = MU.idx[g]; if (!I) continue; const ov = M.ov[g] || {}; for (const s of I.slots) muEscreve(s, ov[s.id]); delete _pool[g]; }
+  }
+  /* ----- nomes plausíveis por nacionalidade ----- */
+  const NOMES = {
+    lat: [['du','ka','ga','pe','ra','lu','ti','ne','ze','bi','vi','ma','jo','fe','ro','ca','da','le','to','mi','san','mar','ric','cris','fer','ale','guil','nan'], ['du','io','nho','zin','ka','to','nd','el','lo','xo','ex','ito','ao','z','ry','ke','ni','ba','co','dy']],
+    kr:  [['ka','min','hyun','seo','woo','ji','tae','sung','joon','yoo','dong','han','ryu','shin','bae','gyu','do','ha'], ['ng','jun','ho','min','su','won','woo','hyuk','sang','ki','ri','do','ya','seo']],
+    cn:  [['xiao','ming','zhe','yu','hao','jun','wei','lin','chen','tian','kai','long','feng','shi','yan','bo','ze','an'], ['ng','long','xi','hao','yu','an','kun','ze','xin','tao','lei','ye','wen']],
+    jp:  [['ha','ru','ki','sa','to','ko','ya','mi','ta','ro','shi','no','ke','ju','ryu','ren','hi'], ['to','ki','ro','ya','ta','mi','ru','ma','shi','ko','na','ji','su']],
+    sea: [['an','minh','tuan','nam','duc','khoa','hieu','phuc','long','son','bao','kien','tri','vy','nat','pop','boom','arm','non','dewa','riz','putra','ald','faj','bay','haf'], ['h','ng','an','ky','ky','o','i','ra','ko','ny','zy','dy','tan','ki','ri']],
+    sla: [['vla','ki','sa','ni','mi','ro','ale','dmi','ste','ma','bo','zo','pa','ja','ti','ko','an','vo','da','ruz'], ['d','ril','sha','ko','lav','ek','ik','ic','ski','ov','ya','vich','ton','zer','nik','an','tek','mir']],
+    nor: [['ox','fre','ja','ni','mal','el','sig','ste','hen','ma','ba','jo','lu','ku','ri','ha','tor','vik','ras','kri'], ['ke','x','ar','ik','mus','ne','dor','ten','ard','son','by','ner','ler','ee','z','ie']],
+    ang: [['ja','ty','bre','cal','ry','no','hu','za','ke','mi','jax','ash','cole','dex','nate','finn','reed','max','kai','lo'], ['x','den','son','vin','sh','lex','ton','ley','ck','n','dy','ro','z','rr','ze']],
+    med: [['ale','gio','lu','ma','pa','el','ni','ro','fa','da','ste','vi','ba','xe','jo','ti','zo','co'], ['ex','ic','ou','ro','is','ano','ino','eo','ch','oux','ty','ni','la','ac','ot','y']],
+    tr:  [['ka','em','bu','ey','ce','ya','er','tu','ha','me','os','ber','alp','ay','can'], ['ner','han','kan','ar','ay','gur','ra','lp','can','ti','ze','du','sal','is']],
+  };
+  const GRUPO = {}; [['lat', 'br pt ar mx cl co pe uy es gt sv ve ec bo py cr pa do cu'], ['kr', 'kr'], ['cn', 'cn hk tw mn'], ['jp', 'jp'], ['sea', 'vn th id my sg ph kh'],
+    ['sla', 'ru ua by kz pl cz sk rs hr si bg ro hu lt lv ee ba mk me al ge am az uz'], ['nor', 'se dk no fi de nl be at ch is ie'], ['ang', 'us ca gb au nz za in'], ['med', 'fr it gr cy mt lu'], ['tr', 'tr sa il ae eg ma tn dz jo lb']]
+    .forEach(([g, l]) => l.split(' ').forEach(c => { GRUPO[c] = g; }));
+  function muNick(flag) {
+    const T = NOMES[GRUPO[String(flag).toLowerCase()] || 'ang'], pick = a => a[Math.floor(mrnd() * a.length)];
+    for (let t = 0; t < 40; t++) {
+      let n = pick(T[0]) + pick(T[1]); if (mrnd() < 0.2) n += pick(T[1]);
+      const r = mrnd(); n = r < 0.3 ? n : r < 0.34 && n.length <= 4 ? n.toUpperCase() : n[0].toUpperCase() + n.slice(1);
+      if (n.length < 3 || n.length > 10 || MU.nicks.has(n.toLowerCase())) continue; return n;
+    }
+    let n; do { n = pick(T[0]) + pick(T[1]) + Math.floor(mrnd() * 90 + 10); } while (MU.nicks.has(n.toLowerCase())); return n[0].toUpperCase() + n.slice(1);
+  }
+  /* ----- curva de idade, aposentadoria, regens ----- */
+  const idadeBase = (g, nick, o) => clamp(Math.round(PERF[g].m + (muHf(g + nick, 'a1') + muHf(g + nick, 'a2') - 1) * 8 + (o - 70) * 0.05), 17, PERF[g].max - 6);
+  const potBase = (g, nick, a, o) => a >= PERF[g].pk ? o : o + Math.round(Math.pow(muHf(g + nick, 'p'), 1.3) * (PERF[g].pk - a) * 1.1);
+  function evolOvr(P, o, a, pot, rev) { // idade a = já incrementada; rev = empurrão do termostato da liga
+    let d;
+    if (a <= P.pk) { const r = a <= 19 ? 0.5 : a <= 21 ? 0.42 : a <= 23 ? 0.36 : 0.3; d = Math.max(0, pot - o) * r + mgau() * (a <= 21 ? 1.3 : 0.9); }
+    else if (a <= P.dec0) d = Math.max(0, pot - o) * 0.15 + mgau() * 0.9;
+    else d = -P.dec * (1 + 0.15 * (a - P.dec0 - 1)) + mgau() * 0.9;
+    return clamp(Math.floor(o + d + (rev || 0) + mrnd()), 42, 98); // arredondamento estocástico (sem viés)
+  }
+  const muAposenta = (P, a, o) => a >= P.max || (a >= P.rmin && mrnd() < 1 / (1 + Math.exp(-(a - P.r50 + (70 - o) * 0.06) / P.rs)));
+  function muRegen(g, I, s, ano, adj) {
+    const G = I.grp[s.lg + '|' + s.tier];
+    let pot = G.alvo + 0.6 * ((s.tm.base || G.alvo) - G.alvo) + MU_OFF + adj + mgau() * (G.n < 12 ? 2.5 : 5);
+    if (mrnd() < (G.n < 12 ? 0.04 : 0.08)) pot += 6 + mrnd() * 4;
+    pot = Math.round(clamp(pot, 58, 96));
+    const fl = I.flags[s.lg].length ? I.flags[s.lg] : (FLAG_REG[s.lg] || (I.todas.length ? I.todas : ['BR', 'US', 'KR', 'DE', 'CN'])), flag = fl[Math.floor(mrnd() * fl.length)];
+    const r = mrnd(), a = r < 0.15 ? 16 : r < 0.45 ? 17 : r < 0.75 ? 18 : 19, o = clamp(Math.round(pot - (G.n < 12 ? 4 + mrnd() * 4 : 9 + mrnd() * 7)), 46, 76), nick = muNick(flag);
+    MU.nicks.add(nick.toLowerCase());
+    return [o, a, pot, (s.row[4] || 0) + 1, nick, flag, ano];
+  }
+  function muDonos() { const own = new Map(); for (const g in GAMES) for (const q of Object.values(S.games[g].squads)) q.slots.forEach(p => { if (p && p.id) { const k = g + '|' + p.id; if (!own.has(k)) own.set(k, []); own.get(k).push(p); } }); return own; }
+  function mundoVirarAno() { // processa UMA virada de ano (y -> y+1) para todos os jogos
+    const M = S.mundo, ano = ++M.y; M.n++; MU.apN = M.n;
+    const own = muDonos(), tocados = new Set(), aposLog = [];
+    for (const g in GAMES) {
+      const I = muIndice(g); if (!I) continue; const P = PERF[g], ov = M.ov[g] = M.ov[g] || {}, grp = {}, fila = [];
+      const pots = I.slots.map(s => s.row[5] != null ? s.row[5] : s.row[1]).sort((a, b) => a - b), lenda = pots[Math.floor(pots.length * 0.85)];
+      const atual = {}; for (const s of I.slots) { const k = s.lg + '|' + s.tier, A = atual[k] = atual[k] || [0, 0]; A[0] += s.row[1]; A[1]++; }
+      for (const s of I.slots) { // passo 1: envelhece, evolui e decide quem se aposenta (contratados pelo usuário não se aposentam)
+        const row = s.row, id = s.id + (row[4] ? '~' + row[4] : ''), dono = own.get(g + '|' + id), o0 = row[1];
+        const gk = s.lg + '|' + s.tier, GI = I.grp[gk], A = atual[gk], rev = MU_REV * (GI.n < 12 ? 1.6 : 1) * (GI.alvo - A[0] / A[1]);
+        const a = (row[2] == null ? idadeBase(g, row[0], o0) : row[2]) + 1, pot = row[5] != null ? row[5] : potBase(g, row[0], a - 1, o0), o = evolOvr(P, o0, a, pot, rev);
+        const ret = !dono && muAposenta(P, a, o), G = grp[s.lg + '|' + s.tier] = grp[s.lg + '|' + s.tier] || { soma: 0, n: 0, ret: 0 };
+        G.n++; if (ret) G.ret++; else G.soma += o;
+        fila.push({ s, o, a, pot, ret, dono, o0 });
+      }
+      for (const x of fila) { // passo 2: grava; cada vaga vazia vira um regen cujo talento acompanha o alvo do grupo (termostato)
+        const s = x.s, row = s.row, G = grp[s.lg + '|' + s.tier], alvo = I.grp[s.lg + '|' + s.tier].alvo;
+        if (x.ret) {
+          if (x.pot >= lenda) { M.apos.unshift([ano, g, row[0], x.a, Math.max(x.o, x.pot), row[3] || '', s.tm.nome || '']); M.apos.length = Math.min(M.apos.length, 60); aposLog.push({ g, nick: row[0], a: x.a, pot: x.pot }); }
+          const adj = clamp((alvo - (G.soma + G.ret * (alvo - 6)) / G.n) * MU_GANHO * (G.n < 12 ? 1.8 : 1), -6, 7), e = muRegen(g, I, s, ano, adj); ov[s.id] = e; muEscreve(s, e);
+        } else {
+          const e = ov[s.id] ? ov[s.id].slice() : []; e[0] = x.o; e[1] = x.a; e[2] = x.pot; ov[s.id] = e;
+          row[1] = x.o; row[2] = x.a; row[5] = x.pot; if (row[4] == null) row[4] = 0; if (e.length < 4) row[3] = s.orig[3];
+          if (x.dono) x.dono.forEach(p => { p.o = clamp(p.o + (x.o - x.o0), 40, 99); p.a = x.a; tocados.add(p); });
+        }
+      }
+      delete _pool[g];
+    }
+    for (const g in GAMES) { // jogadores sem linha no mundo (promovidos da base) só envelhecem; a base também
+      for (const q of Object.values(S.games[g].squads)) q.slots.forEach(p => { if (p && !tocados.has(p) && p.a != null) { p.a++; tocados.add(p); } });
+      (S.base[g] || []).forEach(p => { if (p.a != null) p.a++; });
+    }
+    if (S.estrela) { const p = [...own.values()].flat().find(x => x.estrela); if (p) S.estrela.o = p.o; }
+    for (const g in S.ligas || {}) mundoRefrescarLiga(S.ligas[g], g);
+    aposLog.filter(x => aberto(x.g)).sort((x, y) => y.pot - x.pot).slice(0, 3).forEach(x => log(`${x.nick} se aposentou aos ${x.a} anos (${GAMES[x.g].curto})`));
+  }
+  function mundoTick() { mundoSync(); while (S.mundo.y < S.org.ano) mundoVirarAno(); }
+  function mundoRefrescarLiga(Lg, g) { // recalcula p/b dos times da liga do usuário a partir dos dados atualizados
+    const d = rawData(g), L = d && d.leagues[Lg.reg]; Lg.mv = S.mundo.n; if (!L) return;
+    const todos = {}, t1 = {}; L.t2.forEach(t => { todos[t.n] = t; }); L.t1.forEach(t => { todos[t.n] = t; t1[t.n] = t; });
+    const up = t => { const m = todos[t.n]; if (m) { t.p = m.p || null; t.b = mediaTime(m.p); } };
+    Lg.d1.forEach(up); Lg.d2.forEach(up);
+    Lg.d3.forEach(t => { const m = t1[t.n.replace(/ Academy$/, '')]; if (m) t.b = Math.max(60, mediaTime(m.p) - 8); });
+  }
+  const aposentados = g => (S.mundo.apos || []).filter(x => !g || x[1] === g).map(x => ({ ano: x[0], g: x[1], nick: x[2], idade: x[3], o: x[4], flag: x[5] }));
+
   root.Org = { LOJA, lojaItens, comprarLoja, itemAtivo, rendaMerch, GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
     infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, passo, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
-    compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
+    compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin,
+    mundoSync, mundoTick, mundoVirarAno, aposentados, MUNDO_PERF: PERF };
 })(typeof window !== 'undefined' ? window : globalThis);
