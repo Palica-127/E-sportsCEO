@@ -157,7 +157,7 @@ func premio_jovem(p) -> float: return min(8.0, (p.pot - p.o) * 0.5) if (p.get("a
 func valor_jogador(p) -> float: return 15000.0 * pow(1.3, p.o + premio_jovem(p) - 70)
 func valor_venda(p) -> int:
 	var ct = CONTRATO if p.get("ct") == null else p.ct
-	return int(max(500, jr(valor_jogador(p) * 0.6 * cl(0.5 + ct / float(CONTRATO) * 0.5, 0.5, 1) / 500.0) * 500))
+	return int(max(500, jr(valor_jogador(p) * 0.6 * cl(0.5 + ct / float(CONTRATO) * 0.5, 0.5, 1) * (1.0 + 0.04 * staff_nivel("diretor")) / 500.0) * 500))
 func vender(g, sq, slot) -> Dictionary:
 	var q = S.games[g].squads[sq]; var p = q.slots[slot]
 	if p == null: return {"ok": false, "msg": "Vaga vazia."}

@@ -115,7 +115,7 @@ func infra_investido() -> float:
 			for l in infra_nivel(it.id, g): t += it.base * pow(INFRA_MULT, l)
 	return t
 func infra_custo(it, g) -> int: return jr(it.base * pow(INFRA_MULT, infra_nivel(it.id, g)) / 1000.0) * 1000
-func upkeep_semanal() -> int: return jr(infra_investido() * UPKEEP)
+func upkeep_semanal() -> int: return jr(infra_investido() * UPKEEP * (1.0 - 0.06 * staff_nivel("gerente")))
 func comprar_infra(id, g) -> Dictionary:
 	var it = null
 	for x in INFRA:
@@ -182,7 +182,7 @@ func ganho_rep(d) -> float: return d * max(0.15, 1.0 - S.org.rep / 9.0)
 func seguidores(m) -> void:
 	var g = 1.0 + (m - 1.0) / (1.0 + S.social.seg / 5e5) if m > 1 else m
 	S.social.seg = cl(jr(S.social.seg * g), 500, 10000000)
-func renda_social() -> int: return jr(S.social.seg * 0.003)
+func renda_social() -> int: return jr(S.social.seg * 0.003 * (1.0 + 0.05 * staff_nivel("marketing")))
 func custo_foco() -> int: return 3000 if S.foco == "midia" else 0
 func ofertas() -> Array:
 	if S.ofertas.is_empty():
@@ -257,7 +257,7 @@ func bonus_temp(g) -> float:
 func renda_merch() -> int:
 	var t = 0
 	for x in S.itens: t += int(x.get("pay", 0))
-	return t
+	return jr(t * (1.0 + 0.05 * staff_nivel("marketing")))
 func loja_itens() -> Array:
 	if S.loja.is_empty():
 		var ids = LOJA.map(func(x): return x.id)

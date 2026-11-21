@@ -243,9 +243,9 @@ func avancar(semanas: int) -> bool:
 					for x in S.log.slice(0, min(S.logN - l0, S.log.size())):
 						var rx = RegEx.new(); rx.compile("^S\\d+/\\d+: "); notas.append(rx.sub(x, ""))
 					d["notas"] = notas
-		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick(); contrato_tick()
+		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick(); contrato_tick(); orc_tick()
 		S.org.semana += 1
-		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
+		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1); fin_ano_fechar(S.org.ano - 1)
 		mundo_tick()
 	save(); return jogou
 var _rx_imp: RegEx

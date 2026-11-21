@@ -303,7 +303,7 @@ func infra_investido() -> float:
 			for l in infra_nivel(it.id, g): t += it.base * pow(INFRA_MULT, l)
 	return t
 func infra_custo(it, g) -> int: return jr(it.base * pow(INFRA_MULT, infra_nivel(it.id, g)) / 1000.0) * 1000
-func upkeep_semanal() -> int: return jr(infra_investido() * UPKEEP)
+func upkeep_semanal() -> int: return jr(infra_investido() * UPKEEP * (1.0 - 0.06 * staff_nivel("gerente")))
 func comprar_infra(id, g) -> Dictionary:
 	var it = null
 	for x in INFRA:
@@ -370,7 +370,7 @@ func ganho_rep(d) -> float: return d * max(0.15, 1.0 - S.org.rep / 9.0)
 func seguidores(m) -> void:
 	var g = 1.0 + (m - 1.0) / (1.0 + S.social.seg / 5e5) if m > 1 else m
 	S.social.seg = cl(jr(S.social.seg * g), 500, 10000000)
-func renda_social() -> int: return jr(S.social.seg * 0.003)
+func renda_social() -> int: return jr(S.social.seg * 0.003 * (1.0 + 0.05 * staff_nivel("marketing")))
 func custo_foco() -> int: return 3000 if S.foco == "midia" else 0
 func ofertas() -> Array:
 	if S.ofertas.is_empty():
@@ -445,7 +445,7 @@ func bonus_temp(g) -> float:
 func renda_merch() -> int:
 	var t = 0
 	for x in S.itens: t += int(x.get("pay", 0))
-	return t
+	return jr(t * (1.0 + 0.05 * staff_nivel("marketing")))
 func loja_itens() -> Array:
 	if S.loja.is_empty():
 		var ids = LOJA.map(func(x): return x.id)
@@ -639,7 +639,7 @@ func premio_jovem(p) -> float: return min(8.0, (p.pot - p.o) * 0.5) if (p.get("a
 func valor_jogador(p) -> float: return 15000.0 * pow(1.3, p.o + premio_jovem(p) - 70)
 func valor_venda(p) -> int:
 	var ct = CONTRATO if p.get("ct") == null else p.ct
-	return int(max(500, jr(valor_jogador(p) * 0.6 * cl(0.5 + ct / float(CONTRATO) * 0.5, 0.5, 1) / 500.0) * 500))
+	return int(max(500, jr(valor_jogador(p) * 0.6 * cl(0.5 + ct / float(CONTRATO) * 0.5, 0.5, 1) * (1.0 + 0.04 * staff_nivel("diretor")) / 500.0) * 500))
 func vender(g, sq, slot) -> Dictionary:
 	var q = S.games[g].squads[sq]; var p = q.slots[slot]
 	if p == null: return {"ok": false, "msg": "Vaga vazia."}
@@ -1520,9 +1520,9 @@ func avancar(semanas: int) -> bool:
 					for x in S.log.slice(0, min(S.logN - l0, S.log.size())):
 						var rx = RegEx.new(); rx.compile("^S\\d+/\\d+: "); notas.append(rx.sub(x, ""))
 					d["notas"] = notas
-		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick(); contrato_tick()
+		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick(); contrato_tick(); orc_tick()
 		S.org.semana += 1
-		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
+		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1); fin_ano_fechar(S.org.ano - 1)
 		mundo_tick()
 	save(); return jogou
 var _rx_imp: RegEx
@@ -1950,7 +1950,10 @@ func fin_resumo() -> Dictionary:
 const STAFF := {
 	"tecnico": {"nome": "Treinador principal", "desc": "Cada nível: +6% na evolução dos jogadores.", "max": 5},
 	"analista": {"nome": "Analista de desempenho", "desc": "Cada nível: +0.5 de força dos times em partida.", "max": 5},
-	"preparador": {"nome": "Preparador mental", "desc": "Cada nível: +2 no alvo de moral do elenco.", "max": 5}}
+	"preparador": {"nome": "Preparador mental", "desc": "Cada nível: +2 no alvo de moral do elenco.", "max": 5},
+	"marketing": {"nome": "Gerente de marketing", "desc": "Cada nível: +5% de renda de redes e loja.", "max": 5},
+	"gerente": {"nome": "Gerente financeiro", "desc": "Cada nível: -6% na manutenção da estrutura.", "max": 5},
+	"diretor": {"nome": "Diretor esportivo", "desc": "Cada nível: +4% no valor de venda de jogadores.", "max": 5}}
 func staff_nivel(id) -> int:
 	if dir_off: return 0
 	var s = S.get("staff"); return int(s.get(id, 0)) if s is Dictionary else 0
@@ -2073,6 +2076,29 @@ func aceitar_proposta(i) -> Dictionary:
 func recusar_proposta(i) -> void:
 	var pr: Array = S.get("propostas", [])
 	if i < pr.size(): pr.remove_at(i); S["propostas"] = pr; save()
+
+# ---------- Orçamento por jogo e relatório anual (bloco 5, só Godot) ----------
+func orc_de(g) -> int:
+	var o = S.get("orc"); return int(o.get(g, 0)) if o is Dictionary else 0
+func orc_set(g, v) -> void:
+	var o: Dictionary = S.get("orc", {}); o[g] = maxi(0, int(v)); S["orc"] = o; save()
+func folha_jogo(g) -> int:
+	var t = 0
+	for sq in SQUADS:
+		if S.games[g].squads[sq].on: t += folha(g, sq)
+	return t
+func orc_tick() -> void:
+	if dir_off or S.tempo % 8 != 0: return
+	for g in GAMES:
+		if not ativo(g) or not aberto(g): continue
+		var b = orc_de(g)
+		if b > 0 and folha_jogo(g) > b:
+			msg("diretoria", "Orçamento estourado em %s" % GAMES[g].curto, "A folha de %s é de %s por semana, acima do orçamento de %s. Reduza gastos ou aumente o limite em Finanças." % [GAMES[g].curto, money(folha_jogo(g)), money(b)], [], g)
+func fin_ano_fechar(ano_ant) -> void:
+	if dir_off: return
+	var ini: int = int(S.get("fin_ini", S.org.caixa)); var fim: int = int(S.org.caixa)
+	var h: Array = S.get("fin_anos", []); h.push_front({"ano": ano_ant, "ini": ini, "fim": fim}); S["fin_anos"] = h.slice(0, 10); S["fin_ini"] = fim
+	msg("diretoria", "Relatório financeiro de %d" % ano_ant, "O caixa foi de %s para %s (%s%s) ao longo do ano." % [money(ini), money(fim), "+" if fim >= ini else "-", money(absi(fim - ini))], [], "")
 
 # ---------- Central de informação: caixa de entrada, notícias e notificações (novo no Godot) ----------
 const FEED_MAX := 150

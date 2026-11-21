@@ -46,6 +46,21 @@ func vfin() -> void:
 	for x in R.des: td += x[1]
 	for x in R.des:
 		bar(cd, x[0], x[1], max(1, td), BAD, O.money(x[1]))
+	var co = card("Orçamento semanal de salários", null, ACC)
+	lbl(co, "Defina um teto por jogo (0 = sem limite). Estourar gera aviso da diretoria.", 19, DIM)
+	for g in O.GAMES:
+		if not O.ativo(g) or not O.aberto(g): continue
+		var fj: int = O.folha_jogo(g); var ob: int = O.orc_de(g); var ho = hrow(co)
+		lbl(ho, "%s  %s" % [O.GAMES[g].curto, O.money(fj)], 22, BAD if ob > 0 and fj > ob else TXT).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn(ho, "-", func(): O.orc_set(g, ob - 10000); render(), ob <= 0)
+		lbl(ho, O.money(ob) if ob > 0 else "livre", 22, GOLD)
+		btn(ho, "+", func(): O.orc_set(g, ob + 10000 if ob > 0 else max(10000, int(ceil(fj / 10000.0)) * 10000)); render())
+	var ca = O.S.get("fin_anos", [])
+	if ca.size():
+		var cy = card("Relatório anual", null, GOLD)
+		for x in ca:
+			var d: int = x.fim - x.ini
+			var hy2 = hrow(cy); lbl(hy2, str(x.ano), 24, TXT).size_flags_horizontal = Control.SIZE_EXPAND_FILL; lbl(hy2, "%s%s" % ["+" if d >= 0 else "-", O.money(absi(d))], 24, OK if d >= 0 else BAD)
 	if R.por_jogo.size():
 		var cj = card("Resultado por jogo", null, GOLD)
 		for x in R.por_jogo:

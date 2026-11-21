@@ -103,7 +103,10 @@ func fin_resumo() -> Dictionary:
 const STAFF := {
 	"tecnico": {"nome": "Treinador principal", "desc": "Cada nível: +6% na evolução dos jogadores.", "max": 5},
 	"analista": {"nome": "Analista de desempenho", "desc": "Cada nível: +0.5 de força dos times em partida.", "max": 5},
-	"preparador": {"nome": "Preparador mental", "desc": "Cada nível: +2 no alvo de moral do elenco.", "max": 5}}
+	"preparador": {"nome": "Preparador mental", "desc": "Cada nível: +2 no alvo de moral do elenco.", "max": 5},
+	"marketing": {"nome": "Gerente de marketing", "desc": "Cada nível: +5% de renda de redes e loja.", "max": 5},
+	"gerente": {"nome": "Gerente financeiro", "desc": "Cada nível: -6% na manutenção da estrutura.", "max": 5},
+	"diretor": {"nome": "Diretor esportivo", "desc": "Cada nível: +4% no valor de venda de jogadores.", "max": 5}}
 func staff_nivel(id) -> int:
 	if dir_off: return 0
 	var s = S.get("staff"); return int(s.get(id, 0)) if s is Dictionary else 0
@@ -226,3 +229,26 @@ func aceitar_proposta(i) -> Dictionary:
 func recusar_proposta(i) -> void:
 	var pr: Array = S.get("propostas", [])
 	if i < pr.size(): pr.remove_at(i); S["propostas"] = pr; save()
+
+# ---------- Orçamento por jogo e relatório anual (bloco 5, só Godot) ----------
+func orc_de(g) -> int:
+	var o = S.get("orc"); return int(o.get(g, 0)) if o is Dictionary else 0
+func orc_set(g, v) -> void:
+	var o: Dictionary = S.get("orc", {}); o[g] = maxi(0, int(v)); S["orc"] = o; save()
+func folha_jogo(g) -> int:
+	var t = 0
+	for sq in SQUADS:
+		if S.games[g].squads[sq].on: t += folha(g, sq)
+	return t
+func orc_tick() -> void:
+	if dir_off or S.tempo % 8 != 0: return
+	for g in GAMES:
+		if not ativo(g) or not aberto(g): continue
+		var b = orc_de(g)
+		if b > 0 and folha_jogo(g) > b:
+			msg("diretoria", "Orçamento estourado em %s" % GAMES[g].curto, "A folha de %s é de %s por semana, acima do orçamento de %s. Reduza gastos ou aumente o limite em Finanças." % [GAMES[g].curto, money(folha_jogo(g)), money(b)], [], g)
+func fin_ano_fechar(ano_ant) -> void:
+	if dir_off: return
+	var ini: int = int(S.get("fin_ini", S.org.caixa)); var fim: int = int(S.org.caixa)
+	var h: Array = S.get("fin_anos", []); h.push_front({"ano": ano_ant, "ini": ini, "fim": fim}); S["fin_anos"] = h.slice(0, 10); S["fin_ini"] = fim
+	msg("diretoria", "Relatório financeiro de %d" % ano_ant, "O caixa foi de %s para %s (%s%s) ao longo do ano." % [money(ini), money(fim), "+" if fim >= ini else "-", money(absi(fim - ini))], [], "")
