@@ -110,17 +110,31 @@
   function modal() { let m = document.getElementById('modal'); if (!UI.ficha) { if (m) m.remove(); return; } if (!m) { m = document.createElement('div'); m.id = 'modal'; document.body.appendChild(m); } m.innerHTML = `<div class="mbox" role="dialog">${ficha(UI.ficha)}</div>`; }
   function lineupHT(tipo, y) { const x = X(); const r = x && x.ht.find(r => r[1] === tipo && r[2] === +y); return r ? r[4] : null; }
 
+  const flagIso = c => c ? `<img class="flag" src="flags/${String(c).toLowerCase()}.svg" alt="${esc(c)}" title="${esc(c)}" loading="lazy" onerror="this.remove()">` : '';
+  const TIPOS = { Major: 'Majors', IEM: 'IEM', EPL: 'ESL Pro League', BLAST: 'BLAST' };
   function vHallGen() {
     const H = (window.HIST || {})[UI.game];
     if (!H) return `<section class="card empty"><h2>${O.GAMES[UI.game].nome}</h2><p>Histórico deste jogo ainda não foi levantado.</p></section>`;
-    const T = H.torneios.slice().sort((a, b) => b.a - a.a), cnt = {}, mv = {};
-    H.torneios.forEach(t => { cnt[t.c] = (cnt[t.c] || 0) + 1; if (t.mvp) { const k = t.mvp[0]; (mv[k] = mv[k] || { n: k, t: t.mvp[1], pais: t.mvp[2], y: [] }).y.push(t.a); } });
-    const tit = Object.entries(cnt).sort((a, b) => b[1] - a[1]), leg = Object.values(mv).sort((a, b) => b.y.length - a.y.length || a.y[0] - b.y[0]);
-    const sub = UI.hall === 'leg' || UI.hall === 'tit' ? UI.hall : 'tor';
-    const chips = `<div class="chips">${[['tor', '🏆 Torneios'], ['tit', '🏅 Títulos por time'], ['leg', '⭐ MVPs / Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
-    if (sub === 'tit') return chips + `<section class="card"><h2>Títulos por time</h2>` + tit.map(([n, c]) => `<div class="tb"><span>${c}</span>${crest(n)}<b>${esc(n)}</b><em>${'🏆'.repeat(Math.min(c, 6))}</em></div>`).join('') + '</section>';
-    if (sub === 'leg') return chips + `<section class="card"><h2>MVPs de ${esc(H.nome)}</h2>` + leg.map(m => `<div class="leg">${avatar(m.n)}<div class="who"><b>${esc(m.n)}</b><small>⭐ ${m.y.length} MVP${m.y.length > 1 ? 's' : ''} (${m.y.join(', ')}) · ${esc(m.t)} · ${esc(m.pais)}</small></div></div>`).join('') + '</section>';
-    return chips + `<section class="card"><h2>${esc(H.nome)}</h2>` + T.map(t => `<div class="hrow"><span class="yr">${t.a}</span><div class="who"><b>${crest(t.c, 'sm')} 🏆 ${esc(t.c)} <small>${esc(t.p || '')}</small></b><small>${esc(t.n)} · vice: ${esc(t.v)}</small>${t.mvp ? `<small>⭐ MVP: ${esc(t.mvp[0])}</small>` : ''}</div></div>`).join('') + '</section>';
+    const sub = ['tor', 'tit', 'bo', 'leg'].includes(UI.hall) ? UI.hall : 'tor', fl = UI.hf || '';
+    const chips = `<div class="chips">${[['tor', '🏆 Torneios'], ['tit', '🏅 Títulos por time'], ['bo', '🥇 Bola de Ouro'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    const all = H.torneios, cnt = {}, mv = {};
+    all.forEach(t => { if (t.tp === 'Major' || !fl) cnt[t.c] = (cnt[t.c] || 0) + 1; });
+    if (sub === 'tit') {
+      const cm = {}; all.forEach(t => { const k = t.c; (cm[k] = cm[k] || { M: 0, o: 0 })[t.tp === 'Major' ? 'M' : 'o']++; });
+      return chips + `<section class="card"><h2>Títulos por time</h2><p class="hint">Majors e demais torneios levantados.</p>` + Object.entries(cm).sort((a, b) => b[1].M - a[1].M || b[1].o - a[1].o).map(([n, c]) => `<div class="tb"><span>${c.M}</span>${crest(n)}<b>${esc(n)}</b><em>${c.M ? c.M + ' Major' + (c.M > 1 ? 's' : '') + ' · ' : ''}${c.o} outros</em></div>`).join('') + '</section>';
+    }
+    if (sub === 'bo') {
+      return chips + `<section class="card"><h2>Bola de Ouro · Top 10 do ano (HLTV)</h2>` + Object.keys(H.bo).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${flagIso(H.bo[y][0][1])}🥇 ${esc(H.bo[y][0][0])}</b><div class="lu">${H.bo[y].slice(1).map((r, i) => `<span>${i + 2}º ${flagIso(r[1])}${esc(r[0])}</span>`).join('')}</div></div></div>`).join('') + '</section>';
+    }
+    if (sub === 'leg') {
+      const L = {}; const g = n => { const k = n.toLowerCase().replace('device', 'dev1ce'); return (L[k] = L[k] || { n: n === 'device' ? 'dev1ce' : n, bo1: [], top: 0, mvp: [], iso: '', maj: [] }); };
+      Object.entries(H.bo).forEach(([y, a]) => a.forEach((r, i) => { const o = g(r[0]); o.top++; o.iso = o.iso || r[1]; if (!i) o.bo1.push(y); }));
+      all.forEach(t => { if (t.mvp) g(t.mvp[0]).mvp.push(t.a + ' ' + (t.tp === 'Major' ? '🥇' : '')); if (t.tp === 'Major' && t.r) t.r.forEach(n => g(n).maj.push(t.a)); });
+      const arr = Object.values(L).map(o => ({ ...o, pts: o.bo1.length * 5 + o.mvp.length * 1.5 + o.top * .6 + o.maj.length * 2 })).sort((a, b) => b.pts - a.pts).slice(0, 25);
+      return chips + `<section class="card"><h2>Lendas</h2><p class="hint">Ranking por nº 1 do ano, MVPs, Top 10 e Majors (line-ups conferidas).</p>` + arr.map(o => `<div class="leg">${avatar(o.n)}<div class="who"><b>${flagIso(o.iso)}${esc(o.n)}</b><small>${o.bo1.length ? '🥇 #1 do ano: ' + o.bo1.join(', ') + ' · ' : ''}${o.top} no Top 10${o.maj.length ? ' · 🏆 ' + o.maj.length + ' Major' + (o.maj.length > 1 ? 's' : '') + ' (' + o.maj.join(', ') + ')' : ''}</small>${o.mvp.length ? `<small>⭐ ${o.mvp.length} MVP${o.mvp.length > 1 ? 's' : ''}: ${o.mvp.join(', ')}</small>` : ''}</div></div>`).join('') + '</section>';
+    }
+    const lista = all.filter(t => !fl || t.tp === fl).sort((a, b) => b.a - a.a);
+    return chips + `<div class="chips">${[['', 'Todos'], ...Object.entries(TIPOS)].map(([k, n]) => `<button class="chip ${k === fl ? 'on' : ''}" data-act="hfil" data-id="${k}">${n}</button>`).join('')}</div><section class="card"><h2>${esc(H.nome)} · ${lista.length} torneios</h2>` + lista.map(t => `<div class="hrow"><span class="yr">${t.a}</span><div class="who"><b>${crest(t.c, 'sm')} 🏆 ${esc(t.c)} <small>${esc(t.p || '')}</small></b><small>${esc(t.n)}${t.v ? ' · vice: ' + esc(t.v) : ''}</small>${t.mvp ? `<small>⭐ MVP: ${esc(t.mvp[0])}</small>` : ''}${t.r ? `<div class="lu">${t.r.map(n => `<span>${esc(n)}</span>`).join('')}</div>` : ''}</div></div>`).join('') + '</section>';
   }
   function vHall() {
     if (UI.game !== 'lol') return vHallGen();
@@ -335,6 +349,7 @@
     else if (a === 'ficha') { UI.ficha = id; render(); }
     else if (a === 'fecha') { UI.ficha = null; render(); }
     else if (a === 'hall') { UI.hall = id; render(); }
+    else if (a === 'hfil') { UI.hf = id; render(); }
     else if (a === 'vel') { PL.vel = +id; render(); }
     else if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; delete l.raw; delete l.src; delete l.proc; l.cut = false; O.save(); render(); }
     else if (a === 'lg-cut') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l.cut = !l.cut; l.img = l.cut ? l.proc : l.raw; O.save(); render(); }

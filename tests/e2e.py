@@ -60,8 +60,8 @@ async def main():
             await pg.screenshot(path=f'{OUT}/ficha_{w}.png'); await pg.click('#modal .lp a'); pt=(await pg.locator('#modal').inner_text()).lower(); ok('carreira' in pt or 'sem dados' in pt, f'{w}: ficha do jogador abre'); await pg.screenshot(path=f'{OUT}/jogador_{w}.png'); await pg.click('[data-act=fecha]')
             ok(await pg.locator('#modal').count() == 0, f'{w}: ficha fecha')
             await pg.click('[data-act=game][data-id=cs2]'); await pg.click('[data-act=tab][data-id=hall]'); await pg.click('[data-act=hall][data-id=tor]'); cs = (await pg.locator('#main').inner_text()).lower()
-            ok('shanghai' in cs, f'{w}: histórico CS2 lista Majors')
-            await pg.click('[data-act=hall][data-id=leg]'); ok('zywoo' in (await pg.locator('#main').inner_text()).lower(), f'{w}: MVPs CS2')
+            ok('shanghai' in cs and 'pro league' in cs, f'{w}: histórico CS2 lista Majors')
+            await pg.click('[data-act=hall][data-id=leg]'); await pg.click('[data-act=hall][data-id=leg]'); lt=(await pg.locator('#main').inner_text()).lower(); ok('zywoo' in lt and 'major' in lt, f'{w}: lendas CS2'); await pg.screenshot(path=f'{OUT}/cs_leg_{w}.png'); await pg.click('[data-act=hall][data-id=bo]'); ok('2025' in (await pg.locator('#main').inner_text()) and await pg.locator('#main img.flag').count() > 10, f'{w}: Bola de Ouro CS2'); await pg.screenshot(path=f'{OUT}/cs_bo_{w}.png'); await pg.click('[data-act=hall][data-id=tor]'); await pg.click('[data-act=hfil][data-id=EPL]'); ok('season 23' in (await pg.locator('#main').inner_text()).lower(), f'{w}: filtro EPL'); await pg.screenshot(path=f'{OUT}/cs_epl_{w}.png'); await pg.click('[data-act=hfil][data-id=""]')
             await pg.click('[data-act=game][data-id=lol]')
             await pg.screenshot(path=f'{OUT}/ligas_{w}.png')
             await pg.click('[data-act=time]') if await pg.locator('[data-act=time]').count() else None

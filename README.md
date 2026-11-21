@@ -44,3 +44,4 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - Ficha do jogador (LoL): clique no nick → carreira por time, títulos (Mundial/MSI/ligas/copas), MVPs. A ficha do time agora mostra o técnico.
 - Bola de Ouro do LoL (top 10 por ano) na aba Campeões.
 - `js/data/hist.js`: histórico real dos outros jogos (aba Campeões genérica: torneios, títulos por time, MVPs). Preenchido: Majors de CS (2013–2026). Só entra dado conferido na web.
+- CS2 completo (`tools/gen_hist_cs2.py` → `js/data/hist.js`): 89 torneios (Majors, IEM, ESL Pro League S1–S23, BLAST), MVPs, line-ups dos Majors (só as conferidas), Bola de Ouro = Top 10 anual da HLTV (2013–2025) e Lendas calculadas. Filtro por tipo de torneio.
