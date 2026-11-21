@@ -81,7 +81,7 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Malr1ne','Wisper','Boxi','tOfu'],
   '1w Team': ['Pure','bzm','33','Ari','Whitemon'], 'Xtreme Gaming': ['Ame','Xm','zeal','XinQ','BoBoKa']},
  'ff': {'LOUD': ['HAK','Nickz7','GUAXA7','Trap'], 'Fluxo': ['Giuh','Butzin','MT7','Bops']},
- 'valorant': {'100 Thieves': ['Asuna','Timotino','vora','bang','Cryo'], 'LOUD': ['DaviH','basic','cortezia','Bati','cauanzin'],
+ 'valorant': {'Gen.G': ['Karon','MaKo','Dambi','t3xture','Raxcal'], '100 Thieves': ['Asuna','Timotino','vora','bang','Cryo'], 'LOUD': ['DaviH','basic','cortezia','Bati','cauanzin'],
   'NRG': ['zekken','eeiu','skuba','Ethan','mada'], 'Sentinels': ['johnqt','brawk','OXY','canezerra','keiko'], 'Leviatán': ['Neon','blowz','spikeziN','lukxo','erde'], 'Karmine Corp': ['LewN','dos9','Avez','SUYGETSU','N4RRATE'], 'Nongshim RedForce': ['Ivy','Rb','Francis','Xross','UdoTan'],
   'Paper Rex': ['something','f0rsakeN','PatMen','Primmie','invy'], 'T1': ['TenZ','crashies','iZu','stax','BuZz'],
   'BBL Esports': ['ComeBack','VenTT','oroni','Loita','Lar0k'],
