@@ -51,4 +51,5 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - Free Fire (`tools/gen_hist_ff.py` → `js/data/hist_ff.js`): Mundiais 2019–2025, EWC 2024–26, LBFF 3–8/2023 e FFWS Brasil 2024; rosters só dos campeões com line-up verificada; Bola de Ouro provisória 2019–2025 (pesos do BrasLOL; 2026 fica para depois do Mundial).
 
 
+- EA FC / FIFA (`tools/gen_hist_fifa.py` → `js/data/hist_fifa.js`): Mundial individual 2004–2026 (sem 2007, 2020 e 2021), eClub World Cup 2017–2023, Nations Cup 2019/2022/2023 e EWC 2024. Ballon d'Or por títulos conferidos, provisório. Line-ups de clubes só quando a fonte as cita.
 Nomes do prêmio anual por jogo (mapa `PREMIO` em `js/ui.js`): LoL Golden Crown, CS2 Golden Rifle, Valorant Radiant Award, Free Fire Golden Booyah, Dota 2 Golden Aegis, R6 Golden Shield, EA FC Ballon d'Or, Wild Rift Golden Rift.
