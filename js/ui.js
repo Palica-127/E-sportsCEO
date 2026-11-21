@@ -7,7 +7,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const UI = { tab: 'org', game: 'lol', squad: 't1', mk: { role: '', liga: '', q: '', n: 30, pay: false, asc: false }, ligaVer: null, aberto: null, resetArm: false };
 
-  const TABS = [['org', '🏢', 'Início'], ['calendario', '📅', 'Calendário'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Torneios'], ['hall', '👑', 'Campeões']];
+  const TABS = [['org', '🏢', 'Início'], ['calendario', '📅', 'Calendário'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🛍️', 'Loja'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Torneios'], ['hall', '👑', 'Campeões']];
 
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('on');
@@ -294,7 +294,12 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   }
   function vEstrutura() {
     const S = O.get();
-    return `<section class="card"><div class="kv"><span>Bônus de força</span><b>+${O.infraBonus().toFixed(1)}</b></div><div class="kv"><span>Manutenção semanal</span><b>${O.money(O.upkeepSemanal())}</b></div></section>` +
+    const ativos = S.itens.map(x => `<div class="kv"><span>${esc(x.nome)}</span><b>${x.f ? '+' + x.f + ' força · ' : ''}${x.pay ? '<span class="pos">' + O.money(x.pay) + '/sem</span> · ' : ''}${x.sem} sem</b></div>`).join('');
+    const loja = `<section class="card"><h2>🛍️ Loja da semana</h2><p class="hint">O estoque muda a cada 4 semanas (próxima troca em ${4 - S.lojaSem}). Reforços somam no máximo +4 de força.</p>` +
+      O.lojaItens().map(it => { const tem = it.tipo !== 'seg' && S.itens.some(x => x.id === it.id);
+        return `<div class="slot infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small></div><button class="mini buy" data-act="loja" data-id="${it.id}" ${tem || S.org.caixa < it.c ? 'disabled' : ''}>${tem ? 'ATIVO' : O.money(it.c)}</button></div>`; }).join('') + '</section>' +
+      (ativos ? `<section class="card"><h2>Ativos</h2>${ativos}</section>` : '');
+    return loja + `<h2 class="sec">Instalações permanentes</h2>` + `<section class="card"><div class="kv"><span>Bônus de força</span><b>+${O.infraBonus().toFixed(1)}</b></div><div class="kv"><span>Manutenção semanal</span><b>${O.money(O.upkeepSemanal())}</b></div></section>` +
       O.INFRA.map(it => { const n = O.infraNivel(it.id), max = n >= it.max, c = O.infraCusto(it);
         return `<section class="card infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small><div class="bar"><i style="width:${n / it.max * 100}%"></i></div><small>Nível ${n}/${it.max}${it.bonus ? ' · +' + it.bonus + ' de força por nível' : ''}</small></div>
           <button class="mini buy" data-act="infra" data-id="${it.id}" ${max || S.org.caixa < c ? 'disabled' : ''}>${max ? 'MAX' : O.money(c)}</button></section>`; }).join('');
@@ -378,6 +383,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     else if (a === 'patro') res(O.aceitarPatro(id));
     else if (a === 'evento') res(O.escolherEvento(+id));
     else if (a === 'infra') res(O.comprarInfra(id));
+    else if (a === 'loja') res(O.comprarLoja(id));
     else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
     else if (a === 'mrole') { UI.mk.role = id; UI.mk.n = 30; render(); }
     else if (a === 'mpay') { UI.mk.pay = !UI.mk.pay; UI.mk.n = 30; render(); }

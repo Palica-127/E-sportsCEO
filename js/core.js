@@ -34,6 +34,19 @@
     { id: 'base',     nome: 'Categoria de base', icone: '🌱', max: 5, base: 50000, bonus: 0, desc: 'Revela jovens talentos a cada split (nível maior = jovens melhores).' },
     { id: 'cozinha',  nome: 'Cozinha',             icone: '🍳', max: 3, base: 20000, bonus: 0.3, desc: 'Comida caseira na gaming house.' },
   ];
+  /* Loja: ofertas rotativas (a cada 4 semanas). tipo: buff = força temporária; seg = seguidores; merch = renda semanal por N semanas; caixa = dinheiro de patrocinador/sorteio */
+  const LOJA = [
+    { id: 'lanche',  nome: 'Pizza e integração',   icone: '🍕', tipo: 'buff', f: 0.8, sem: 3, c: 12000,  desc: '+0,8 de força por 3 semanas.' },
+    { id: 'boot',    nome: 'Bootcamp intensivo',   icone: '🏕️', tipo: 'buff', f: 1.5, sem: 6, c: 45000,  desc: '+1,5 de força por 6 semanas.' },
+    { id: 'coach',   nome: 'Coach convidado',      icone: '🎓', tipo: 'buff', f: 2.2, sem: 4, c: 95000,  desc: '+2,2 de força por 4 semanas.' },
+    { id: 'analista',nome: 'Analista de dados',    icone: '📊', tipo: 'buff', f: 1,   sem: 10, c: 60000, desc: '+1 de força por 10 semanas.' },
+    { id: 'ads',     nome: 'Campanha de anúncios', icone: '📣', tipo: 'seg', v: 1.12, c: 25000,          desc: '+12% de seguidores agora.' },
+    { id: 'influ',   nome: 'Collab com influencer',icone: '🤳', tipo: 'seg', v: 1.3,  c: 70000,          desc: '+30% de seguidores agora.' },
+    { id: 'camisa',  nome: 'Linha de camisas',     icone: '👕', tipo: 'merch', pay: 2500, sem: 12, c: 24000, desc: 'Vende R$ 2,5 mil/sem por 12 semanas (retorna R$ 30 mil).' },
+    { id: 'skin',    nome: 'Pacote de skins da org', icone: '🎨', tipo: 'merch', pay: 6000, sem: 16, c: 80000, desc: 'Rende R$ 6 mil/sem por 16 semanas (retorna R$ 96 mil).' },
+    { id: 'stream',  nome: 'Estúdio de streaming', icone: '🎥', tipo: 'merch', pay: 4500, sem: 20, c: 70000, desc: 'Rende R$ 4,5 mil/sem por 20 semanas (retorna R$ 90 mil).' },
+  ];
+  const LOJA_N = 5, LOJA_CICLO = 4, BUFF_MAX = 4;
   const INFRA_MULT = 2.6;      // custo de cada nível = base * INFRA_MULT^nivelAtual
   const UPKEEP = 0.004;        // manutenção semanal = 0,4% do total investido
   const CICLO = 26;            // semanas por split (2 splits por ano): jogos + playoffs + entretemporada
@@ -59,7 +72,7 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
-             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, evento: null, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
   }
   let S = novoJogo();
   const get = () => S;
@@ -71,7 +84,7 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
@@ -222,6 +235,8 @@
     S.patro.forEach(x => x.sem--); const fim = S.patro.filter(x => x.sem <= 0); S.patro = S.patro.filter(x => x.sem > 0); fim.forEach(x => log(`Patrocínio com ${x.n} terminou`));
     seguidores(1 + 0.002 + 0.0004 * S.org.rep + (S.estrela ? Math.max(0, S.estrela.o - 60) * 0.00004 : 0) + (S.foco === 'midia' ? 0.02 : 0));
     if (S.buff && --S.buff.sem <= 0) S.buff = null;
+    S.itens.forEach(x => x.sem--); S.itens = S.itens.filter(x => x.sem > 0);
+    if (++S.lojaSem >= LOJA_CICLO) { S.lojaSem = 0; S.loja = []; lojaItens(); }
     if (++S.ofertaSem >= 6) { S.ofertaSem = 0; S.ofertas = []; ofertas(); }
     if (S.evento && --S.evento.sem <= 0) { S.evento = null; log('Evento expirou sem decisão'); }
     if (!S.evento && rnd() < 0.12) { const e = EVENTOS[Math.floor(rnd() * EVENTOS.length)]; S.evento = { id: e.id, sem: 4 }; log('Novo evento: ' + e.txt); }
@@ -282,7 +297,21 @@
     const st = titulares(game, sq);
     return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus() + bonusTemp();
   }
-  const bonusTemp = () => (S.foco === 'treino' ? 1 : 0) + (S.buff ? S.buff.f : 0);
+  const bonusTemp = () => Math.min(BUFF_MAX, (S.foco === 'treino' ? 1 : 0) + (S.buff ? S.buff.f : 0) + S.itens.reduce((a, x) => a + (x.f || 0), 0));
+  const rendaMerch = () => S.itens.reduce((a, x) => a + (x.pay || 0), 0);
+  function lojaItens() { // 5 itens sorteados do catálogo, renovados a cada 4 semanas
+    if (!S.loja.length) { const ids = LOJA.map(x => x.id); S.loja = []; while (S.loja.length < LOJA_N) S.loja.push(ids.splice(Math.floor(rnd() * ids.length), 1)[0]); }
+    return S.loja.map(id => LOJA.find(x => x.id === id));
+  }
+  function comprarLoja(id) {
+    const it = lojaItens().find(x => x && x.id === id); if (!it) return { ok: false, msg: 'Item fora de estoque.' };
+    if (S.org.caixa < it.c) return { ok: false, msg: 'Caixa insuficiente.' };
+    if (it.tipo !== 'seg' && S.itens.some(x => x.id === id)) return { ok: false, msg: 'Você já tem esse item ativo.' };
+    S.org.caixa -= it.c;
+    if (it.tipo === 'seg') seguidores(it.v); else S.itens.push({ id: it.id, nome: it.nome, f: it.f || 0, pay: it.pay || 0, sem: it.sem });
+    S.loja = S.loja.filter(x => x !== id); log(`Loja: ${it.nome}`); save();
+    return { ok: true, msg: `${it.nome} comprado.` };
+  }
   const mediaTime = pl => pl && pl.length ? pl.reduce((a, p) => a + p[1], 0) / pl.length : 70;
 
   /* ---------- Competições (só LoL por enquanto) ---------- */
@@ -498,13 +527,13 @@
     let receita = 0, despesa = 0;
     for (const sq in SQUADS) {
       const q = S.games[game].squads[sq]; if (!q.on) continue;
-      if (prontos(game, sq)) receita += Math.round(18000 * S.org.rep * (sq === 't1' ? 1 : 0.2));
+      if (prontos(game, sq)) receita += Math.round(14000 * S.org.rep * (sq === 't1' ? 1 : 0.2));
       despesa += folha(game, sq);
     }
     return { receita, despesa, saldo: receita - despesa };
   }
   function projecaoOrg() { // total semanal da org: todos os jogos + patrocínios + redes - foco - manutenção
-    let receita = rendaPatro() + rendaSocial(), despesa = upkeepSemanal() + custoFoco();
+    let receita = rendaPatro() + rendaSocial() + rendaMerch(), despesa = upkeepSemanal() + custoFoco();
     for (const g in GAMES) if (GAMES[g].ativo) { const p = projecao(g); receita += p.receita; despesa += p.despesa; }
     return { receita, despesa, saldo: receita - despesa };
   }
@@ -541,7 +570,7 @@
     S.ligas = S.ligas || {}; delete S.ligas[g]; save();
   }
 
-  root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
+  root.Org = { LOJA, lojaItens, comprarLoja, rendaMerch, GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
     infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, passo, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);

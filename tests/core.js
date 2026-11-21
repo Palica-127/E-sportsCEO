@@ -115,4 +115,12 @@ ok(paradas === 5 && semanasAuto > 5 && semanasAuto < 400, 'avanço contínuo par
 O.set(O.novoJogo()); S = O.get(); let evSemana = 0; for (let i = 0; i < 3; i++) O.passo(); ok(S.org.semana === 4, 'passo avança 1 semana por vez');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
+// loja: compra, buff limitado e expiração
+O.set(O.novoJogo()); S = O.get(); S.org.caixa = 1e6; const li = O.lojaItens();
+ok(li.length === 5 && new Set(li.map(x => x.id)).size === 5, 'loja com 5 itens distintos');
+const b0 = O.bonusTemp(), it0 = li.find(x => x.tipo === 'buff'); const r0 = O.comprarLoja(it0.id);
+ok(r0.ok && O.bonusTemp() > b0 && S.org.caixa === 1e6 - it0.c, 'comprar reforço soma bônus e desconta caixa');
+ok(!O.comprarLoja(it0.id).ok, 'não recompra item ativo');
+S.itens.push({ id: 'x', f: 9, sem: 5 }); ok(O.bonusTemp() <= 4, 'bônus temporário limitado a +4');
+O.avancar(it0.sem + 5); ok(!S.itens.some(x => x.id === it0.id), 'item expira');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);
