@@ -35,3 +35,9 @@ Jogo de gerenciamento de uma organização de esports, em site estático (sem bu
 
 ## Avanço contínuo
 O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem parar, até você clicar em ⏸ ou acontecer algo importante (evento, contrato, final de torneio, caixa negativo). Velocidades 1x/2x/6x.
+
+## LoL: fichas, campeões e brackets
+- `tools/gen_lolx.js` extrai do BrasLOL nacionalidades, campeões do Mundial/MSI com line-ups e lendas (`js/data/lolx.js`) e copia só as bandeiras usadas (`flags/`). Fotos de pessoas não são copiadas (avatares com iniciais).
+- Torneios → abrir um time → **Ficha do time** (line-up, idades, nacionalidades, força, troféus).
+- Aba **Campeões**: Mundial, MSI e Lendas.
+- Playoffs e torneios internacionais aparecem como chaves (brackets) em colunas.

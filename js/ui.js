@@ -6,7 +6,7 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const UI = { tab: 'org', game: 'lol', squad: 't1', mk: { role: '', liga: '', q: '', n: 30, pay: false, asc: false }, ligaVer: null, aberto: null, resetArm: false };
 
-  const TABS = [['org', '🏢', 'Início'], ['calendario', '📅', 'Calendário'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Torneios']];
+  const TABS = [['org', '🏢', 'Início'], ['calendario', '📅', 'Calendário'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Torneios'], ['hall', '👑', 'Campeões']];
 
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('on');
@@ -65,6 +65,51 @@
     $('nav').innerHTML = TABS.map(([id, ic, nm]) => `<button class="${id === UI.tab ? 'on' : ''}" data-act="tab" data-id="${id}"><span>${ic}</span>${nm}</button>`).join('');
   }
 
+
+  /* ---------- LoL: bandeiras, fichas, campeões e lendas (dados do BrasLOL, sem fotos) ---------- */
+  const X = () => window.LOLX || null;
+  function bandeira(n) { const x = X(); if (!x || UI.game !== 'lol' && n !== true) return ''; const c = x.nat[n]; return c && x.iso[c] ? `<img class="flag" src="flags/${x.iso[c]}.svg" alt="${esc(x.natN[c] || c)}" title="${esc(x.natN[c] || c)}" loading="lazy" onerror="this.remove()">` : ''; }
+  function avatar(n) { const ini = String(n).replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '?'; let h = 0; for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `<span class="av" style="--h:${h}">${ini}</span>`; }
+  function achaTime(nome) { const L = (O.dataOf('lol') || {}).leagues || {}; for (const k in L) for (const tier of ['t1', 't2']) for (const t of (L[k][tier] || [])) if (t.n === nome) return { t, liga: L[k].nome, tier: tier.toUpperCase() }; return null; }
+  function titulos(nome) {
+    const x = X(); if (!x) return { wc: [], msi: [] };
+    const al = new Set([nome]); x.ht.forEach(r => { if (r[0] === nome) al.add(r[3]); });
+    const ys = o => Object.keys(o).filter(y => al.has(o[y])).map(Number);
+    return { wc: ys(x.wct), wcv: ys(x.wcv), msi: ys(x.msv), msiv: ys(x.mst) };
+  }
+  function ficha(nome) {
+    const f = achaTime(nome), tt = titulos(nome), x = X(), roles = (O.GAMES.lol || {}).roles || [];
+    let h = `<div class="mh">${crest(nome, 'lg')}<div><h2>${esc(nome)}</h2><small>${f ? esc(f.liga) + ' · ' + f.tier : 'Time'}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
+    if (f && f.t.p) {
+      const ovr = (f.t.p.reduce((a, p) => a + p[1], 0) / f.t.p.length).toFixed(1), idade = (f.t.p.reduce((a, p) => a + p[2], 0) / f.t.p.length).toFixed(1);
+      h += `<div class="kvs"><div><small>Força</small><b>${ovr}</b></div><div><small>Idade média</small><b>${idade}</b></div><div><small>Mundiais</small><b>${tt.wc.length}</b></div><div><small>MSI</small><b>${tt.msi.length}</b></div></div>`;
+      h += `<h3>Line-up</h3><div class="lineup">` + f.t.p.map((p, i) => `<div class="lp">${avatar(p[0])}<i class="role ri${i}">${roles[i] || ''}</i><b>${esc(p[0])}</b>${bandeira(p[0])}<small>${p[2]} anos</small><span class="ovr">${p[1]}</span></div>`).join('') + '</div>';
+    }
+    if (x && (tt.wc.length || tt.msi.length || (tt.wcv || []).length)) {
+      h += '<h3>Troféus</h3><div class="trof">' + (tt.wc.length ? `<p>🏆 Mundial: <b>${tt.wc.sort().join(', ')}</b></p>` : '') + (tt.msi.length ? `<p>🥇 MSI: <b>${tt.msi.sort().join(', ')}</b></p>` : '') + ((tt.wcv || []).length ? `<p class="hint">Vice no Mundial: ${tt.wcv.sort().join(', ')}</p>` : '') + '</div>';
+    }
+    return h;
+  }
+  function modal() { let m = document.getElementById('modal'); if (!UI.ficha) { if (m) m.remove(); return; } if (!m) { m = document.createElement('div'); m.id = 'modal'; document.body.appendChild(m); } m.innerHTML = `<div class="mbox" role="dialog">${ficha(UI.ficha)}</div>`; }
+  function lineupHT(tipo, y) { const x = X(); const r = x && x.ht.find(r => r[1] === tipo && r[2] === +y); return r ? r[4] : null; }
+  function vHall() {
+    const x = X(); if (!x) return '<section class="card empty"><p>Sem dados.</p></section>';
+    const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    if (sub === 'leg') {
+      const arr = Object.entries(x.hon).map(([n, o]) => ({ n, o, pts: (o.wc || []).length * 3 + (o.msi || []).length * 2 + (o.lg || 0) * .5 + (o.mv || []).length })).sort((a, b) => b.pts - a.pts);
+      return chips + '<section class="card"><h2>Lendas</h2>' + arr.map(({ n, o }) => `<div class="leg">${avatar(n)}<div class="who"><b>${esc(n)} ${bandeira(n) || ''}</b><small>${(o.wc || []).length ? '🏆 ' + o.wc.length + ' Mundial (' + o.wc.join(', ') + ') ' : ''}${(o.msi || []).length ? '🥇 ' + o.msi.length + ' MSI ' : ''}${o.lg ? '🏅 ' + o.lg + ' ligas ' : ''}</small>${(o.mv || []).length ? `<small>⭐ ${o.mv.map(m => m[0] + ' ' + esc(m[1].replace(/^MVP /, 'MVP '))).slice(0, 4).join(' · ')}</small>` : ''}</div></div>`).join('') + '</section>';
+    }
+    const camp = sub === 'wc' ? x.wct : x.msv, vice = sub === 'wc' ? x.wcv : x.mst, tipo = sub === 'wc' ? 'Mundial' : 'MSI';
+    return chips + `<section class="card"><h2>${sub === 'wc' ? 'Campeões do Mundial' : 'Campeões do MSI'}</h2>` + Object.keys(camp).sort((a, b) => b - a).map(y => {
+      const lu = lineupHT(tipo, y), nm = camp[y];
+      return `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${crest(nm, 'sm')} 🏆 ${esc(nm)}</b><small>vice: ${esc(vice[y] || '—')}</small>${lu ? `<div class="lu">${lu.map(n => `<span>${bandeira(n) || ''}${esc(n)}</span>`).join('')}</div>` : ''}</div></div>`;
+    }).join('') + '</section>';
+  }
+  /* chaves (brackets) em colunas */
+  function bracket(cols) {
+    return '<div class="bracket">' + cols.map(c => `<div class="bcol"><h4>${esc(c.t)}</h4>` + c.m.map(m => `<div class="bm ${m.p ? 'pend' : ''}"><div class="${m.w === m.a ? 'win' : ''} ${m.ea ? 'eu' : ''}">${m.ca || ''}<span>${esc(m.a)}</span></div><div class="${m.w === m.b ? 'win' : ''} ${m.eb ? 'eu' : ''}">${m.cb || ''}<span>${esc(m.b)}</span></div></div>`).join('') + '</div>').join('') + '</div>';
+  }
+
   /* ---------- Abas ---------- */
   function vOrg() {
     const S = O.get(), p = O.projecao(UI.game), po = O.projecaoOrg();
@@ -112,7 +157,7 @@
       <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
       const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
-      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div><span class="ovr">${p.o}</span>${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
+      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div><span class="ovr">${p.o}</span>${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     const bs = (S.base || {})[UI.game] || [];
@@ -135,7 +180,7 @@
       <div class="row2"><select id="mliga"><option value="">Todas as ligas</option>${ligas.map(l => `<option ${m.liga === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <input id="mq" placeholder="Buscar nome" value="${esc(m.q)}"></div></section>
       <section class="card"><h2>${tot} jogadores</h2>` + lista.slice(0, m.n).map(p => `<div class="slot"><span class="role ri${roles.indexOf(p.r)}">${p.r}</span>
-        <div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · ${O.money(O.salary(p.o))}/sem</small></div><span class="ovr">${p.o}</span>
+        <div class="who"><b>${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · ${O.money(O.salary(p.o))}/sem</small></div><span class="ovr">${p.o}</span>
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
   }
@@ -214,13 +259,16 @@
     if (c.phase === 'wait') h += `<p class="warn">Faltam titulares: contrate no Mercado.</p>`;
     h += rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''} ${r.pos === 6 ? 'cut' : ''}"><span>${r.pos}</span>${crestT(c, r.i)}<b>${esc(r.n)}</b><em>${r.w}V ${r.l}D</em></div>`).join('') + '<p class="hint">Os 6 primeiros vão aos playoffs.</p></section>';
     if (c.phase === 'po' && c.po) {
-      h += `<section class="card"><h2>Playoffs</h2>` + c.po.res.map(r => `<div class="tb"><span>${est[r.st]}</span>${crestT(c, r.w)}<b>${nome(r.a)} x ${nome(r.b)}</b><em>${nome(r.w)}</em></div>`).join('')
-        + c.po.pares.map(([a, b]) => `<div class="tb pend"><span>${est[c.po.stage]}</span><b>${nome(a)} x ${nome(b)}</b><em>a jogar</em></div>`).join('') + '</section>';
+      const cols = est.map((t, st) => ({ t, m: c.po.res.filter(r => r.st === st).map(r => ({ a: O.nome(c, r.a), b: O.nome(c, r.b), w: O.nome(c, r.w), ca: crestT(c, r.a), cb: crestT(c, r.b) }))
+        .concat(c.po.stage === st ? c.po.pares.map(([a, b]) => ({ a: O.nome(c, a), b: O.nome(c, b), p: 1, ca: crestT(c, a), cb: crestT(c, b) })) : []) })).filter(k => k.m.length);
+      h += `<section class="card wide"><h2>Playoffs</h2>${bracket(cols)}</section>`;
     }
     if (c.phase === 'intl' && c.intl) {
-      const I = c.intl, nm = i => esc(O.nomeT(I.teams[i]));
-      h += `<section class="card"><h2>🌍 ${O.intlDef(c.game)[I.tipo].nome}</h2><p class="hint">${I.teams.length} times · bolsa ${O.money(O.intlDef(c.game)[I.tipo].bolsa)}</p>` + I.res.slice(-8).map(r => `<div class="tb"><span>${r.st}</span><b>${nm(r.a)} x ${nm(r.b)}</b><em>${nm(r.w)}</em></div>`).join('')
-        + (I.alive.length > 1 ? I.alive.map((a, k) => k % 2 ? '' : `<div class="tb pend"><span>a jogar</span><b>${nm(a)} x ${nm(I.alive[k + 1])}</b><em>${I.teams[a].eu || I.teams[I.alive[k + 1]].eu ? 'você' : ''}</em></div>`).join('') : '') + '</section>';
+      const I = c.intl, nm = i => O.nomeT(I.teams[i]), ordem = [], by = {};
+      I.res.forEach(r => { if (!by[r.st]) { by[r.st] = []; ordem.push(r.st); } by[r.st].push({ a: nm(r.a), b: nm(r.b), w: nm(r.w), ea: I.teams[r.a].eu, eb: I.teams[r.b].eu }); });
+      const pend = I.alive.length > 1 ? I.alive.filter((_, k) => k % 2 === 0).map((a, k) => ({ a: nm(a), b: nm(I.alive[2 * k + 1]), p: 1, ea: I.teams[a].eu, eb: I.teams[I.alive[2 * k + 1]].eu })) : [];
+      const cols = ordem.slice(-3).map(t => ({ t, m: by[t] })); if (pend.length) cols.push({ t: 'A jogar', m: pend });
+      h += `<section class="card wide"><h2>🌍 ${O.intlDef(c.game)[I.tipo].nome}</h2><p class="hint">${I.teams.length} times · bolsa ${O.money(O.intlDef(c.game)[I.tipo].bolsa)}</p>${bracket(cols)}</section>`;
     }
     if (c.last.length) h += `<section class="card"><h2>Seus últimos jogos</h2>` + c.last.slice(0, 6).map(m => `<div class="tb"><span>${m.v ? '✅' : '❌'}</span>${crest(m.op)}<b>vs ${esc(m.op)}</b><em>${m.pl} · ${esc(m.f)}</em></div>`).join('') + '</section>';
     const ih = (S.intlHist || []).filter(x => (x.g || 'lol') === UI.game); if (ih.length && UI.squad === 't1') h += `<section class="card"><h2>Títulos internacionais</h2>` + ih.slice(0, 6).map(x => `<div class="tb"><span>${x.y}</span><b>🌍 ${esc(x.nome || (x.tipo === 'MSI' ? 'MSI' : 'Mundial'))}: ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : esc(x.reg || '')}</em></div>`).join('') + '</section>';
@@ -238,17 +286,20 @@
     const key = lg + tier + t.n, open = UI.aberto === key;
     const f = t.p ? (t.p.reduce((a, p) => a + p[1], 0) / t.p.length).toFixed(1) : '—';
     const roles = DG().roles;
-    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${esc(p[0])} <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}</div>` : ''}</div>`;
+    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${bandeira(p[0])}${esc(p[0])} <small>${p[2]}a</small> <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}${UI.game === 'lol' ? `<button class="mini" data-act="ficha" data-id="${esc(t.n)}">📋 Ficha do time</button>` : ''}</div>` : ''}</div>`;
   }
 
   /* ---------- Render e eventos ---------- */
-  const VIEWS = { calendario: vCalendario, negocios: vNegocios, org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas };
-  function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = O.get().setup ? vSetup() : VIEWS[UI.tab](); $('main').scrollTop = sc; }
+  const VIEWS = { calendario: vCalendario, negocios: vNegocios, org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas, hall: vHall };
+  function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = O.get().setup ? vSetup() : VIEWS[UI.tab](); $('main').scrollTop = sc; modal(); }
 
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
     if (a === 'play') playToggle();
+    else if (a === 'ficha') { UI.ficha = id; render(); }
+    else if (a === 'fecha') { UI.ficha = null; render(); }
+    else if (a === 'hall') { UI.hall = id; render(); }
     else if (a === 'vel') { PL.vel = +id; render(); }
     else if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; delete l.raw; delete l.src; delete l.proc; l.cut = false; O.save(); render(); }
     else if (a === 'lg-cut') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l.cut = !l.cut; l.img = l.cut ? l.proc : l.raw; O.save(); render(); }
