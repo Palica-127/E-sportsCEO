@@ -59,6 +59,7 @@ func vorg() -> void:
 		var hp = hrow(cp); pill(hp, gname(prox.g), GCOL.get(prox.g, ACC), true); pill(hp, prox.tag, DIM); pill(hp, "em %d sem." % prox.em if prox.em > 0 else "esta semana", GOLD)
 		lbl(cp, "%s%s" % [prox.label, ("  ×  " + str(prox.op)) if prox.op != null else ""], 30, TXT)
 		lbl(cp, str(prox.data.txt), 22, DIM)
+	vdiretoria()
 	for g in O.GAMES:
 		if not O.ativo(g) or not O.aberto(g): continue
 		var cg = card(O.GAMES[g].nome, null, GCOL.get(g, ACC))

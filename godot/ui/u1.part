@@ -125,7 +125,8 @@ func kpi(p, items: Array) -> void:   # linha de indicadores [rótulo, valor, cor
 		var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 2); pc.add_child(v)
 		lbl(v, it[0], 18, DIM, false); lbl(v, it[1], 28, it[2] if it.size() > 2 else TXT, false)
 func bar(p, titulo, val, mx, col = null, txt := "") -> void:   # barra de progresso rotulada
-	var h = hrow(p); var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 150; l.size_flags_horizontal = Control.SIZE_FILL
+	var h = hrow(p)
+	if titulo != "": var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 150; l.size_flags_horizontal = Control.SIZE_FILL
 	var pb = ProgressBar.new(); pb.min_value = 0; pb.max_value = mx; pb.value = val; pb.show_percentage = false; pb.custom_minimum_size.y = 16; pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pb.add_theme_stylebox_override("background", _sbf(SURF2, 8, null, 0, 0)); pb.add_theme_stylebox_override("fill", _sbf(col if col != null else ACC, 8, null, 0, 0)); h.add_child(pb)
 	var t = lbl(h, txt if txt != "" else str(int(val)), 22, TXT, false); t.custom_minimum_size.x = 70; t.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; t.size_flags_horizontal = Control.SIZE_FILL

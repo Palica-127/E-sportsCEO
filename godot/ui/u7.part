@@ -1,0 +1,21 @@
+
+# ---------- Diretoria ----------
+func vdiretoria() -> void:
+	O.dir_garantir()
+	var D = O.S.get("dir")
+	if not (D is Dictionary) or D.is_empty(): return
+	var c = card("Diretoria · objetivos de %d" % D.ano, null, GOLD)
+	var conf: float = D.conf
+	var col = OK if conf >= 60 else GOLD if conf >= 35 else BAD
+	bar(c, "Confiança", conf, 100.0, col, "%d%%" % int(conf))
+	lbl(c, O.dir_rotulo(conf), 22, col)
+	for o in D.objs:
+		var p: Dictionary = O.dir_prog(o)
+		var h = hrow(c); pill(h, "OK" if p.ok else "...", OK if p.ok else DIM, p.ok)
+		var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 4); h.add_child(v)
+		lbl(v, o.txt, 23)
+		bar(v, "", p.frac, 1.0, OK if p.ok else ACC, "%d%%" % int(p.frac * 100))
+		lbl(v, p.txt, 19, DIM)
+	var hs: Array = D.get("hist", [])
+	if hs.size():
+		var x = hs[0]; lbl(c, "Último balanço (%d): %d/%d cumpridos, confiança %d%%" % [x.ano, x.oks, x.total, x.conf], 19, DIM)

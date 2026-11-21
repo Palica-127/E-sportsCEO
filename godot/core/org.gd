@@ -198,7 +198,7 @@ func novo_jogo() -> Dictionary:
 		"org": {"nome": "Minha Org", "caixa": 500000, "rep": 1.0, "semana": 1, "ano": 2026, "regiao": "CBLOL", "logo": {"s": "🐺", "c": "#7c8cff", "f": "escudo"}},
 		"setup": null, "tempo": 0, "inicio": "lol", "ordem": [], "tent": 0, "estrela": null, "infra": {}, "games": games, "comp": {}, "ligas": {}, "base": {}, "noticias": [], "vendidos": [],
 		"patro": [], "ofertas": [], "ofertaSem": 0, "social": {"seg": 5000}, "foco": "nenhum", "buff": null, "aporte": 0, "itens": [], "loja": [], "lojaSem": 0, "evento": null, "intlHist": [],
-		"reg": {}, "hon": {}, "bo": {}, "pts": {}, "log": [], "logN": 0}
+		"reg": {}, "hon": {}, "bo": {}, "pts": {}, "log": [], "logN": 0, "dir": {}}
 	J["mundo"] = novo_mundo(J.org.ano)
 	return J
 func _vazios(n: int) -> Array:
@@ -1512,7 +1512,7 @@ func avancar(semanas: int) -> bool:
 					d["notas"] = notas
 		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1
 		S.org.semana += 1
-		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1)
+		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
 		mundo_tick()
 	save(); return jogou
 var _rx_imp: RegEx
@@ -1785,3 +1785,69 @@ func aposentados(g = null) -> Array:
 	for x in S.mundo.apos:
 		if g == null or x[1] == g: out.append({"ano": x[0], "g": x[1], "nick": x[2], "idade": x[3], "o": x[4], "flag": x[5]})
 	return out
+
+# ---------- Diretoria: objetivos anuais e confiança (novo no Godot) ----------
+var dir_off = false   # os testes de paridade com o JS desligam isto
+const DIR_RANK := {"campeao": 4, "vice": 3, "semi": 2, "quartas": 1}
+func _dir_rank_ano(g, ano) -> int:
+	var c = comp_for(g, "t1")
+	if c == null: return 0
+	var best = 0
+	for h in c.hist:
+		if h.y == ano and h.eu != null: best = max(best, DIR_RANK.get(h.eu, 0))
+	return best
+func dir_garantir() -> void:
+	if dir_off: return
+	if not (S.get("dir") is Dictionary) or S.dir.is_empty() or S.dir.ano != S.org.ano: dir_gerar()
+func dir_gerar() -> void:
+	var conf = 60.0; var hist = []
+	if S.get("dir") is Dictionary and not S.dir.is_empty(): conf = S.dir.conf; hist = S.dir.get("hist", [])
+	var g: String = S.inicio; var rep: float = S.org.rep; var objs = []
+	var alvo_pos = 1 if rep < 2.0 else 2 if rep < 4.0 else 3 if rep < 6.0 else 4
+	objs.append({"id": "pos", "g": g, "alvo": alvo_pos, "txt": {1: "Chegar aos playoffs", 2: "Chegar às semifinais", 3: "Chegar à final", 4: "Ser campeão"}[alvo_pos] + " em " + GAMES[g].curto + " (time principal)", "ok": false})
+	var cx0: int = int(S.org.caixa)
+	objs.append({"id": "caixa", "base": cx0, "alvo": cx0 + max(120000, int(cx0 * 0.15)), "txt": "Fechar o ano com caixa maior", "ok": false})
+	var sg0: int = int(S.social.seg)
+	objs.append({"id": "seg", "base": sg0, "alvo": int(sg0 * 1.2) + 500, "txt": "Crescer 20% em seguidores", "ok": false})
+	objs.append({"id": "elenco", "alvo": 1, "txt": "Manter todos os times principais com titulares completos no fim do ano", "ok": false})
+	S.dir = {"ano": S.org.ano, "conf": conf, "objs": objs, "hist": hist}
+func dir_prog(o: Dictionary) -> Dictionary:   # {atual, meta, frac, ok, txt}
+	match o.id:
+		"pos":
+			var r = _dir_rank_ano(o.g, S.org.ano); var nomes = ["fora", "quartas", "semi", "final", "campeão"]
+			return {"frac": clampf(float(r) / o.alvo, 0.0, 1.0), "ok": r >= o.alvo, "txt": "melhor: " + nomes[r]}
+		"caixa":
+			var f: float = float(S.org.caixa - o.base) / float(max(1, o.alvo - o.base))
+			return {"frac": clampf(f, 0.0, 1.0), "ok": S.org.caixa >= o.alvo, "txt": "%s / %s" % [money(S.org.caixa), money(o.alvo)]}
+		"seg":
+			var f2: float = float(S.social.seg - o.base) / float(max(1, o.alvo - o.base))
+			return {"frac": clampf(f2, 0.0, 1.0), "ok": S.social.seg >= o.alvo, "txt": "%s / %s" % [str(int(S.social.seg)), str(int(o.alvo))]}
+		"elenco":
+			var tot = 0; var cheios = 0
+			for g in GAMES:
+				if not ativo(g) or not aberto(g): continue
+				tot += 1
+				if not titulares(g, "t1").has(null): cheios += 1
+			return {"frac": float(cheios) / max(1, tot), "ok": cheios == tot, "txt": "%d de %d times completos" % [cheios, tot]}
+	return {"frac": 0.0, "ok": false, "txt": ""}
+func dir_virada(ano_ant: int) -> void:   # chamado quando o ano vira; avalia o ano que acabou e sorteia os novos objetivos
+	if dir_off: return
+	if not (S.get("dir") is Dictionary) or S.dir.is_empty() or S.dir.ano != ano_ant:
+		dir_gerar(); return
+	var oks = 0; var linhas = []
+	for o in S.dir.objs:
+		var p = dir_prog(o); o["ok"] = p.ok
+		if p.ok: oks += 1
+		linhas.append({"txt": o.txt, "ok": p.ok})
+	var conf: float = S.dir.conf + oks * 10.0 - (S.dir.objs.size() - oks) * 12.0
+	conf = clampf(conf, 0.0, 100.0)
+	var premio = oks * 50000
+	if premio > 0: S.org.caixa += premio
+	if oks == S.dir.objs.size(): S.org.rep = cl(S.org.rep + 0.1, 0.5, 10)
+	if conf <= 15.0: S.org.rep = cl(S.org.rep - 0.1, 0.5, 10)
+	var h: Array = S.dir.get("hist", []); h.push_front({"ano": ano_ant, "oks": oks, "total": S.dir.objs.size(), "conf": int(conf), "premio": premio})
+	log_("Diretoria %d: %d de %d objetivos cumpridos%s. Confiança %d%%." % [ano_ant, oks, S.dir.objs.size(), (" (bônus " + money(premio) + ")") if premio > 0 else "", int(conf)])
+	S.dir = {"ano": S.org.ano, "conf": conf, "objs": [], "hist": h.slice(0, 10)}
+	dir_gerar()
+func dir_rotulo(conf: float) -> String:
+	return "Confiança total" if conf >= 85.0 else "Satisfeita" if conf >= 60.0 else "Cautelosa" if conf >= 35.0 else "Descontente" if conf > 15.0 else "Em crise"

@@ -125,7 +125,8 @@ func kpi(p, items: Array) -> void:   # linha de indicadores [rótulo, valor, cor
 		var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 2); pc.add_child(v)
 		lbl(v, it[0], 18, DIM, false); lbl(v, it[1], 28, it[2] if it.size() > 2 else TXT, false)
 func bar(p, titulo, val, mx, col = null, txt := "") -> void:   # barra de progresso rotulada
-	var h = hrow(p); var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 150; l.size_flags_horizontal = Control.SIZE_FILL
+	var h = hrow(p)
+	if titulo != "": var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 150; l.size_flags_horizontal = Control.SIZE_FILL
 	var pb = ProgressBar.new(); pb.min_value = 0; pb.max_value = mx; pb.value = val; pb.show_percentage = false; pb.custom_minimum_size.y = 16; pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pb.add_theme_stylebox_override("background", _sbf(SURF2, 8, null, 0, 0)); pb.add_theme_stylebox_override("fill", _sbf(col if col != null else ACC, 8, null, 0, 0)); h.add_child(pb)
 	var t = lbl(h, txt if txt != "" else str(int(val)), 22, TXT, false); t.custom_minimum_size.x = 70; t.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; t.size_flags_horizontal = Control.SIZE_FILL
@@ -261,6 +262,7 @@ func vorg() -> void:
 		var hp = hrow(cp); pill(hp, gname(prox.g), GCOL.get(prox.g, ACC), true); pill(hp, prox.tag, DIM); pill(hp, "em %d sem." % prox.em if prox.em > 0 else "esta semana", GOLD)
 		lbl(cp, "%s%s" % [prox.label, ("  ×  " + str(prox.op)) if prox.op != null else ""], 30, TXT)
 		lbl(cp, str(prox.data.txt), 22, DIM)
+	vdiretoria()
 	for g in O.GAMES:
 		if not O.ativo(g) or not O.aberto(g): continue
 		var cg = card(O.GAMES[g].nome, null, GCOL.get(g, ACC))
@@ -907,3 +909,24 @@ func vmundo() -> void:
 	var ns: Array = S.noticias.filter(func(x): return x.g == g)
 	if ns.is_empty(): lbl(c4, "Sem notícias.", 20, DIM)
 	for x in ns.slice(0, 15): lbl(c4, "S%d/%d · %s" % [x.s, x.y, x.t], 20, OK if x.k == "up" else BAD if x.k == "down" else TXT)
+
+# ---------- Diretoria ----------
+func vdiretoria() -> void:
+	O.dir_garantir()
+	var D = O.S.get("dir")
+	if not (D is Dictionary) or D.is_empty(): return
+	var c = card("Diretoria · objetivos de %d" % D.ano, null, GOLD)
+	var conf: float = D.conf
+	var col = OK if conf >= 60 else GOLD if conf >= 35 else BAD
+	bar(c, "Confiança", conf, 100.0, col, "%d%%" % int(conf))
+	lbl(c, O.dir_rotulo(conf), 22, col)
+	for o in D.objs:
+		var p: Dictionary = O.dir_prog(o)
+		var h = hrow(c); pill(h, "OK" if p.ok else "...", OK if p.ok else DIM, p.ok)
+		var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 4); h.add_child(v)
+		lbl(v, o.txt, 23)
+		bar(v, "", p.frac, 1.0, OK if p.ok else ACC, "%d%%" % int(p.frac * 100))
+		lbl(v, p.txt, 19, DIM)
+	var hs: Array = D.get("hist", [])
+	if hs.size():
+		var x = hs[0]; lbl(c, "Último balanço (%d): %d/%d cumpridos, confiança %d%%" % [x.ano, x.oks, x.total, x.conf], 19, DIM)

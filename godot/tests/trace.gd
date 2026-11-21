@@ -1,7 +1,7 @@
 extends SceneTree
 # Espelho de tests/trace.js: godot --headless --path godot --script tests/trace.gd -- 3 lol
 func _initialize() -> void:
-	var O = root.get_node("Org"); O.testando = true
+	var O = root.get_node("Org"); O.testando = true; O.dir_off = true
 	var args := OS.get_cmdline_user_args(); var anos: int = int(args[0]) if args.size() > 0 else 3; var jogo: String = args[1] if args.size() > 1 else "lol"
 	O.S = O.novo_jogo(); O.S.seed = 424242; O.mundo_sync()
 	O.iniciar({"game": jogo, "nome": "Teste"}); O.sem_estrela()

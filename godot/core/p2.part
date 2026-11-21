@@ -10,7 +10,7 @@ func novo_jogo() -> Dictionary:
 		"org": {"nome": "Minha Org", "caixa": 500000, "rep": 1.0, "semana": 1, "ano": 2026, "regiao": "CBLOL", "logo": {"s": "🐺", "c": "#7c8cff", "f": "escudo"}},
 		"setup": null, "tempo": 0, "inicio": "lol", "ordem": [], "tent": 0, "estrela": null, "infra": {}, "games": games, "comp": {}, "ligas": {}, "base": {}, "noticias": [], "vendidos": [],
 		"patro": [], "ofertas": [], "ofertaSem": 0, "social": {"seg": 5000}, "foco": "nenhum", "buff": null, "aporte": 0, "itens": [], "loja": [], "lojaSem": 0, "evento": null, "intlHist": [],
-		"reg": {}, "hon": {}, "bo": {}, "pts": {}, "log": [], "logN": 0}
+		"reg": {}, "hon": {}, "bo": {}, "pts": {}, "log": [], "logN": 0, "dir": {}}
 	J["mundo"] = novo_mundo(J.org.ano)
 	return J
 func _vazios(n: int) -> Array:
