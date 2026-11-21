@@ -151,3 +151,5 @@ input[type=range]{padding:0;min-height:28px;accent-color:var(--gold)}
 .hero .k{font:700 13px var(--d);letter-spacing:.24em;text-transform:uppercase}.hero .nm{font:700 48px/1 var(--d);text-transform:uppercase;margin:8px 0 2px;overflow-wrap:anywhere}.hero .tm{font-weight:600}
 .podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;margin-bottom:12px}.pd{text-align:center;min-width:0}.pd b{display:block;font:700 17px var(--d);text-transform:uppercase;overflow-wrap:anywhere}.pd small{color:var(--mut)}
 .av{overflow:hidden}.av img{width:100%;height:100%;object-fit:cover;display:block}
+
+.crest[data-act],.av[data-act],.tn>span:not(.crest):not(.logo),.team b[data-act],.who a[data-act]{cursor:pointer}.who a[data-act],.lp a[data-act],.leg a[data-act]{color:inherit;text-decoration:none;border-bottom:1px dotted rgba(217,179,95,.5)}

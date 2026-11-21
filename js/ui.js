@@ -46,7 +46,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       <div class="chips"><button class="chip ${!SU.role ? 'on' : ''}" data-act="su-role" data-id="">Todas</button>${roles.map(r => `<button class="chip ${SU.role === r ? 'on' : ''}" data-act="su-role" data-id="${r}">${r}</button>`).join('')}</div>
       <input id="su-q" placeholder="Buscar jogador" value="${esc(SU.q)}"><button class="btn ghost" style="margin-top:8px" data-act="su-sem">Começar sem estrela</button></section>`
       + `<section class="card"><h2>${lista.length} jogadores</h2>` + lista.slice(0, SU.n).map(p => { const ch = O.chanceEstrela(p.o), f = O.fee(p.o);
-        return `<div class="slot">${avatar(p.n)}<span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · aceita: ${pc(ch)}</small></div>${hex(p.o)}<button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
+        return `<div class="slot">${avatar(p.n)}<span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b><a href="#" data-act="ficha" data-id="p:${esc(p.n)}">${esc(p.n)}</a></b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · aceita: ${pc(ch)}</small></div>${hex(p.o)}<button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
       + (lista.length > SU.n ? '<button class="btn alt" data-act="su-mais">Mostrar mais</button>' : '') + '</section>';
   }
   const hue = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
@@ -75,8 +75,8 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     const o = orgOf(s0); if (o) { const c = slug(o.cur); if (L.has(c)) return c; }
     let b = ''; L.forEach(x => { if ((sl.startsWith(x + '-') || x.startsWith(sl + '-')) && x.length > b.length && (sl.startsWith(x + '-') || !b)) b = x; }); return b; };
   const crest = (n, sz) => { const sl = logoOf(slug(n)); return sl
-    ? `<span class="crest ${sz || 'sm'} real"><img src="logos/${sl}.${(window.LOGOX || {})[sl] || 'webp'}" alt="${esc(n)}" loading="lazy" decoding="async"></span>`
-    : `<span class="crest ${sz || 'sm'}" style="--h:${hue(n)}">${esc(ini(n))}</span>`; };
+    ? `<span class="crest ${sz || 'sm'} real" data-act="ficha" data-id="${esc(n)}"><img src="logos/${sl}.${(window.LOGOX || {})[sl] || 'webp'}" alt="${esc(n)}" loading="lazy" decoding="async"></span>`
+    : `<span class="crest ${sz || 'sm'}" data-act="ficha" data-id="${esc(n)}" style="--h:${hue(n)}">${esc(ini(n))}</span>`; };
   const crestT = (c, i, sz) => c.teams[i].eu ? logo(O.get().org.logo, { sm: 26, md: 44, lg: 60 }[sz || 'sm']) : crest(O.nome(c, i), sz);
   const DG = () => O.dataOf(UI.game);
   /* ---------- Cabeçalho ---------- */
@@ -96,7 +96,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   const fotoSlug = n => String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
   function avatar(n) { const ini = String(n).replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '?'; let h = 0; for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) % 360;
     const f = (window.FOTOS || []).find(x => x.slice(0, x.lastIndexOf('.')) === fotoSlug(n)); // fotos/<nick>.jpg que o próprio usuário colocou
-    return `<span class="av" style="--h:${h}">${f ? `<img src="fotos/${f}" alt="">` : ini}</span>`; }
+    return `<span class="av" data-act="ficha" data-id="p:${esc(n)}" style="--h:${h}">${f ? `<img src="fotos/${f}" alt="">` : ini}</span>`; }
   function achaTime(nome) { const L = (O.dataOf('lol') || {}).leagues || {}; for (const k in L) for (const tier of ['t1', 't2']) for (const t of (L[k][tier] || [])) if (t.n === nome) return { t, liga: L[k].nome, tier: tier.toUpperCase() }; return null; }
   function titulos(nome) {
     const x = X(); if (!x) return { wc: [], msi: [] };
@@ -270,7 +270,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
       const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
-      return `<div class="slot">${p ? `${avatar(p.n)}<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)} ${p.c ? flagIso(p.c) : bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div>${hex(p.o)}${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
+      return `<div class="slot">${p ? `${avatar(p.n)}<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}<a href="#" data-act="ficha" data-id="p:${esc(p.n)}">${esc(p.n)}</a> ${p.c ? flagIso(p.c) : bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div>${hex(p.o)}${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     const bs = (S.base || {})[UI.game] || [];
@@ -293,7 +293,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       <div class="row2"><select id="mliga"><option value="">Todas as ligas</option>${ligas.map(l => `<option ${m.liga === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <input id="mq" placeholder="Buscar nome" value="${esc(m.q)}"></div></section>
       <section class="card"><h2>${tot} jogadores</h2>` + lista.slice(0, m.n).map(p => `<div class="slot"><span class="role ri${roles.indexOf(p.r)}">${p.r}</span>
-        ${avatar(p.n)}<div class="who"><b>${esc(p.n)} ${p.c ? flagIso(p.c) : bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · ${O.money(O.salary(p.o))}/sem</small></div>${hex(p.o)}
+        ${avatar(p.n)}<div class="who"><b><a href="#" data-act="ficha" data-id="p:${esc(p.n)}">${esc(p.n)}</a> ${p.c ? flagIso(p.c) : bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · ${O.money(O.salary(p.o))}/sem</small></div>${hex(p.o)}
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
   }
@@ -417,7 +417,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     const key = lg + tier + t.n, open = UI.aberto === key;
     const f = t.p ? (t.p.reduce((a, p) => a + p[1], 0) / t.p.length).toFixed(1) : '—';
     const roles = DG().roles;
-    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${bandeira(p[0])}<a href="#" data-act="ficha" data-id="p:${esc(p[0])}">${esc(p[0])}</a> <small>${p[2] == null ? '—' : p[2] + 'a'}</small> <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}<button class="mini" data-act="ficha" data-id="${esc(t.n)}">📋 Ficha do time</button></div>` : ''}</div>`;
+    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b data-act="ficha" data-id="${esc(t.n)}">${esc(t.n)}</b><em>${f} ${open ? '▴' : '▾'}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${bandeira(p[0])}<a href="#" data-act="ficha" data-id="p:${esc(p[0])}">${esc(p[0])}</a> <small>${p[2] == null ? '—' : p[2] + 'a'}</small> <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}<button class="mini" data-act="ficha" data-id="${esc(t.n)}">📋 Ficha do time</button></div>` : ''}</div>`;
   }
 
   /* ---------- Render e eventos ---------- */
@@ -425,6 +425,8 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = O.get().setup ? vSetup() : VIEWS[UI.tab](); $('main').scrollTop = sc; modal(); }
 
   document.addEventListener('click', e => {
+    const tn = e.target.closest('.tn > span:not(.crest):not(.logo)'); // nome do time nos confrontos abre a ficha
+    if (tn && !e.target.closest('[data-act]')) { const nm = tn.textContent.trim(); if (nm && nm !== O.get().org.nome) { UI.ficha = nm; render(); } return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
     if (a === 'play') playToggle();
