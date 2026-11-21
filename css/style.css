@@ -175,3 +175,8 @@ input[type=range]{padding:0;min-height:28px;accent-color:var(--gold)}
 @media (min-width:520px){.pt-btns.row{grid-template-columns:1fr 1fr}}
 @media (prefers-reduced-motion:reduce){.pf li.nw{background:var(--bg2)}}
 .pt .tn{font-size:17px}.pt .tn span{overflow-wrap:break-word;word-break:normal;hyphens:auto}
+/* treino e base */
+.trn{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin-top:4px}.trn .fc{min-width:0;min-height:30px;font-size:11px;padding:3px 8px}.trn .bar{flex:1;min-width:60px;margin:0}.trn .bar.max i{background:var(--pos)}
+.who .trn small,.who .tnd{white-space:normal;flex:1 1 100%;overflow:visible}.tnd{color:var(--mut);font-size:12px}
+.negoc{margin-top:6px;padding:8px;border:1px solid var(--line);background:rgba(255,255,255,.03)}.negoc small{display:block;white-space:normal;color:var(--mut)}
+.mini.warn{background:var(--neg);color:#fff;border:0}.log li.up{color:var(--pos)}.log li.down{color:var(--neg)}

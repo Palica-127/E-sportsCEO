@@ -72,7 +72,7 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
-             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, aporte: 0, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, base: {}, noticias: [], vendidos: [], patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, aporte: 0, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
   }
   let S = novoJogo();
   const get = () => S;
@@ -84,7 +84,8 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; if (Object.values(s.infra).some(v => typeof v === 'number')) { const old = s.infra; s.infra = {}; for (const g in base.games) s.infra[g] = Object.assign({}, old); }; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; if (Object.values(s.infra).some(v => typeof v === 'number')) { const old = s.infra; s.infra = {}; for (const g in base.games) s.infra[g] = Object.assign({}, old); }; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || []; s.noticias = s.noticias || []; s.vendidos = s.vendidos || [];
+        for (const g in s.games) { for (const q of Object.values(s.games[g].squads)) (q.slots || []).forEach(p => p && iniciarJogador(p)); (s.base[g] || []).forEach(p => iniciarJogador(p)); } // migração: campos de treino
         S = s; return true;
       }
     } catch (e) {}
@@ -154,7 +155,7 @@
     for (const sq of Object.values(S.games[game].squads)) sq.slots.forEach(p => p && ids.add(p.id));
     return ids;
   }
-  function livres(game) { if (!D(game)) return []; const used = contratados(game); return pool(game).filter(p => !used.has(p.id)); }
+  function livres(game) { if (!D(game)) return []; const used = contratados(game), vend = new Set(S.vendidos || []); return pool(game).filter(p => !used.has(p.id) && !vend.has(p.id)); }
 
   /* ---------- Org: estrutura, times, elenco ---------- */
   // estrutura é POR JOGO: S.infra[jogo][id] = nível (cada jogo tem sua própria gaming house, equipe de apoio etc.)
@@ -188,7 +189,7 @@
     let slot = idx >= 0 && !q.slots[idx] ? idx : -1;
     if (slot < 0) for (let i = n; i < q.slots.length; i++) if (!q.slots[i]) { slot = i; break; }
     if (slot < 0) return { ok: false, msg: 'Titular da função e reservas já ocupados.' };
-    q.slots[slot] = { id: player.id, n: player.n, o: player.o, a: player.a, c: player.c, r: player.r, t: player.t, l: player.l, fee: f, ct: CONTRATO };
+    q.slots[slot] = iniciarJogador({ id: player.id, n: player.n, o: player.o, a: player.a, c: player.c, r: player.r, t: player.t, l: player.l, fee: f, ct: CONTRATO });
     S.org.caixa -= f; log(`Contratou ${player.n} (${player.o}) para o ${SQUADS[sq].nome}`); save();
     return { ok: true, msg: `${player.n} contratado${slot >= n ? ' como reserva' : ''}.` };
   }
@@ -250,13 +251,6 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     if (S.evento && --S.evento.sem <= 0) { S.evento = null; log('Evento expirou sem decisão'); }
     if (!S.evento && rnd() < 0.12) { const e = EVENTOS[Math.floor(rnd() * EVENTOS.length)]; S.evento = { id: e.id, sem: 4 }; log('Novo evento: ' + e.txt); }
   }
-  function renovar(game, sq, slot) {
-    const p = S.games[game].squads[sq].slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
-    const c = Math.round(fee(p.o) * 0.5 / 1000) * 1000; if (S.org.caixa < c) return { ok: false, msg: 'Caixa insuficiente.' };
-    S.org.caixa -= c; p.ct = (p.ct || 0) + CONTRATO; log(`Renovou ${p.n} (+2 anos)`); save();
-    return { ok: true, msg: `${p.n} renovado por mais 2 anos (${money(c)}).` };
-  }
-  const custoRenovar = p => Math.round(fee(p.o) * 0.5 / 1000) * 1000;
   function mover(game, de, para, slot) {
     const a = S.games[game].squads[de], b = S.games[game].squads[para], p = a.slots[slot];
     if (!p) return { ok: false, msg: 'Vaga vazia.' }; if (!b.on) return { ok: false, msg: 'Crie o outro time primeiro.' };
@@ -266,21 +260,204 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     b.slots[t] = p; a.slots[slot] = null; log(`${p.n}: ${SQUADS[de].nome} → ${SQUADS[para].nome}`); save();
     return { ok: true, msg: `${p.n} movido para o ${SQUADS[para].nome}.` };
   }
-  const SIL = ['ka','ro','zi','le','mo','tu','vex','dra','ni','sho','bal','tor','xe','pa','ru','fu','gi','lo','ze','ky'];
-  function gerarBase() { // ao fim de cada split do T1: a base revela um jovem por jogo (até 3 guardados)
+  /* ---------- Treino, desenvolvimento e base (jogadores do usuário) ---------- */
+  /* Cada jogador do usuário tem: pot (potencial real, oculto para jovens), xp (progresso até o próximo +1 de nota), foco de treino,
+     mo (moral 0-100), tr (traço), tmp (semanas no clube) e rate (XP ganho na última semana). */
+  const FOCOS = {
+    bal: { id: 'bal', nome: 'Equilibrado', icone: '⚖️', xp: 1,   desc: 'Treino variado: sem bônus e sem custo.' },
+    mec: { id: 'mec', nome: 'Mecânica',    icone: '🖱️', xp: 1.3, desc: '+30% de XP, mas desgasta a moral.' },
+    men: { id: 'men', nome: 'Mentalidade', icone: '🧠', xp: 0.9, desc: '-10% de XP; sobe a moral e dá +0,1 de força ao time (liderança).' },
+    fis: { id: 'fis', nome: 'Físico',      icone: '💪', xp: 0.8, desc: '-20% de XP; evita a queda por idade e protege a moral.' },
+  };
+  const FOCO_IDS = Object.keys(FOCOS);
+  const TRACOS = {
+    esf:  { nome: 'Esforçado',   desc: '+15% de XP.' },
+    pro:  { nome: 'Prodígio',    desc: 'Evolui muito rápido até os 20 anos e depois desacelera.' },
+    lid:  { nome: 'Líder',       desc: '+0,15 de força ao time (até +0,45).' },
+    frio: { nome: 'Cabeça fria', desc: 'A moral nunca cai abaixo de 55.' },
+    rel:  { nome: 'Relaxado',    desc: '-15% de XP, mas moral mais estável.' },
+  };
+  const TR_IDS = Object.keys(TRACOS);
+  const BASE_ANO_MAX = 21;     // quem completa 21 anos na base sai (promova, venda ou perca)
+  const hs = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } h ^= h >>> 15; h = Math.imul(h, 2246822519); h ^= h >>> 13; return (h >>> 0) / 4294967296; }; // hash 0..1 (não gasta a semente do jogo)
+  const xpNecessario = o => Math.round(10 + Math.max(0, o - 60) * 0.9);
+  const idadeXp = a => a <= 17 ? 1.2 : a <= 18 ? 1.1 : a <= 19 ? 1 : a <= 20 ? 0.9 : a <= 21 ? 0.8 : a <= 22 ? 0.65 : a <= 23 ? 0.5 : a <= 24 ? 0.4 : a <= 25 ? 0.3 : a <= 26 ? 0.22 : a <= 27 ? 0.16 : a <= 28 ? 0.12 : 0.08;
+  function potInicial(p) { // potencial de quem veio do mercado: jovens têm margem, veteranos não
+    const a = p.a == null ? 25 : p.a, [lo, hi] = a <= 17 ? [6, 14] : a <= 18 ? [5, 12] : a <= 19 ? [4, 10] : a <= 20 ? [3, 8] : a <= 21 ? [2, 6] : a <= 23 ? [1, 3] : a <= 25 ? [0, 2] : [0, 0];
+    return Math.min(96, p.o + Math.round(lo + (hi - lo) * hs(p.id + 'pot')));
+  }
+  function iniciarJogador(p) { // completa os campos de treino (contratação e saves antigos)
+    if (p.pot == null) p.pot = potInicial(p);
+    if (p.pot < p.o) p.pot = p.o;
+    if (p.xp == null) p.xp = 0;
+    if (!FOCOS[p.foco]) p.foco = 'bal';
+    if (p.mo == null) p.mo = 70;
+    if (p.tr === undefined) { const k = hs(p.id + 'tr'); p.tr = k < 0.4 ? null : TR_IDS[Math.min(TR_IDS.length - 1, Math.floor((k - 0.4) / 0.6 * TR_IDS.length))]; }
+    if (p.tmp == null) p.tmp = 0;
+    return p;
+  }
+  function potVisivel(p, game) { // potencial como o jogador/olheiro enxerga: jovens têm margem de erro, que cai com a idade, o tempo no clube e a base
+    const a = p.a == null ? 25 : p.a; let w = clamp(Math.round(23 - a), 0, 6);
+    w = Math.max(0, w - Math.floor((p.tmp || 0) / 26) - Math.floor(infraNivel('base', game || 'lol') / 2));
+    const pot = p.pot == null ? potInicial(p) : p.pot, est = w ? clamp(Math.round(pot + (hs(p.id + 'v') * 2 - 1) * w), p.o, 99) : pot;
+    return { est, lo: Math.max(p.o, est - w), hi: est + w, incerto: w > 0, estrelas: clamp(Math.round((est - 60) / 7), 1, 5) };
+  }
+  const nT = g => GAMES[g].roles.length;
+  function ganhoXp(p, game, sq, titular) { // XP semanal do jogador (a UI usa a mesma conta)
+    iniciarJogador(p); const room = p.pot - p.o; if (room <= 0) return 0;
+    const a = p.a == null ? 24 : p.a, f = FOCOS[p.foco], ni = n => infraNivel(n, game);
+    const tr = p.tr === 'esf' ? 1.15 : p.tr === 'rel' ? 0.85 : p.tr === 'pro' ? (a <= 20 ? 1.25 : 0.85) : 1;
+    const raw = 1 + ni('casa') * 0.10 + ni('nutri') * 0.04 + ni('academia') * 0.04 * (p.foco === 'fis' ? 2 : 1) + (S.foco === 'treino' ? 0.25 : 0) + (sq === 'base' ? ni('base') * 0.05 : 0);
+    const M = raw > 1 ? 1 + (raw - 1) / (1 + (raw - 1) * 0.6) : raw;          // retornos decrescentes
+    const mor = 0.7 + clamp(p.mo, 0, 100) / 100 * 0.5, rf = room >= 6 ? 1 : 0.4 + 0.6 * room / 6;
+    return idadeXp(a) * f.xp * tr * M * mor * rf * (titular ? 1 : 0.85);
+  }
+  function tendencia(p, game, sq, titular) { // ↑ evolui rápido, → estável, ↓ em queda; anual = +nota esperada por ano
+    iniciarJogador(p); const x = ganhoXp(p, game, sq, titular), anual = x * 52 / xpNecessario(p.o);
+    if (p.o >= p.pot) return { s: (p.a || 0) >= 30 ? '↓' : '→', anual: 0 };
+    if (p.mo < 30) return { s: '↓', anual };
+    return { s: anual >= 2 ? '↑' : '→', anual };
+  }
+  const moralRot = mo => mo >= 75 ? 'Motivado' : mo >= 55 ? 'Normal' : mo >= 35 ? 'Desanimado' : 'Revoltado';
+  function noticia(txt, g, tipo) { S.noticias = S.noticias || []; S.noticias.unshift({ s: S.org.semana, y: S.org.ano, g, t: txt, k: tipo || 'info' }); S.noticias.length = Math.min(S.noticias.length, 20); }
+  function atualizaMoral(p, g, sq, tit) {
+    const ni = n => infraNivel(n, g), c = S.comp[g + '-' + sq]; let res = 0;
+    if (c && c.last && c.last.length >= 3) { const l = c.last.slice(0, 5); res = (l.filter(x => x.v).length / l.length - 0.5) * 16; }
+    const tgt = 62 + ni('psi') * 6 + ni('casa') * 1.5 + (tit ? 8 : -10) + res + (p.tr === 'lid' ? 4 : 0) + (p.tr === 'rel' ? 3 : 0) + (p.estrela ? 6 : 0) + ({ men: 6, mec: -4, fis: 2 }[p.foco] || 0);
+    p.mo = clamp(p.mo + (tgt - p.mo) * 0.12, p.tr === 'frio' ? 55 : 0, 100);
+    if (p.neg > 0) p.neg--;
+  }
+  function treinaUm(p, g, sq, tit) {
+    iniciarJogador(p); p.tmp++; atualizaMoral(p, g, sq, tit);
+    const x = ganhoXp(p, g, sq, tit); p.rate = x; p.xp += x;
+    while (p.o < p.pot && p.xp >= xpNecessario(p.o)) {
+      p.xp -= xpNecessario(p.o); p.o++; if (p.estrela && S.estrela) S.estrela.o = p.o;
+      noticia(`${p.n} subiu para ${p.o}`, g, 'up');
+      if (p.o >= p.pot) noticia(`${p.n} atingiu o seu potencial (${p.o})`, g, 'info');
+    }
+    if (p.o >= p.pot) p.xp = 0;
+  }
+  function aniversario() { // fim do ano de jogo: +1 ano de idade; veteranos podem perder rendimento; quem completa 21 anos sai da base
     for (const g in GAMES) {
-      const nv = infraNivel('base', g); if (!nv) continue;
-      if (!GAMES[g].ativo || !S.games[g].squads.t1.on) continue;
-      const lst = S.base[g] = S.base[g] || []; if (lst.length >= 3) continue;
-      const roles = GAMES[g].roles, r = roles[Math.floor(rnd() * roles.length)], o = Math.round(54 + nv * 2.5 + rnd() * 5);
-      let n = ''; for (let k = 0, m = 2 + Math.floor(rnd() * 2); k < m; k++) n += SIL[Math.floor(rnd() * SIL.length)];
-      lst.push({ id: 'b' + Math.floor(rnd() * 1e9), n: n[0].toUpperCase() + n.slice(1), o, pot: Math.min(88, o + 8 + nv * 2 + Math.floor(rnd() * 6)), a: 16 + Math.floor(rnd() * 3), r, t: 'Base', l: 'Base' });
-      log(`Base (${GAMES[g].curto}): revelou ${lst[lst.length - 1].n} (${o}, pot. ${lst[lst.length - 1].pot})`);
+      const ni = n => infraNivel(n, g);
+      const dec = p => {
+        if (!p || p.a == null) return; p.a++;
+        if (p.a >= 30) {
+          const pr = Math.min(0.9, (p.a - 29) * 0.25) * (p.foco === 'fis' ? 0.4 : 1) * (1 - 0.1 * ni('academia') - 0.05 * ni('nutri'));
+          if (rnd() < pr) { p.o--; p.pot = Math.min(p.pot == null ? p.o : p.pot, p.o); noticia(`${p.n} perdeu rendimento com a idade (${p.o})`, g, 'down'); }
+        }
+      };
+      for (const q of Object.values(S.games[g].squads)) q.slots.forEach(dec);
+      const lst = S.base[g] || []; lst.forEach(dec);
+      S.base[g] = lst.filter(p => { if (p.a >= BASE_ANO_MAX) { log(`${p.n} saiu da base (${p.a} anos)`); noticia(`${p.n} saiu da base por idade`, g, 'down'); return false; } return true; });
     }
   }
-  function evoluir() { // fim de split: jogadores jovens evoluem até o potencial
-    const up = p => { if (p && p.pot && p.o < p.pot) { p.o = Math.min(p.pot, p.o + 1 + Math.floor(rnd() * 3)); if (p.a != null) p.a = Math.min(p.a + 0, 30); } };
-    for (const g in GAMES) { for (const q of Object.values(S.games[g].squads)) q.slots.forEach(up); (S.base[g] || []).forEach(up); }
+  function treinarSemana() { // 1x por semana: treina todo o elenco do usuário e a base
+    for (const g in GAMES) {
+      for (const sq in SQUADS) S.games[g].squads[sq].slots.forEach((p, i) => { if (p) treinaUm(p, g, sq, i < nT(g)); });
+      (S.base[g] || []).forEach(p => treinaUm(p, g, 'base', true));
+    }
+    if (S.org.semana === 52) aniversario();
+  }
+  const acharJ = (g, sq, ref) => sq === 'base' ? (S.base[g] || []).find(x => x.id === ref) : S.games[g].squads[sq].slots[+ref];
+  function trocarFoco(game, sq, ref, foco) {
+    if (!FOCOS[foco]) return { ok: false, msg: 'Foco inválido.' };
+    const p = acharJ(game, sq, ref); if (!p) return { ok: false, msg: 'Jogador não encontrado.' };
+    p.foco = foco; save(); return { ok: true, msg: `${p.n}: foco em ${FOCOS[foco].nome}.` };
+  }
+  function focoEquipe(game, sq, foco) {
+    if (!FOCOS[foco]) return { ok: false, msg: 'Foco inválido.' };
+    let n = 0; S.games[game].squads[sq].slots.forEach(p => { if (p) { p.foco = foco; n++; } }); save();
+    return { ok: true, msg: n ? `Todo o elenco treina ${FOCOS[foco].nome}.` : 'Sem jogadores neste time.' };
+  }
+  function bonusEquipe(game, sq) { // moral média (acima/abaixo de 70), liderança e mentalidade mexem na força do time
+    const t = titulares(game, sq).filter(Boolean); if (!t.length) return 0;
+    const mo = t.reduce((a, p) => a + (p.mo == null ? 70 : p.mo), 0) / t.length;
+    return clamp((mo - 70) * 0.03, -1, 0.7) + Math.min(0.45, t.filter(p => p.tr === 'lid').length * 0.15) + Math.min(0.3, t.filter(p => p.foco === 'men').length * 0.1);
+  }
+  /* valor de mercado: jovens com potencial valem mais; venda desconta 40% (comissão/liquidez) e perde valor com contrato curto */
+  const premioJovem = p => (p.a != null && p.a <= 22 && p.pot > p.o) ? Math.min(8, (p.pot - p.o) * 0.5) : 0;
+  const valorJogador = p => 15000 * Math.pow(1.3, p.o + premioJovem(p) - 70);
+  function valorVenda(p) { const ct = p.ct == null ? CONTRATO : p.ct; return Math.max(500, Math.round(valorJogador(p) * 0.6 * clamp(0.5 + ct / CONTRATO * 0.5, 0.5, 1) / 500) * 500); }
+  function vender(game, sq, slot) {
+    const q = S.games[game].squads[sq], p = q.slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
+    if (p.estrela) return { ok: false, msg: 'A estrela da org não pode ser vendida.' };
+    const v = valorVenda(p); q.slots[slot] = null; S.org.caixa += v; S.vendidos = S.vendidos || []; S.vendidos.push(p.id);
+    const lucro = v - (p.fee || 0); log(`Vendeu ${p.n} (${p.o}) por ${money(v)}${p.fee ? (lucro >= 0 ? ' (lucro ' : ' (prejuízo ') + money(Math.abs(lucro)) + ')' : ''}`); save();
+    return { ok: true, msg: `${p.n} vendido por ${money(v)}.` };
+  }
+  /* renovação com negociação: o jogador pede um valor; oferta baixa pode ser recusada (e ele fica chateado), alta agrada */
+  const OFERTAS = { baixa: { nome: 'Baixa', m: 0.7, ch: 0.45 }, justa: { nome: 'Justa', m: 1, ch: 0.92 }, alta: { nome: 'Generosa', m: 1.4, ch: 1 } };
+  function propostaRenovar(p, oferta, anos) {
+    iniciarJogador(p); const of = OFERTAS[oferta || 'justa'] || OFERTAS.justa; anos = [1, 2, 3].includes(anos) ? anos : 2;
+    const custo = Math.round(custoRenovar(p) * of.m * (anos === 1 ? 0.6 : anos === 3 ? 1.4 : 1) / 1000) * 1000;
+    let ch = of.ch + (p.mo - 60) / 100 - (p.mo < 25 && oferta !== 'alta' ? 0.3 : 0); if (p.estrela) ch = 1;
+    return { custo, chance: clamp(ch, 0.05, 1), anos };
+  }
+  function renovar(game, sq, slot, oferta, anos) {
+    const p = S.games[game].squads[sq].slots[slot]; if (!p) return { ok: false, msg: 'Vaga vazia.' };
+    oferta = OFERTAS[oferta] ? oferta : 'justa'; const pr = propostaRenovar(p, oferta, anos);
+    if (p.neg > 0) return { ok: false, msg: `${p.n} não quer conversar agora (tente em ${p.neg} sem.).` };
+    if (S.org.caixa < pr.custo) return { ok: false, msg: 'Caixa insuficiente.' };
+    if (pr.chance < 1 && rnd() >= pr.chance) { p.mo = Math.max(0, p.mo - 8); p.neg = 4; log(`${p.n} recusou a renovação`); save(); return { ok: false, recusou: true, msg: `${p.n} recusou a proposta e ficou chateado.` }; }
+    S.org.caixa -= pr.custo; p.ct = (p.ct || 0) + 52 * pr.anos; if (oferta === 'alta') p.mo = Math.min(100, p.mo + 10);
+    log(`Renovou ${p.n} (+${pr.anos} ano${pr.anos > 1 ? 's' : ''})`); save();
+    return { ok: true, msg: `${p.n} renovado por mais ${pr.anos} ano${pr.anos > 1 ? 's' : ''} (${money(pr.custo)}).` };
+  }
+  const custoRenovar = p => Math.round(fee(p.o) * 0.5 / 1000) * 1000;
+  /* ---------- Base (academia): jovens variados, com nome por país, potencial e traço ---------- */
+  const capBase = nv => 3 + (nv >= 3 ? 1 : 0) + (nv >= 5 ? 1 : 0);
+  const custoBase = g => { const nv = infraNivel('base', g); return nv ? nv * 400 + (S.base[g] || []).length * 250 : 0; };   // por semana
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const semAcento = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const capit = s => s.charAt(0).toUpperCase() + s.slice(1);
+  function sortearPais(g) { // nacionalidade conforme a região do jogo
+    const N = root.NOMES; if (!N) return 'BR';
+    const cl = (N.cluster[g] || {})[regiaoDe(g)] || 'GLOBAL', w = N.pesos[cl] || N.pesos.GLOBAL; let x = rnd() * Object.values(w).reduce((a, b) => a + b, 0);
+    for (const c in w) { x -= w[c]; if (x <= 0) return c; } return Object.keys(w)[0];
+  }
+  function nomeBase(g, c) { // apelido plausível do país; evita repetir nomes que já existem no jogo
+    const N = root.NOMES, P = N && (N.paises[c] || N.paises.BR) || { n: ['Kauê', 'Davi'], a: ['Tchê', 'Binho'], suf: ['zin'] };
+    const usados = new Set(); try { pool(g).forEach(p => usados.add(p.n.toLowerCase())); } catch (e) {}
+    for (const q of Object.values(S.games[g].squads)) q.slots.forEach(p => p && usados.add(p.n.toLowerCase())); (S.base[g] || []).forEach(p => usados.add(p.n.toLowerCase()));
+    for (let t = 0; t < 12; t++) {
+      const r = rnd(), nm = semAcento(pick(P.n)); let n;
+      if (r < 0.4) n = pick(P.a); else if (r < 0.58) n = capit(nm.slice(0, 3 + Math.floor(rnd() * 3)).toLowerCase() + pick(P.suf || [''])); else if (r < 0.74) n = capit(nm) + pick(['7', '10', '99', '9', '1', '22', '77']); else if (r < 0.88) n = capit(nm) + pick(P.tag || ['gg', 'tv', 'jr', 'pro', 'xd']); else n = 'x' + capit(nm);
+      if (!usados.has(n.toLowerCase())) return n;
+    }
+    return pick(P.a) + Math.floor(rnd() * 90 + 10);
+  }
+  function novoJovem(g, nv) {
+    const roles = GAMES[g].roles, r = roles[Math.floor(rnd() * roles.length)], c = sortearPais(g);
+    const u = rnd(), a = u < 0.15 ? 16 : u < 0.5 ? 17 : u < 0.8 ? 18 : 19;
+    const o = Math.round(52 + nv * 2.2 + (a - 16) * 1.5 + rnd() * 5);
+    let pot = 66 + nv * 3 + (rnd() + rnd() - 1) * 7; const genio = rnd() < 0.01 + 0.012 * nv; if (genio) pot += 8 + rnd() * 6;
+    pot = clamp(Math.round(pot), o + 3, 96);
+    const k = rnd(), tr = k < 0.35 ? null : TR_IDS[Math.floor((k - 0.35) / 0.65 * TR_IDS.length)];
+    const p = { id: 'b' + Math.floor(rnd() * 1e9), n: nomeBase(g, c), o, pot, a, r, c, t: 'Base', l: 'Base', tr, xp: 0, mo: 75, foco: 'bal', tmp: 0, genio };
+    return p;
+  }
+  function gerarBase(game) { // fim de split do T1: a base revela jovens (mais níveis = mais jovens e melhores); base cheia não revela
+    for (const g of (game ? [game] : Object.keys(GAMES))) {
+      const nv = infraNivel('base', g); if (!nv) continue;
+      if (!GAMES[g].ativo || !S.games[g].squads.t1.on) continue;
+      const lst = S.base[g] = S.base[g] || [], cap = capBase(nv);
+      let n = 1 + (nv >= 3 && rnd() < 0.3 + 0.15 * (nv - 3) ? 1 : 0) + (nv >= 5 && rnd() < 0.3 ? 1 : 0);
+      if (lst.length >= cap) { log(`Base (${GAMES[g].curto}): cheia, promova, venda ou dispense para revelar novos jovens`); continue; }
+      while (n-- > 0 && lst.length < cap) {
+        const p = novoJovem(g, nv); lst.push(p); const v = potVisivel(p, g);
+        log(`Base (${GAMES[g].curto}): revelou ${p.n}${p.genio ? ', uma JOIA RARA' : ''} (${p.c}, ${p.a} anos, nota ${p.o}, potencial ${'★'.repeat(v.estrelas)}${'☆'.repeat(5 - v.estrelas)}${v.incerto ? '?' : ''})`);
+      }
+    }
+  }
+  function evoluir(game) { // avaliação de fim de split: jovens com potencial podem dar um salto (a evolução do dia a dia é o treino semanal)
+    for (const g of (game ? [game] : Object.keys(GAMES))) {
+      const salto = (p, sq) => {
+        if (!p || p.pot == null || p.o >= p.pot || (p.a != null && p.a > 22) || rnd() >= 0.15) return;
+        p.o++; p.xp = 0; if (p.estrela && S.estrela) S.estrela.o = p.o; noticia(`${p.n} evoluiu além do esperado e subiu para ${p.o}`, g, 'up');
+      };
+      for (const q of Object.values(S.games[g].squads)) q.slots.forEach(salto); (S.base[g] || []).forEach(salto);
+    }
   }
   function promoverBase(game, sq, id) {
     const lst = S.base[game] || [], i = lst.findIndex(x => x.id === id), q = S.games[game].squads[sq]; if (i < 0) return { ok: false, msg: 'Jovem não encontrado.' };
@@ -288,8 +465,17 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     const p = lst[i], n = GAMES[game].roles.length, idx = GAMES[game].roles.indexOf(p.r);
     let t = idx >= 0 && !q.slots[idx] ? idx : -1; if (t < 0) for (let k = n; k < q.slots.length; k++) if (!q.slots[k]) { t = k; break; }
     if (t < 0) return { ok: false, msg: 'Sem vaga livre nesse time.' };
-    q.slots[t] = Object.assign({}, p, { fee: 0, ct: CONTRATO }); lst.splice(i, 1); log(`Promoveu ${p.n} da base`); save();
+    q.slots[t] = Object.assign({}, p, { fee: 0, ct: CONTRATO, t: SQUADS[sq].nome.replace(/ \(.*\)/, ''), l: S.org.nome }); lst.splice(i, 1); log(`Promoveu ${p.n} da base`); save();
     return { ok: true, msg: `${p.n} promovido da base.` };
+  }
+  function venderBase(game, id) {
+    const lst = S.base[game] || [], i = lst.findIndex(x => x.id === id); if (i < 0) return { ok: false, msg: 'Jovem não encontrado.' };
+    const p = lst[i], v = valorVenda(p); lst.splice(i, 1); S.org.caixa += v; log(`Vendeu ${p.n} da base por ${money(v)}`); save();
+    return { ok: true, msg: `${p.n} vendido por ${money(v)}.` };
+  }
+  function dispensarBase(game, id) {
+    const lst = S.base[game] || [], i = lst.findIndex(x => x.id === id); if (i < 0) return { ok: false, msg: 'Jovem não encontrado.' };
+    const p = lst.splice(i, 1)[0]; log(`Dispensou ${p.n} da base`); save(); return { ok: true, msg: `${p.n} dispensado da base.` };
   }
   function contratos() { // passa uma semana: contratos vencem e saem do elenco
     for (const g in GAMES) for (const sq in SQUADS) S.games[g].squads[sq].slots.forEach((p, i, arr) => {
@@ -304,7 +490,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
   const prontos = (game, sq) => { const q = S.games[game].squads[sq]; return q.on && titulares(game, sq).every(Boolean); };
   function forca(game, sq) { // média dos titulares (vaga vazia vale 55) + bônus da estrutura
     const st = titulares(game, sq);
-    return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus(game) + bonusTemp(game);
+    return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus(game) + bonusTemp(game) + bonusEquipe(game, sq);
   }
   const bonusTemp = game => Math.min(BUFF_MAX, (S.foco === 'treino' ? 1 : 0) + (S.buff ? S.buff.f : 0) + S.itens.reduce((a, x) => a + (x.g == null || x.g === game ? x.f || 0 : 0), 0));
   const rendaMerch = () => S.itens.reduce((a, x) => a + (x.pay || 0), 0);
@@ -429,7 +615,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     c.hist.unshift({ y: S.org.ano, s: c.split, camp: nome(c, campeao), vice: nome(c, vice), eu: meu || null }); c.hist.length = Math.min(c.hist.length, 12);
     const pr = i => po.rs.indexOf(i), com = k => Object.keys(po.lugar).filter(x => po.lugar[x] === k).map(Number).sort((x, y) => pr(x) - pr(y));
     const ordem = [campeao, vice].concat(com('semi'), com('quartas'), po.rs.filter(i => !(i in po.lugar) && i !== campeao));
-    c.po = null; c.phase = 'off'; if (c.sq === 't1') { gerarBase(); evoluir(); } c.wk = Math.max(2, CICLO - c.sched.length - 3);
+    c.po = null; c.phase = 'off'; if (c.sq === 't1') { gerarBase(c.game); evoluir(c.game); } c.wk = Math.max(2, CICLO - c.sched.length - 3);
     if (c.sq === 't1') { const ks = Object.keys(intlDef(c.game)); iniciarIntl(c, c.split % 2 === 1 ? ks[0] : ks[1], ordem); }
   }
   /* liga de outra região (ou divisão) simulada de uma vez; devolve a ordem final dos índices (campeão primeiro) */
@@ -658,6 +844,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       if (prontos(game, sq)) receita += Math.round(8000 * Math.pow(S.org.rep, 0.5) * (sq === 't1' ? 1 : 0.2));
       despesa += folha(game, sq);
     }
+    despesa += custoBase(game);
     return { receita, despesa, saldo: receita - despesa };
   }
   function projecaoOrg() { // total semanal da org: todos os jogos + patrocínios + redes - foco - manutenção
@@ -679,7 +866,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
           d.notas = S.log.slice(0, Math.min((S.logN || 0) - l0, S.log.length)).map(x => x.replace(/^S\d+\/\d+: /, ''));
         }
       } }
-      contratos(); semanalOrg(); S.tempo++;
+      treinarSemana(); contratos(); semanalOrg(); S.tempo++;
       S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
     }
     save(); return jogou;
@@ -710,5 +897,6 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
 
   root.Org = { LOJA, lojaItens, comprarLoja, itemAtivo, rendaMerch, GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
     infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, passo, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
+    FOCOS, TRACOS, OFERTAS, xpNecessario, ganhoXp, tendencia, potVisivel, moralRot, trocarFoco, focoEquipe, bonusEquipe, valorVenda, vender, propostaRenovar, venderBase, dispensarBase, gerarBase, evoluir, treinarSemana, capBase, custoBase, iniciarJogador, BASE_ANO_MAX, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin, partidasSemana, narrar, motivoPartida };
 })(typeof window !== 'undefined' ? window : globalThis);
