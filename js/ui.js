@@ -49,7 +49,10 @@
   }
   const hue = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
   const ini = t => { const w = (String(t).match(/[A-Za-zÀ-ÿ0-9]+/g) || ['?']); return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 3)).toUpperCase(); };
-  const crest = (n, sz) => `<span class="crest ${sz || 'sm'}" style="--h:${hue(n)}">${esc(ini(n))}</span>`;
+  const slug = n => String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const crest = (n, sz) => { const sl = slug(n); return window.LOGOS && window.LOGOS.has(sl)
+    ? `<span class="crest ${sz || 'sm'} real"><img src="logos/${sl}.webp" alt="${esc(n)}" loading="lazy" decoding="async"></span>`
+    : `<span class="crest ${sz || 'sm'}" style="--h:${hue(n)}">${esc(ini(n))}</span>`; };
   const crestT = (c, i, sz) => c.teams[i].eu ? logo(O.get().org.logo, { sm: 26, md: 44, lg: 60 }[sz || 'sm']) : crest(O.nome(c, i), sz);
   const DG = () => O.dataOf(UI.game);
   /* ---------- Cabeçalho ---------- */
