@@ -622,6 +622,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
   }
   const mgau = () => (mrnd() + mrnd() + mrnd() - 1.5) * 2;                  // ~N(0,1)
   const rawData = g => g === 'lol' ? root.LOL : (root.DATA && root.DATA[g]) || null;
+  const FLAGS_OK = new Set('AR AU BA BE BG BR BY CA CL CN CO CZ DE DK EE ES FI FR GB GR GT HK HR HU ID IL IT JP KR KZ LT LV MN MX MY NL NO PE PL PT RO RS RU SA SE SG SI SK TH TR TW UA US UY VN ZA'.split(' ')); // bandeiras que existem em flags/ (regens só sorteiam entre elas)
   const FLAG_REG = { CBLOL: ['BR'], LCS: ['US', 'CA', 'KR'], LEC: ['DE', 'FR', 'ES', 'DK', 'SE', 'PL'], LCK: ['KR'], LPL: ['CN'], LCP: ['TW', 'VN', 'JP', 'AU', 'HK'] };
   /* índice dos slots (cada posição de jogador nos dados), com a linha original guardada para restaurar */
   function muIndice(g) {
@@ -637,7 +638,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
           if (!row) return; MU.nicks0.add(String(row[0]).toLowerCase());
           const s = { id: `${id0}${lg}-${k}-${ti}-${i}`, row, orig: row.slice(), lg, tier: k === 1 ? 'T1' : 'T2', tm, i }, gk = lg + '|' + s.tier, G = grp[gk] = grp[gk] || { n: 0, soma: 0 };
           G.n++; G.soma += row[1]; slots.push(s);
-          const fl = row[3] || (X && X.nat && X.iso && X.iso[X.nat[row[0]]]) || null; if (fl) { flags[lg].push(String(fl).toUpperCase()); todas[String(fl).toUpperCase()] = 1; }
+          const fl = row[3] || (X && X.nat && X.iso && X.iso[X.nat[row[0]]]) || null; if (fl && FLAGS_OK.has(String(fl).toUpperCase())) { flags[lg].push(String(fl).toUpperCase()); todas[String(fl).toUpperCase()] = 1; }
         });
       }));
     }
@@ -731,7 +732,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       for (const x of fila) { // passo 2: grava; cada vaga vazia vira um regen cujo talento acompanha o alvo do grupo (termostato)
         const s = x.s, row = s.row, G = grp[s.lg + '|' + s.tier], alvo = I.grp[s.lg + '|' + s.tier].alvo;
         if (x.ret) {
-          if (x.pot >= lenda) { M.apos.unshift([ano, g, row[0], x.a, Math.max(x.o, x.pot), row[3] || '', s.tm.nome || '']); M.apos.length = Math.min(M.apos.length, 60); aposLog.push({ g, nick: row[0], a: x.a, pot: x.pot }); }
+          if (x.pot >= lenda) { M.apos.unshift([ano, g, row[0], x.a, Math.max(x.o, x.pot), String(row[3] || (root.LOLX && root.LOLX.iso && root.LOLX.iso[(root.LOLX.nat || {})[row[0]]]) || '').toUpperCase(), s.tm.nome || '']); M.apos.length = Math.min(M.apos.length, 60); aposLog.push({ g, nick: row[0], a: x.a, pot: x.pot }); }
           const adj = clamp((alvo - (G.soma + G.ret * (alvo - 6)) / G.n) * MU_GANHO * (G.n < 12 ? 1.8 : 1), -6, 7), e = muRegen(g, I, s, ano, adj); ov[s.id] = e; muEscreve(s, e);
         } else {
           const e = ov[s.id] ? ov[s.id].slice() : []; e[0] = x.o; e[1] = x.a; e[2] = x.pot; ov[s.id] = e;
