@@ -92,17 +92,17 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'Cloud9': ['Centir','Focal','Ewzy','Eddy','Kixhro'],
   'Fluxo W7M': ['L0BIN','Paluh','Dotz','Hatez','Fntzy'], 'Falcons': ['LikEfac','jume','Solotov','Yuzus','BriD'], 'G2 Esports': ['Stompn','Benjamaster','Shaiiko','Doki','Alem4o']}}
 # EA FC: pros reais do circuito FC Pro 2026 (EA/FUTWIZ/Red Bull). Nota por ranking mundial quando citado; sem time real (as orgs da liga são fictícias para este jogo).
-FC_RANK = {'Levi de Weerd': 6, 'GuiBarros': 7, 'Tekkz': 12, 'Umut': 21, 'LJR Peixoto': 23, 'HHezerS': 24, 'Yaskow': 49, 'Lukas': 62, 'AnasBadr': 70, 'tuga810': 81}
-FC_PROS = ['Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiBarros','Tekkz','Jafonso','Umut','Emre Yilmaz','Obrun','Yuval','Brice','LJR Peixoto','HHezerS','AboFawzi','The 1OS','Karimisbak','MarwanMC9','Bonanno','Yaskow','Lukas','AlihanLion','Darkley11','Nassada','Stingray','Caccia','Exeed','GugaFerrez','AnasBadr','tuga810']
+FC_RANK = {'Vejrgang': 1, 'RVPLegend': 2, 'Levi de Weerd': 9, 'GuiBarros': 14, 'Tekkz': 18, 'Umut': 21, 'LJR Peixoto': 23, 'HHezerS': 24, 'Yaskow': 49, 'Lukas': 62, 'AnasBadr': 70, 'tuga810': 81}
+FC_PROS = ['RVPLegend','LevyFinn','Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiBarros','Tekkz','Jafonso','Umut','Emre Yilmaz','Obrun','Yuval','Brice','LJR Peixoto','HHezerS','AboFawzi','The 1OS','Karimisbak','MarwanMC9','Bonanno','Yaskow','Lukas','AlihanLion','Darkley11','Nassada','Stingray','Caccia','Exeed','GugaFerraz','AnasBadr','tuga810']
 # clubes reais (Liquipedia FC Pro 26 / Sportskeeda EWC 2026 / EA FC Pro); quem não tem fonte mantém o clube fictício
-FC_CLUB = {'Vejrgang':'Team Falcons','ManuBachoore':'Team Liquid','PHzin':'Tuzzy Esports','Levi de Weerd':'Team Liquid','GuiBarros':'RBLZ Gaming',
+FC_CLUB = {'Vejrgang':'Team Falcons','ManuBachoore':'Team Liquid','PHzin':'Tuzzy Esports','Levi de Weerd':'Team Vitality','RVPLegend':'HYPERSPIRIT','GuiBarros':'RBLZ Gaming',
  'Tekkz':'RBLZ Gaming','Jafonso':'Man City Esports','Umut':'RBLZ Gaming','Emre Yilmaz':'Team Liquid','Obrun':'Exeed','Yuval':'Gaimin Gladiators',
  'Brice':'Team Vitality','LJR Peixoto':'Twisted Minds','AboFawzi':'Twisted Minds','Nassada':'SC Freiburg'}
 _fcn = {}
 # liga de cada pro pelo clube real (EU = clubes europeus; BR = pros brasileiros sem clube europeu; GL = resto)
-_pref = {'EU': ['Vejrgang','ManuBachoore','Levi de Weerd','Emre Yilmaz','Umut','Tekkz','GuiBarros','Brice','Nassada','Jafonso','Yuval','Obrun'],
+_pref = {'EU': ['RVPLegend','LevyFinn','Vejrgang','ManuBachoore','Levi de Weerd','Emre Yilmaz','Umut','Tekkz','GuiBarros','Brice','Nassada','Jafonso','Yuval','Obrun'],
          'GL': ['LJR Peixoto','AboFawzi','PHzin'],
-         'BR': ['nicolas99fc','GugaFerrez','Darkley11','Caccia']}
+         'BR': ['nicolas99fc','GugaFerraz','Darkley11','Caccia']}
 _rest = [x for x in FC_PROS if not any(x in v for v in _pref.values())]
 _q = {k: list(v) for k, v in _pref.items()}
 for _i, _x in enumerate(_rest): _q[('BR', 'EU', 'GL')[_i % 3]].append(_x)
@@ -117,11 +117,11 @@ _n('KZ','molodoy'); _n('LV','YEKINDAR'); _n('RU','donk','sh1ro','magixx','m0NESY
 _n('BA','NiKo','huNter-'); _n('DK','karrigan','TeSeS','HooXi','jabbi','Staehr','Chr1zN','Vejrgang','JBOEN'); _n('FI','Aleksib'); _n('RO','iM')
 _n('SE','nilo','susp','Brollan'); _n('ES','MartinezSa'); _n('CA','Twistzz','NAF'); _n('SK','frozen','MATYS'); _n('PL','jcobbb')
 _n('US','EliGE','Asuna','vora','bang','Cryo','skuba','brawk','Ethan','mada'); _n('ZA','JT'); _n('GT','malbsMd'); _n('BG','Jorko'); _n('HU','torzsi'); _n('CZ','Spinx')
-_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('US','nitr0','Grim','Jeorge'); _n('ZA','Sonic','MisteM'); _n('NO','hallzerk'); _n('BR','chelo','VINI','decenty','noway','saadzin'); _n('RO','regali'); _n('TR','soulfly','jottAAA'); _n('UA','Kvem'); _n('DK','stavn','sjuush'); _n('DE','Krimbo'); _n('SE','adamb'); _n('PL','xKacpersky'); _n('MN','nin9'); _n('BR','HAK','Nickz7','GUAXA7','Trap','Giuh','Butzin','MT7','Bops'); _n('BR','lukxo','erde','DaviH','spikeziN','blowz'); _n('CA','TenZ'); _n('FI','Jamppi'); _n('RU','Chronicle'); _n('UA','Yatoro','Mira','Batyuk'); _n('SK','skiter'); _n('ID','Mikoto'); _n('MY','Ws','zeal'); _n('RU','Malr1ne','Larl','not_me','Pure'); _n('IL','33'); _n('CN','Ame','Xm','XinQ','BoBoKa'); _n('CN','JamYoung','Jee','Mercury','Moseyuh','Zero','Westmelon','z4KR','Starry','EmiliaQAQ','C4LLM3SU3','Summer','ChildKing','L1haNg','3gl'); _n('MY','kaze'); _n('RU','sh1ro','magixx','donk'); _n('BY','tN1R'); _n('LV','YEKINDAR'); _n('IL','flameZ'); _n('EE','ropz'); _n('FI','Aleksib'); _n('UA','b1t','w0nderful'); _n('BR','WOOD7','Tuurtle','naitte','pesadelo','matios','L0BIN','Paluh','Dotz','Hatez','Fntzy','Alem4o'); _n('FR','LikEfac','BriD'); _n('DE','jume'); _n('TR','Solotov'); _n('GB','Yuzus','Doki'); _n('US','Stompn'); _n('DK','Benjamaster'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
+_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('US','nitr0','Grim','Jeorge'); _n('ZA','Sonic','MisteM'); _n('NO','hallzerk'); _n('BR','chelo','VINI','decenty','noway','saadzin'); _n('RO','regali'); _n('TR','soulfly','jottAAA'); _n('UA','Kvem'); _n('DK','stavn','sjuush'); _n('DE','Krimbo'); _n('SE','adamb'); _n('PL','xKacpersky'); _n('MN','nin9'); _n('NL','Levi de Weerd','ManuBachoore','Emre Yilmaz'); _n('RO','RVPLegend'); _n('DE','LevyFinn','Umut'); _n('GB','Tekkz'); _n('AR','nicolas99fc'); _n('IT','HHezerS'); _n('BR','GuiBarros','GugaFerraz'); _n('DK','Vejrgang'); _n('BR','HAK','Nickz7','GUAXA7','Trap','Giuh','Butzin','MT7','Bops'); _n('BR','lukxo','erde','DaviH','spikeziN','blowz'); _n('CA','TenZ'); _n('FI','Jamppi'); _n('RU','Chronicle'); _n('UA','Yatoro','Mira','Batyuk'); _n('SK','skiter'); _n('ID','Mikoto'); _n('MY','Ws','zeal'); _n('RU','Malr1ne','Larl','not_me','Pure'); _n('IL','33'); _n('CN','Ame','Xm','XinQ','BoBoKa'); _n('CN','JamYoung','Jee','Mercury','Moseyuh','Zero','Westmelon','z4KR','Starry','EmiliaQAQ','C4LLM3SU3','Summer','ChildKing','L1haNg','3gl'); _n('MY','kaze'); _n('RU','sh1ro','magixx','donk'); _n('BY','tN1R'); _n('LV','YEKINDAR'); _n('IL','flameZ'); _n('EE','ropz'); _n('FI','Aleksib'); _n('UA','b1t','w0nderful'); _n('BR','WOOD7','Tuurtle','naitte','pesadelo','matios','L0BIN','Paluh','Dotz','Hatez','Fntzy','Alem4o'); _n('FR','LikEfac','BriD'); _n('DE','jume'); _n('TR','Solotov'); _n('GB','Yuzus','Doki'); _n('US','Stompn'); _n('DK','Benjamaster'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
 _n('KR','Meteor','stax','Munchkin','iZu','BuZz','Ivy','Rb','Francis','Xross','Dambi'); _n('RU','something'); _n('ID','f0rsakeN'); _n('MY','d4v41'); _n('SG','Jinggg')
 _n('TR','Rosé','Crewen','Lar0k','Loita','lovers rock'); _n('NL','ManuBachoore','Levi de Weerd'); _n('PT','Jafonso')
 # idades em 20/11/2026 só com data de nascimento conferida (ZywOo 09/11/2000, donk 25/01/2007, NiKo 16/02/1997, yuurih 22/12/1999)
-AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26, 'FalleN': 35, 'HAK': 24, 'Bops': 21, 'Butzin': 21, 'Giuh': 20, 'MT7': 20, 'Ame': 29, 'karrigan': 36, 'Hatez': 23, 'Fntzy': 23, 'Paluh': 26, 'Dotz': 25, 'L0BIN': 24}
+AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26, 'FalleN': 35, 'Vejrgang': 20, 'Levi de Weerd': 22, 'HAK': 24, 'Bops': 21, 'Butzin': 21, 'Giuh': 20, 'MT7': 20, 'Ame': 29, 'karrigan': 36, 'Hatez': 23, 'Fntzy': 23, 'Paluh': 26, 'Dotz': 25, 'L0BIN': 24}
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
@@ -140,7 +140,7 @@ for gi, (g, regs) in enumerate(L.items()):
                     if n in FC_CLUB:
                         c = FC_CLUB[n]; _fcn[c] = _fcn.get(c, 0) + 1
                         nm = c if _fcn[c] == 1 else c + ' ' + 'I' * _fcn[c]
-                    return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), None] + ([NAC[n]] if n in NAC else [])]}
+                    return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), AGE.get(n)] + ([NAC[n]] if n in NAC else [])]}
             return {'n': nm, 'p': [[nick(r, used), max(55, min(90, round(base + r.uniform(-4, 4)))), r.randint(17, 30)] for _ in ROLES[g]]}
         a = t1.split(','); b = t2.split(',')
         assert len(set(a + b)) == 15, (g, key)
