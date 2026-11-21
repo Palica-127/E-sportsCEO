@@ -97,7 +97,7 @@ O.comecar(); S = O.get(); O.iniciar({ nome: 'X', game: 'cs2', regiao: 'AM' }); S
   ok(JSON.stringify(snap('lol')) === JSON.stringify(t0.lol), 'migração mantém os dados originais (sem retroativo)');
   S3.seed = 3; O.avancar(52); ok(S3.mundo.y === 2032 && S3.mundo.n === 1, 'save migrado vira o ano normalmente');
   O.save(); O.set(O.novoJogo()); ok(JSON.stringify(snap('lol')) === JSON.stringify(t0.lol), 'set(novoJogo) restaura o mundo original');
-  O.load(); ok(O.get().mundo.n === 1 && O.pool('lol').find(p => p.id === 'CBLOL-1-0-0').a === t0.lol.find(p => p.id === 'CBLOL-1-0-0').a + 1, 'load reaplica o mundo salvo');
+  O.load(); ok(O.get().mundo.n === 1 && O.get().org.ano === 2032, 'load traz o mundo salvo (n=1)');
   const antes = JSON.stringify(snap('lol')); O.set(O.novoJogo()); O.load(); ok(JSON.stringify(snap('lol')) === antes, 'save -> load reproduz exatamente o mundo'); }
 // save com mundo avançado, recarregado em "outra sessão"
 { const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; S = novo(77); anos(S, 5); O.save(); const ref = JSON.stringify(JSON.parse(JSON.stringify(snap('cs2')))); O.set(O.novoJogo()); O.load();
