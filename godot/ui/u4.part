@@ -1,0 +1,118 @@
+
+# ---------- Agenda (calendário geral: todos os jogos juntos) ----------
+func vcal() -> void:
+	var itens = []; var res_l = []
+	for g in O.GAMES:
+		if not O.ativo(g) or not O.aberto(g): continue
+		for sq in O.SQUADS:
+			var c = O.comp_for(g, sq)
+			if c == null: continue
+			for a in O.agenda(g, sq, 6): a["tag"] = O.tag_de(g, sq); itens.append(a)
+			for l in c.last: var x: Dictionary = l.duplicate(); x["tag"] = O.tag_de(g, sq); res_l.append(x)
+	itens.sort_custom(func(a, b): return a.em < b.em)
+	var c1 = card("Próximas partidas")
+	if itens.is_empty(): lbl(c1, "Nada agendado: complete os titulares de um time.", 24, DIM)
+	for a in itens.slice(0, 14):
+		var t = "%s · sem. +%d · %s" % [a.data.txt, a.em, a.tag]
+		lbl(c1, t, 20, DIM); lbl(c1, "%s%s" % [a.label, (" — vs " + str(a.op)) if a.op != null else ""], 24)
+	var c2 = card("Resultados")
+	if res_l.is_empty(): lbl(c2, "Ainda sem jogos.", 24, DIM)
+	res_l.sort_custom(func(a, b): return a.y * 100 + a.s > b.y * 100 + b.s)
+	for r in res_l.slice(0, 20): lbl(c2, "%s · S%d/%d · %s %s vs %s (%s)" % [r.tag, r.s, r.y, "V" if r.v else "D", r.pl, r.op, r.f], 22, OK if r.v else BAD)
+
+# ---------- Ligas ----------
+func vligas() -> void:
+	var g = game; var its = []
+	for sq in O.SQUADS:
+		if O.S.games[g].squads[sq].on: its.append([sq, O.SQUADS[sq].nome.split(" (")[0]])
+	var c0 = card(); chips(c0, its, squad, func(id): squad = id; render())
+	var c = O.comp_for(g, squad)
+	if c == null: lbl(card(), "Ative esse time.", 24, DIM); return
+	var cc = card("%s · %s · split %d" % [gname(g), O.regiao_de(g), c.split])
+	if c.phase == "reg" or c.phase == "po":
+		var cls: Array = O.classificacao(c); var k = 0
+		for r in cls:
+			k += 1; lbl(cc, "%2d. %s  %d-%d  (força %.1f)" % [r.pos, r.n, r.w, r.l, r.f], 22, GOLD if r.eu else TXT)
+	else: lbl(cc, "Fase: " + {"off": "entressafra", "wait": "aguardando titulares", "intl": "internacional"}.get(c.phase, c.phase), 24, DIM)
+	if c.phase == "intl":
+		var ci = card("Internacional: " + O.intl_def(g)[c.intl.tipo].nome)
+		for i in c.intl.alive: lbl(ci, O.nome_t(c.intl.teams[i]), 22, GOLD if c.intl.teams[i].eu else TXT)
+	var ch = card("Campeões recentes")
+	for h in c.hist: lbl(ch, "%d · split %d · %s (vice %s)%s" % [h.y, h.s, h.camp, h.vice, (" · você: " + str(h.eu)) if h.eu != null else ""], 22)
+	var ci2 = card("Internacionais")
+	for x in O.S.intlHist.filter(func(x): return x.g == g).slice(0, 10): lbl(ci2, "%d · %s · %s%s" % [x.y, x.nome, x.camp, (" · você: " + str(x.eu)) if x.eu != null else ""], 22)
+
+# ---------- Negócios ----------
+func vneg() -> void:
+	var S = O.S; var g = game
+	if S.evento != null:
+		var e = null
+		for x in O.EVENTOS:
+			if x.id == S.evento.id: e = x
+		var ce = card("Evento"); lbl(ce, e.txt, 26); lbl(ce, "Expira em %d sem." % S.evento.sem, 20, DIM)
+		for i in e.ops.size(): var ii = i; btn(ce, e.ops[i].t, func(): res(O.escolher_evento(ii)))
+	var cf = card("Foco da semana")
+	chips(cf, [["nenhum", "Nenhum"], ["treino", "Treino (+custo de moral)"], ["midia", "Mídia (R$ 3 mil/sem)"]], S.foco, func(id): res(O.set_foco(id)))
+	var cp = card("Patrocínios (%d/3) · renda %s/sem" % [S.patro.size(), O.money(O.renda_patro())])
+	for x in S.patro: lbl(cp, "%s · %s/sem · %d sem." % [x.n, O.money(x.pay), x.sem], 22)
+	for o in O.ofertas():
+		var h = hrow(cp); lbl(h, "%s · %s/sem · %d sem." % [o.n, O.money(o.pay), o.sem], 22); btn(h, "Fechar", func(): res(O.aceitar_patro(o.id)))
+	var ci = card("Estrutura · " + gname(g))
+	for it in O.INFRA:
+		var nv: int = O.infra_nivel(it.id, g); var h = hrow(ci)
+		lbl(h, "%s  nv %d/%d\n%s" % [it.nome, nv, it.max, it.desc], 22)
+		btn(h, "Maxímo" if nv >= it.max else O.money(O.infra_custo(it, g)), func(): res(O.comprar_infra(it.id, g)), nv >= it.max)
+	var cl_ = card("Loja (renova a cada 4 sem.)")
+	for it in O.loja_itens():
+		var h = hrow(cl_); lbl(h, "%s\n%s" % [it.nome, it.desc], 22)
+		btn(h, "Ativo" if O.item_ativo(it, g) else O.money(it.c), func(): res(O.comprar_loja(it.id, g)), O.item_ativo(it, g))
+	for it in S.itens: lbl(cl_, "Ativo: %s (%d sem.)" % [it.nome, it.sem], 20, DIM)
+	var ca = card("Abrir novos jogos")
+	var algum = false
+	for x in S.ordem:
+		if O.aberto(x): continue
+		algum = true; var d: Dictionary = O.desbloqueio(x); var falta: int = d.sem - S.tempo; var h = hrow(ca)
+		lbl(h, "%s · %s" % [O.GAMES[x].nome, ("em %d sem." % falta) if falta > 0 else "disponível"], 22)
+		btn(h, O.money(d.custo), func(): var r: Dictionary = O.abrir_jogo(x); toast(r.msg); if r.ok: game = x; render(), falta > 0 or S.org.caixa < d.custo)
+	if not algum: lbl(ca, "Todos os jogos abertos.", 22, DIM)
+
+# ---------- Hall ----------
+func vhall() -> void:
+	var g = game; var H: Dictionary = O.hist_de(g); var real: Dictionary = O.HIST.get(g, {})
+	var tor: Array = []
+	if g == "lol":  # história real do LoL (Mundial e MSI) vem do LOLX
+		for y in O.LOLX.get("wct", {}):
+			tor.append({"n": "Mundial " + str(y), "a": int(y), "tp": "WORLDS", "c": O.LOLX.wct[y], "v": O.LOLX.get("wcv", {}).get(y, "?"), "p": ""})
+		for y in O.LOLX.get("mst", {}):
+			tor.append({"n": "MSI " + str(y), "a": int(y), "tp": "MSI", "c": O.LOLX.mst[y], "v": O.LOLX.get("msv", {}).get(y, "?"), "p": ""})
+	for t in real.get("torneios", []): tor.append(t)
+	for t in H.torneios: tor.append(t)
+	var anos = {}
+	for t in tor: anos[int(t.a)] = true
+	for y in O.S.bo.get(g, {}): anos[int(y)] = true
+	var ys: Array = anos.keys(); ys.sort(); ys.reverse()
+	if ys.is_empty(): lbl(card("Hall"), "Sem histórico para este jogo ainda.", 24, DIM); return
+	if hy == 0 or not ys.has(hy): hy = ys[0]
+	var cn = card("Torneios por ano")
+	var h = hrow(cn)
+	var i: int = ys.find(hy)
+	btn(h, "◀", func(): hy = ys[min(i + 1, ys.size() - 1)]; render(), i >= ys.size() - 1)
+	lbl(h, str(hy), 34, GOLD).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn(h, "▶", func(): hy = ys[max(i - 1, 0)]; render(), i <= 0)
+	var ya = []; for y in ys.slice(0, 40): ya.append([y, str(y)])
+	chips(cn, ya.slice(0, 16), hy, func(id): hy = int(id); render())
+	for t in tor:
+		if int(t.a) != hy: continue
+		var ct = card("%s%s" % [t.n, " (simulado)" if t.get("sim", 0) else ""])
+		lbl(ct, "Campeão: %s  ·  vice %s%s" % [t.c, str(t.v), (" · " + str(t.p)) if str(t.get("p", "")) != "" else ""], 24, GOLD if t.c == O.S.org.nome else TXT)
+		if t.get("mvp") != null: lbl(ct, "MVP: %s (%s)" % [t.mvp[0], t.mvp[1]], 20, DIM)
+	var B = O.S.bo.get(g, {}).get(str(hy))
+	if B != null:
+		var cb = card("Bola de Ouro %d (Top 10)" % hy)
+		for k in B.t.size(): lbl(cb, "%d. %s (%s) · nota %s" % [k + 1, B.t[k][0], B.t[k][1], str(B.t[k][2])], 22, GOLD if k == 0 else TXT)
+		var ctoy = card("Time do ano %d" % hy)
+		for x in B.a: lbl(ctoy, "%s · %s (%s)" % [x[0], x[1], x[2]], 22)
+	var cl_ = card("Aposentadorias de lendas")
+	var ap: Array = O.aposentados(g)
+	if ap.is_empty(): lbl(cl_, "Nenhuma ainda.", 22, DIM)
+	for x in ap.slice(0, 10): lbl(cl_, "%d · %s (%da) · pico %d" % [x.ano, x.nick, x.idade, x.o], 22)

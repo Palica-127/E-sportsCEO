@@ -1,0 +1,105 @@
+
+# ---------- Elenco ----------
+func velenco() -> void:
+	var g = game; var S = O.S
+	var c0 = card()
+	var its = []
+	for sq in O.SQUADS: its.append([sq, O.SQUADS[sq].nome.split(" (")[0] + ("" if S.games[g].squads[sq].on else " +")])
+	chips(c0, its, squad, func(id): squad = id; render())
+	var q = S.games[g].squads[squad]
+	if not q.on:
+		var c = card(O.SQUADS[squad].nome)
+		lbl(c, "Criar este time custa %s de licença." % O.money(O.SQUADS[squad].licenca))
+		btn(c, "Criar time", func(): res(O.ativar_squad(g, squad)), false, true)
+		return
+	var c = card("%s · força %.1f" % [O.SQUADS[squad].nome, O.forca(g, squad)])
+	lbl(c, "Folha %s/sem · moral média %s" % [O.money(O.folha(g, squad)), O.moral_rot(_moral_media(g, squad))], 22, DIM)
+	lbl(c, "Foco de treino do time:", 22, DIM)
+	var fs = []
+	for f in O.FOCOS: fs.append([f, O.FOCOS[f].nome])
+	chips(c, fs, "", func(id): res(O.foco_equipe(g, squad, id)))
+	var roles = O.GAMES[g].roles; var n = roles.size()
+	for i in q.slots.size():
+		var p = q.slots[i]; var tit = "Titular" if i < n else "Reserva"; var rl: String = roles[i] if i < n else "RES"
+		var row = hrow(c)
+		if p == null:
+			lbl(row, "%s — vaga vazia (%s)" % [rl, tit], 24, DIM); continue
+		var tr: Dictionary = O.tendencia(p, g, squad, i < n)
+		var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.clip_text = true
+		b.text = "%s  %s  %d/%d %s  %sa  ct %d" % [rl, p.n, p.o, p.pot, tr.s, str(p.get("a", "?")), int(p.get("ct", O.CONTRATO))]
+		b.pressed.connect(func(): ficha_slot(g, squad, i)); row.add_child(b)
+	_base_card(g)
+func _moral_media(g, sq) -> float:
+	var t: Array = O.titulares(g, sq).filter(func(p): return p != null)
+	if t.is_empty(): return 70.0
+	var s = 0.0
+	for p in t: s += p.mo
+	return s / t.size()
+func ficha_slot(g, sq, i) -> void:
+	var p = O.S.games[g].squads[sq].slots[i]
+	if p == null: return
+	var v = modal("%s · %s" % [p.n, O.GAMES[g].roles[i] if i < O.nT(g) else "Reserva"])
+	var pv: Dictionary = O.pot_visivel(p, g); var tr: Dictionary = O.tendencia(p, g, sq, i < O.nT(g))
+	lbl(v, "Nota %d · potencial %s%s · idade %s · %s" % [p.o, stars(pv.estrelas), "?" if pv.incerto else "", str(p.get("a", "?")), str(p.get("c", ""))], 26)
+	lbl(v, "Moral: %s (%d) · XP %d/%d · tendência %s (%+.1f/ano)" % [O.moral_rot(p.mo), p.mo, p.xp, O.xp_necessario(p.o), tr.s, tr.anual], 24, DIM)
+	if p.get("tr") != null: lbl(v, "Traço: %s — %s" % [O.TRACOS[p.tr].nome, O.TRACOS[p.tr].desc], 22, GOLD)
+	lbl(v, "Contrato: %d semanas · salário %s/sem · valor de venda %s" % [int(p.get("ct", O.CONTRATO)), O.money(O.salario_de(p)), O.money(O.valor_venda(p))], 22, DIM)
+	lbl(v, "Foco de treino:", 24)
+	var fs = []
+	for f in O.FOCOS: fs.append([f, O.FOCOS[f].nome])
+	chips(v, fs, p.foco, func(id): O.trocar_foco(g, sq, i, id); ficha_slot(g, sq, i))
+	lbl(v, "Renovar contrato:", 24)
+	for of in O.OFERTAS:
+		var pr: Dictionary = O.proposta_renovar(p, of, 2)
+		btn(v, "%s · 2 anos · %s · aceita %d%%" % [O.OFERTAS[of].nome, O.money(pr.custo), jr100(pr.chance)], func(): var r: Dictionary = O.renovar(g, sq, i, of, 2); toast(r.msg); ficha_slot(g, sq, i))
+	if not p.get("estrela", false):
+		btn(v, "Vender (%s)" % O.money(O.valor_venda(p)), func(): var r: Dictionary = O.vender(g, sq, i); toast(r.msg); close_modal())
+		btn(v, "Dispensar", func(): var r: Dictionary = O.dispensar(g, sq, i); toast(r.msg); close_modal())
+		for o in O.SQUADS:
+			if o != sq and O.S.games[g].squads[o].on: btn(v, "Mover para " + O.SQUADS[o].nome, func(): var r: Dictionary = O.mover(g, sq, o, i); toast(r.msg); close_modal())
+func _base_card(g) -> void:
+	var nv: int = O.infra_nivel("base", g)
+	var c = card("Categoria de base (nível %d)" % nv)
+	if nv == 0: lbl(c, "Compre a Categoria de base em Negócios para revelar jovens a cada split.", 22, DIM); return
+	lbl(c, "Vagas %d/%d · custo %s/sem" % [O.S.base.get(g, []).size(), O.cap_base(nv), O.money(O.custo_base(g))], 22, DIM)
+	for p in O.S.base.get(g, []):
+		var pv: Dictionary = O.pot_visivel(p, g); var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.custom_minimum_size.y = 64; b.clip_text = true
+		b.text = "%s %s (%s) %da · nota %d · pot %s%s" % [p.r, p.n, p.c, p.a, p.o, stars(pv.estrelas), "?" if pv.incerto else ""]
+		b.pressed.connect(func(): ficha_base(g, p)); c.add_child(b)
+func ficha_base(g, p) -> void:
+	var v = modal("%s (base)" % p.n)
+	var pv: Dictionary = O.pot_visivel(p, g)
+	lbl(v, "%s · %s · %d anos · nota %d · potencial %s%s%s" % [p.r, p.c, p.a, p.o, stars(pv.estrelas), "?" if pv.incerto else "", " · JOIA RARA" if p.get("genio", false) else ""], 24)
+	lbl(v, "Moral %s · XP %d/%d" % [O.moral_rot(p.mo), p.mo, O.xp_necessario(p.o)], 22, DIM)
+	if p.get("tr") != null: lbl(v, "Traço: %s — %s" % [O.TRACOS[p.tr].nome, O.TRACOS[p.tr].desc], 22, GOLD)
+	var fs = []
+	for f in O.FOCOS: fs.append([f, O.FOCOS[f].nome])
+	chips(v, fs, p.foco, func(id): O.trocar_foco(g, "base", p.id, id); ficha_base(g, p))
+	for sq in O.SQUADS:
+		if O.S.games[g].squads[sq].on: btn(v, "Promover para " + O.SQUADS[sq].nome, func(): var r: Dictionary = O.promover_base(g, sq, p.id); toast(r.msg); close_modal(), false, true)
+	btn(v, "Vender (%s)" % O.money(O.valor_venda(p)), func(): var r: Dictionary = O.vender_base(g, p.id); toast(r.msg); close_modal())
+	btn(v, "Dispensar", func(): var r: Dictionary = O.dispensar_base(g, p.id); toast(r.msg); close_modal())
+
+# ---------- Mercado ----------
+func vmercado() -> void:
+	var g = game; var roles: Array = O.GAMES[g].roles
+	var c = card("Mercado · contratar para " + O.SQUADS[squad].nome)
+	if not O.S.games[g].squads[squad].on: lbl(c, "Crie esse time na aba Elenco.", 24, DIM); return
+	var its = [["", "Todos"]]; for r in roles: its.append([r, r])
+	chips(c, its, merc.role, func(id): merc.role = id; merc.n = 25; render())
+	var tg = CheckButton.new(); tg.text = "Só quem posso pagar"; tg.button_pressed = merc.pay; tg.toggled.connect(func(on): merc.pay = on; render()); c.add_child(tg)
+	var lst: Array = O.livres(g).filter(func(p): return (merc.role == "" or p.r == merc.role) and (not merc.pay or O.S.org.caixa >= O.fee(p.o)))
+	lst.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
+	var c2 = card("%d jogadores" % lst.size())
+	for p in lst.slice(0, merc.n):
+		var h = hrow(c2); var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.clip_text = true
+		b.text = "%s %s · %d · %sa · %s" % [p.r, p.n, p.o, str(p.get("a", "?")), p.t]; b.pressed.connect(func(): ficha_mercado(g, p)); h.add_child(b)
+		btn(h, O.money(O.fee(p.o)), func(): res(O.contratar(g, squad, p)), O.S.org.caixa < O.fee(p.o))
+	if lst.size() > merc.n: btn(c2, "Mostrar mais", func(): merc.n += 25; render())
+func ficha_mercado(g, p) -> void:
+	var v = modal(p.n)
+	var pv: Dictionary = O.pot_visivel(O.iniciar_jogador(p.duplicate()), g)
+	lbl(v, "%s · %s (%s) · nota %d · %s anos · %s" % [p.r, p.t, p.l, p.o, str(p.get("a", "?")), str(p.get("c", ""))], 26)
+	lbl(v, "Potencial %s%s (%d–%d)" % [stars(pv.estrelas), "?" if pv.incerto else "", pv.lo, pv.hi], 24, DIM)
+	lbl(v, "Contratação %s · salário %s/sem" % [O.money(O.fee(p.o)), O.money(O.salary(p.o))], 24)
+	btn(v, "Contratar para " + O.SQUADS[squad].nome, func(): var r: Dictionary = O.contratar(g, squad, p); toast(r.msg); close_modal(), false, true)

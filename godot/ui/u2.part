@@ -1,0 +1,116 @@
+
+# ---------- Início de jogo ----------
+func vsetup() -> void:
+	var c = card("Sua organização")
+	var le = LineEdit.new(); le.text = cfg.nome; le.custom_minimum_size.y = 60; le.text_changed.connect(func(t): cfg.nome = t); c.add_child(le)
+	lbl(c, "Jogo inicial", 26, DIM)
+	var its = []
+	for g in O.GAMES:
+		if O.ativo(g): its.append([g, gname(g)])
+	chips(c, its, cfg.game, func(id): cfg.game = id; cfg.regiao = ""; render())
+	lbl(c, "Região", 26, DIM)
+	var regs = []
+	for k in O.D(cfg.game).leagues: regs.append([k, O.D(cfg.game).leagues[k].get("nome", k)])
+	if cfg.regiao == "" or not O.D(cfg.game).leagues.has(cfg.regiao): cfg.regiao = O.D(cfg.game).inicio
+	chips(c, regs, cfg.regiao, func(id): cfg.regiao = id; render())
+	btn(c, "Criar org", func():
+		var r: Dictionary = O.iniciar({"game": cfg.game, "nome": cfg.nome, "regiao": cfg.regiao}); game = cfg.game; render(), false, true)
+func vestrela() -> void:
+	var c = card("Convide uma estrela")
+	lbl(c, "Tentativas: %d. Estrelas aceitam menos; a chance depende da nota. Quem aceitar entra sem taxa e vira o rosto da org." % O.S.tent, 24, DIM)
+	btn(c, "Começar sem estrela", func(): O.sem_estrela(); render())
+	var g: String = O.S.inicio; var lst: Array = O.livres(g).filter(func(p): return p.tier == "T1")
+	lst.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
+	var c2 = card("Candidatos")
+	for p in lst.slice(0, 15):
+		var h = hrow(c2); lbl(h, "%s  %s  nota %d  (%d%%)" % [p.n, p.r, p.o, jr100(O.chance_estrela(p.o))], 24)
+		btn(h, "Convidar", func(): var r: Dictionary = O.convidar_estrela(p); toast(r.msg); render())
+func jr100(x) -> int: return int(round(x * 100))
+
+# ---------- Org ----------
+func vorg() -> void:
+	var S = O.S; var pr: Dictionary = O.projecao_org()
+	var c = card("Resumo semanal")
+	lbl(c, "Receita %s · Despesa %s · Saldo %s" % [O.money(pr.receita), O.money(pr.despesa), O.money(pr.saldo)], 24, OK if pr.saldo >= 0 else BAD)
+	var h = hrow(c)
+	btn(h, "⏸ Parar" if play else "▶ Avançar", _toggle_play, false, true)
+	btn(h, "+1 semana", func(): _manual(1))
+	btn(h, "Até o jogo", _ate_jogo)
+	var h2 = hrow(c)
+	var tg = CheckButton.new(); tg.text = "Pular partidas"; tg.button_pressed = auto; tg.toggled.connect(func(on):
+		auto = on
+		if on: FileAccess.open("user://auto", FileAccess.WRITE).store_string("1")
+		else: DirAccess.remove_absolute(ProjectSettings.globalize_path("user://auto"))); h2.add_child(tg)
+	var sp = OptionButton.new(); sp.add_item("1x"); sp.add_item("2x"); sp.add_item("6x"); sp.selected = [0.45, 0.22, 0.07].find(vel) if [0.45, 0.22, 0.07].has(vel) else 0
+	sp.item_selected.connect(func(i): vel = [0.45, 0.22, 0.07][i]; if play: timer.start(vel)); h2.add_child(sp)
+	for g in O.GAMES:
+		if not O.ativo(g) or not O.aberto(g): continue
+		var cg = card(O.GAMES[g].nome)
+		for sq in O.SQUADS:
+			var cp = O.comp_for(g, sq)
+			if cp == null: continue
+			var st: String = {"off": "entressafra", "wait": "à espera (complete os titulares)", "reg": "rodada %d" % (cp.round + 1), "po": "playoffs", "intl": "internacional"}[cp.phase]
+			lbl(cg, "%s · força %.1f · %s" % [O.SQUADS[sq].nome, O.forca(g, sq), st], 24)
+	var cn = card("Notícias")
+	for l in S.log.slice(0, 10): lbl(cn, l, 22, DIM)
+	var cr = card()
+	btn(cr, "Tem certeza? Toque de novo" if fm == "reset" else "Nova org (apaga o save)", func():
+		if fm == "reset": fm = ""; O.reset_estado(); O.comecar(); render()
+		else: fm = "reset"; render())
+func _toggle_play() -> void:
+	play = not play
+	if play: timer.start(vel)
+	else: timer.stop()
+	render()
+func _manual(n: int) -> void:
+	for i in n:
+		var r: Dictionary = O.passo(not auto)
+		if r.get("parou", false): mostra_pre(r); return
+		_depois(r)
+	render()
+func _ate_jogo() -> void:
+	for i in 60:
+		var r: Dictionary = O.passo(not auto)
+		if r.get("parou", false): mostra_pre(r); return
+		if r.get("partidas", []).size() or r.get("motivo") != null: _depois(r); break
+	render()
+func _tick() -> void:
+	if modal_layer.get_child_count() > 0: return
+	var r: Dictionary = O.passo(not auto)
+	if r.get("parou", false): timer.stop(); mostra_pre(r); return
+	_depois(r)
+	if play: render()
+func _depois(r: Dictionary) -> void:
+	if r.get("partidas", []).size() and not auto: timer.stop(); mostra_res(r.partidas); return
+	if r.get("motivo") != null:
+		play = false; timer.stop(); toast(str(r.motivo))
+func mostra_pre(r: Dictionary) -> void:
+	var v = modal("Partida na semana %d" % r.semana)
+	for p in r.partidas:
+		var c = card("", v)
+		lbl(c, p.tag, 24, DIM); lbl(c, "%s  vs  %s" % [p.euNome, p.op], 30, TXT)
+		lbl(c, "%s · Bo%d · força %.1f x %.1f · chance %d%%" % [p.fase, p.bo, p.fMeu, p.fOp, jr100(p.p)], 24)
+	btn(v, "Simular partida", func(): _simular(), false, true)
+func _simular() -> void:
+	var r: Dictionary = O.passo(false); for c in modal_layer.get_children(): c.queue_free()
+	if r.get("partidas", []).size(): mostra_res(r.partidas)
+	else: close_modal()
+func mostra_res(ps: Array) -> void:
+	var v = modal("Resultado")
+	for d in ps:
+		var nar: Dictionary = d.nar; var c = card("", v)
+		lbl(c, d.tag + " · " + d.fase, 22, DIM)
+		lbl(c, "%s %d x %d %s" % [d.euNome, d.meus, d.deles, d.op], 34, OK if d.v else BAD)
+		lbl(c, "VITÓRIA" if d.v else "DERROTA", 26, OK if d.v else BAD)
+		for j in nar.jogos:
+			var t = "%s (%s)" % [j.lbl, j.sub]; for m in j.m: t += "  %s %d-%d" % [m.n, m.a, m.b]
+			lbl(c, t, 22)
+		for m in nar.momentos: lbl(c, "• " + m.txt, 22, DIM)
+		lbl(c, "MVP: %s (%s) · %s" % [nar.mvp.n, nar.mvp.time, nar.mvp.stat], 24, GOLD)
+		var e = d.get("efeito")
+		if e != null: lbl(c, "Caixa %s · Rep %+.2f · Torcida %+.1f%%" % [O.money(e.caixa), e.rep, e.seg * 100], 22, DIM)
+		for n in d.get("notas", []): lbl(c, "→ " + n, 22, GOLD)
+	btn(v, "Continuar", close_modal_continue, false, true)
+func close_modal_continue() -> void:
+	close_modal()
+	if play: timer.start(vel)

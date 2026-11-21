@@ -136,6 +136,9 @@ func carregar_dados() -> void:
 	if not LOL.is_empty(): return
 	LOL = _load_json("lol.LOL.json"); DATA = _load_json("outros.DATA.json"); LOLX = _load_json("lolx.LOLX.json"); NOMES = _load_json("nomes.NOMES.json")
 	HIST = {}
+	for f in ["hist", "hist_dota", "hist_ff", "hist_fifa", "hist_r6", "hist_val", "hist_wr"]:
+		var h = _load_json(f + ".HIST.json")
+		if typeof(h) == TYPE_DICTIONARY: HIST.merge(h, true)
 func data_of(g):
 	carregar_dados(); mundo_sync()
 	var d = LOL if g == "lol" else DATA.get(g, null)
