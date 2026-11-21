@@ -52,7 +52,29 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   const hue = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
   const ini = t => { const w = (String(t).match(/[A-Za-zÀ-ÿ0-9]+/g) || ['?']); return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 3)).toUpperCase(); };
   const slug = n => String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const crest = (n, sz) => { const sl = slug(n); return window.LOGOS && window.LOGOS.has(sl)
+  /* Organizações com rebrand (mesma org, nomes por período [nome, de, até; 0 = atual]). Títulos e logo seguem a org (porte do BrasLOL). */
+  const ORGS = [
+    { cur: 'Dplus KIA', nm: [['MiraGe Gaming', 2016, 2017], ['DAMWON Gaming', 2017, 2020], ['DWG KIA', 2021, 2021], ['Dplus KIA', 2022, 0]] },
+    { cur: 'T1', nm: [['SK Telecom T1', 2013, 2019], ['T1', 2019, 0]] },
+    { cur: 'DRX', nm: [['Longzhu Gaming', 2016, 2017], ['Kingzone DragonX', 2017, 2019], ['DragonX', 2019, 2019], ['DRX', 2020, 0]] },
+    { cur: 'Weibo Gaming', nm: [['Suning Gaming', 2016, 2019], ['Suning', 2020, 2021], ['Weibo Gaming', 2022, 0]] },
+    { cur: 'BLG', nm: [['Bilibili Gaming', 2017, 2023], ['BLG', 2023, 0]] },
+    { cur: 'G2', nm: [['Gamers2', 2014, 2015], ['G2 Esports', 2015, 0]] },
+    { cur: 'Gen.G', nm: [['KSV', 2017, 2018], ['Gen.G', 2018, 0]] },
+    { cur: 'TSM', nm: [['Team SoloMid', 2009, 2019], ['TSM', 2019, 0]] },
+    { cur: 'NAVI', nm: [['Natus Vincere', 2009, 2022], ['NAVI', 2022, 0]] },
+    { cur: 'Ninjas in Pyjamas', nm: [['NiP', 2012, 0], ['Ninjas in Pyjamas', 2012, 0]] },
+  ];
+  const kn = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const ORGIX = (() => { const m = {}; ORGS.forEach(o => { m[kn(o.cur)] = o; o.nm.forEach(x => { m[kn(x[0])] = o; }); }); return m; })();
+  const orgOf = n => (n == null ? null : ORGIX[kn(n)] || null), orgCur = n => { const o = orgOf(n); return o ? o.cur : n; };
+  const orgPast = n => { const o = orgOf(n); return o ? o.nm.filter(x => kn(x[0]) !== kn(o.cur)) : []; };
+  /* nomes diferentes com o mesmo logo (o nome exibido continua o original) e fallback por prefixo (filial, versão antiga do nome) */
+  const LOGOALIAS = { 'royal-never-give-up': 'royal-club', 'star-horn-royal-club': 'royal-club', 'samsung-white': 'samsung-galaxy', 'sk-telecom-t1': 't1', 'skt': 't1', 'g2-esports': 'g2', 'damwon-gaming': 'dplus-kia', 'dwg-kia': 'dplus-kia', 'bilibili-gaming': 'blg', 'kingzone-dragonx': 'drx', 'gen-g-academy': 'gen-g-global-academy', 'gen-g-esports': 'gen-g' };
+  const logoOf = s0 => { const L = window.LOGOS; if (!L) return ''; let sl = L.has(s0) ? s0 : LOGOALIAS[s0] || s0; if (L.has(sl)) return sl;
+    const o = orgOf(s0); if (o) { const c = slug(o.cur); if (L.has(c)) return c; }
+    let b = ''; L.forEach(x => { if ((sl.startsWith(x + '-') || x.startsWith(sl + '-')) && x.length > b.length && (sl.startsWith(x + '-') || !b)) b = x; }); return b; };
+  const crest = (n, sz) => { const sl = logoOf(slug(n)); return sl
     ? `<span class="crest ${sz || 'sm'} real"><img src="logos/${sl}.webp" alt="${esc(n)}" loading="lazy" decoding="async"></span>`
     : `<span class="crest ${sz || 'sm'}" style="--h:${hue(n)}">${esc(ini(n))}</span>`; };
   const crestT = (c, i, sz) => c.teams[i].eu ? logo(O.get().org.logo, { sm: 26, md: 44, lg: 60 }[sz || 'sm']) : crest(O.nome(c, i), sz);
@@ -78,7 +100,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   function achaTime(nome) { const L = (O.dataOf('lol') || {}).leagues || {}; for (const k in L) for (const tier of ['t1', 't2']) for (const t of (L[k][tier] || [])) if (t.n === nome) return { t, liga: L[k].nome, tier: tier.toUpperCase() }; return null; }
   function titulos(nome) {
     const x = X(); if (!x) return { wc: [], msi: [] };
-    const al = new Set([nome]); x.ht.forEach(r => { if (r[0] === nome) al.add(r[3]); });
+    const al = new Set([nome]); x.ht.forEach(r => { if (r[0] === nome) al.add(r[3]); }); const og = orgOf(nome); if (og) og.nm.forEach(n => al.add(n[0]));
     const ys = o => Object.keys(o).filter(y => al.has(o[y])).map(Number);
     return { wc: ys(x.wct), wcv: ys(x.wcv), msi: ys(x.msv), msiv: ys(x.mst) };
   }
@@ -100,7 +122,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   function ficha(nome) {
     if (String(nome).startsWith('p:')) return fichaJog(nome.slice(2));
     const f = achaTime(nome), tt = titulos(nome), x = X(), roles = (O.GAMES.lol || {}).roles || [];
-    let h = `<div class="mh">${crest(nome, 'lg')}<div><h2>${esc(nome)}</h2><small>${f ? esc(f.liga) + ' · ' + f.tier : 'Time'}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
+    let h = `<div class="mh">${crest(nome, 'lg')}<div><h2>${esc(nome)}</h2><small>${f ? esc(f.liga) + ' · ' + f.tier : 'Time'}</small>${orgPast(nome).length ? `<small class="hint">Antes: ${orgPast(nome).map(x => esc(x[0]) + ' (' + x[1] + (x[2] && x[2] !== x[1] ? '–' + x[2] : '') + ')').join(' · ')}</small>` : ''}</div><button class="mini" data-act="fecha">✕</button></div>`;
     if (f && f.t.p) {
       const ovr = (f.t.p.reduce((a, p) => a + p[1], 0) / f.t.p.length).toFixed(1), idade = f.t.p.some(p => p[2] == null) ? '—' : (f.t.p.reduce((a, p) => a + p[2], 0) / f.t.p.length).toFixed(1);
       h += `<div class="kvs"><div><small>Força</small><b>${ovr}</b></div><div><small>Idade média</small><b>${idade}</b></div><div><small>Mundiais</small><b>${tt.wc.length}</b></div><div><small>MSI</small><b>${tt.msi.length}</b></div></div>`;
@@ -125,7 +147,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     const all = H.torneios, cnt = {}, mv = {};
     all.forEach(t => { if (t.tp === MAIN || !fl) cnt[t.c] = (cnt[t.c] || 0) + 1; });
     if (sub === 'tit') {
-      const cm = {}; all.forEach(t => { const k = t.c; (cm[k] = cm[k] || { M: 0, o: 0 })[t.tp === MAIN ? 'M' : 'o']++; });
+      const cm = {}; all.forEach(t => { const k = orgCur(t.c); (cm[k] = cm[k] || { M: 0, o: 0 })[t.tp === MAIN ? 'M' : 'o']++; });
       return chips + `<section class="card"><h2>Títulos por time</h2><p class="hint">Majors e demais torneios levantados.</p>` + Object.entries(cm).sort((a, b) => b[1].M - a[1].M || b[1].o - a[1].o).map(([n, c]) => `<div class="tb"><span>${c.M}</span>${crest(n)}<b>${esc(n)}</b><em>${c.M ? c.M + ' ' + (TIPOS[MAIN] || MAIN) + ' · ' : ''}${c.o} outros</em></div>`).join('') + '</section>';
     }
     if (sub === 'bo') {
