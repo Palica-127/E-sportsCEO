@@ -210,9 +210,47 @@ func mundo_virar_ano() -> void:
 		for v in own.values():
 			for p in v:
 				if p.get("estrela", false): S.estrela.o = p.o
+	if not dir_off: mundo_mercado(own)
 	for g in S.ligas: mundo_refrescar_liga(S.ligas[g], g)
 	apos_log = apos_log.filter(func(x): return aberto(x.g)); apos_log.sort_custom(func(x, y): return y.pot < x.pot)
 	for x in apos_log.slice(0, 3): log_("%s se aposentou aos %d anos (%s)" % [x.nick, x.a, GAMES[x.g].curto])
+func mu_entrada(s) -> Array:
+	var r: Array = s.row
+	var fl = r[3] if r.size() > 3 else null
+	return [r[1], r[2] if r.size() > 2 and r[2] != null else 22, r[5] if r.size() > 5 and r[5] != null else r[1], max(1, int(r[4]) if r.size() > 4 and r[4] != null else 1), r[0], fl, 0]
+func mundo_mercado(own: Dictionary) -> void:
+	var M = S.mundo; var ano: int = M.y
+	for g in GAMES:
+		var I = mu_indice(g)
+		if I == null: continue
+		var ov: Dictionary = M.ov[g]; var porgrupo = {}
+		for s in I.slots:
+			var rid: String = s.id + (("~" + str(s.row[4])) if s.row.size() > 4 and s.row[4] else "")
+			if own.has(g + "|" + rid): continue
+			var gk: String = s.lg + "|" + s.tier
+			if not porgrupo.has(gk): porgrupo[gk] = []
+			porgrupo[gk].append(s)
+		var gks = porgrupo.keys(); gks.sort()
+		var feitas = 0
+		for gk in gks:
+			var L: Array = porgrupo[gk]
+			if L.size() < 8: continue
+			var n: int = maxi(1, int(L.size() / 14))
+			for _k in n:
+				var sa = L[floori(mrnd() * L.size())]
+				if sa.row[1] < I.grp[gk].alvo + 2: continue
+				var opts = L.filter(func(x): return x.tm != sa.tm and x.i == sa.i and x.tm.base > sa.tm.base - 1.5)
+				if opts.is_empty(): continue
+				var sb = opts[floori(mrnd() * opts.size())]
+				if mrnd() > 0.7: continue
+				var ea = mu_entrada(sa); var eb = mu_entrada(sb)
+				var ta = sa.tm.nome; var tb = sb.tm.nome
+				ov[sa.id] = eb; ov[sb.id] = ea
+				mu_escreve(sa, eb); mu_escreve(sb, ea)
+				feitas += 1
+				if aberto(g) and ea[0] >= I.grp[gk].alvo + 6 and feitas <= 4:
+					feed("%s (%s) deixa %s e fecha com %s; %s faz o caminho inverso" % [ea[4], GAMES[g].curto, ta, tb, eb[4]], g, "info", 2 if ea[0] >= I.grp[gk].alvo + 10 else 1)
+		_pool.erase(g)
 func mundo_tick() -> void:
 	mundo_sync()
 	while S.mundo.y < S.org.ano:
