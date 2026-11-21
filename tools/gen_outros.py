@@ -86,11 +86,24 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
 FC_RANK = {'Levi de Weerd': 6, 'GuiBarros': 7, 'Tekkz': 12, 'Umut': 21, 'LJR Peixoto': 23, 'HHezerS': 24, 'Yaskow': 49, 'Lukas': 62, 'AnasBadr': 70, 'tuga810': 81}
 FC_PROS = ['Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiBarros','Tekkz','Jafonso','Umut','Emre Yilmaz','Obrun','Yuval','Brice','LJR Peixoto','HHezerS','AboFawzi','The 1OS','Karimisbak','MarwanMC9','Bonanno','Yaskow','Lukas','AlihanLion','Darkley11','Nassada','Stingray','Caccia','Exeed','GugaFerrez','AnasBadr','tuga810']
 _fc = iter(FC_PROS)
+# Nacionalidades (ISO2) só onde a fonte ou o nome do jogador deixam claro; o resto fica em branco.
+NAC = {}
+def _n(iso, *nicks):
+    for n in nicks: NAC[n] = iso
+_n('FR','apEX','ZywOo','Neityu'); _n('IL','flameZ','xertioN','HeavyGod','NertZ'); _n('GB','mezii','Tekkz'); _n('EE','ropz')
+_n('BR','FalleN','yuurih','KSCERATO','vsm','biguzera','piriajr','snow','brnz4n','insani','nqz','LNZ','venomzera','DaviH','lukxo','tkzin','HerdsZ','Loira','DiasLucas','volpz','Bokzera','resetz','stemp','Gabu7z','live','Flastry','PHzin','GuiBarros','LJR Peixoto')
+_n('KZ','molodoy'); _n('LV','YEKINDAR'); _n('RU','donk','sh1ro','magixx','m0NESY','Collapse'); _n('UA','zont1x','b1t','w0nderful','r1nkle','Yatoro')
+_n('BA','NiKo','huNter-'); _n('DK','karrigan','TeSeS','HooXi','jabbi','Staehr','Chr1zN','Vejrgang','JBOEN'); _n('FI','Aleksib'); _n('RO','iM')
+_n('SE','nilo','susp','Brollan'); _n('ES','MartinezSa'); _n('CA','Twistzz','NAF'); _n('SK','frozen','MATYS'); _n('PL','jcobbb')
+_n('US','EliGE','Asuna','vora','bang','Cryo','skuba','brawk','Ethan','mada'); _n('ZA','JT'); _n('GT','malbsMd'); _n('BG','Jorko'); _n('HU','torzsi'); _n('CZ','Spinx')
+_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
+_n('KR','Meteor','stax','Munchkin','iZu','BuZz','Ivy','Rb','Francis','Xross','Dambi'); _n('RU','something'); _n('ID','f0rsakeN'); _n('MY','d4v41'); _n('SG','Jinggg')
+_n('TR','Rosé','Crewen','Lar0k','Loita','lovers rock'); _n('NL','ManuBachoore','Levi de Weerd'); _n('PT','Jafonso')
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
         o = HLTV20[n] if g == 'cs2' and n in HLTV20 else round(92 - SGG20.index(n) * 0.8) if n in SGG20 else max(55, min(90, round(base - 4 - k * 0.5)))
-        ps.append([n, o, None])
+        ps.append([n, o, None, NAC[n]] if n in NAC else [n, o, None])
     return {'n': nm, 'p': ps}
 res = {}
 for gi, (g, regs) in enumerate(L.items()):
@@ -100,7 +113,7 @@ for gi, (g, regs) in enumerate(L.items()):
             if nm in REAL.get(g, {}): return real_time(g, nm, base)
             if g == 'fifa':
                 n = next(_fc, None)
-                if n: return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), None]]}
+                if n: return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), None] + ([NAC[n]] if n in NAC else [])]}
             return {'n': nm, 'p': [[nick(r, used), max(55, min(90, round(base + r.uniform(-4, 4)))), r.randint(17, 30)] for _ in ROLES[g]]}
         a = t1.split(','); b = t2.split(',')
         assert len(set(a + b)) == 15, (g, key)

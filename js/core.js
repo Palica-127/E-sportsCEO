@@ -143,8 +143,8 @@
     const out = [], roles = D(g).roles, id0 = g === 'lol' ? '' : g + '-';
     for (const lg in D(g).leagues) {
       const L = D(g).leagues[lg];
-      L.t1.forEach((t, ti) => t.p.forEach((p, i) => out.push({ id: `${id0}${lg}-1-${ti}-${i}`, n: p[0], o: p[1], a: p[2], r: roles[i], t: t.n, l: lg, tier: 'T1' })));
-      L.t2.forEach((t, ti) => (t.p || []).forEach((p, i) => p && out.push({ id: `${id0}${lg}-2-${ti}-${i}`, n: p[0], o: p[1], a: p[2], r: roles[i], t: t.n, l: lg, tier: 'T2' })));
+      L.t1.forEach((t, ti) => t.p.forEach((p, i) => out.push({ id: `${id0}${lg}-1-${ti}-${i}`, n: p[0], o: p[1], a: p[2], c: p[3], r: roles[i], t: t.n, l: lg, tier: 'T1' })));
+      L.t2.forEach((t, ti) => (t.p || []).forEach((p, i) => p && out.push({ id: `${id0}${lg}-2-${ti}-${i}`, n: p[0], o: p[1], a: p[2], c: p[3], r: roles[i], t: t.n, l: lg, tier: 'T2' })));
     }
     return (_pool[g] = out);
   }
@@ -186,7 +186,7 @@
     let slot = idx >= 0 && !q.slots[idx] ? idx : -1;
     if (slot < 0) for (let i = n; i < q.slots.length; i++) if (!q.slots[i]) { slot = i; break; }
     if (slot < 0) return { ok: false, msg: 'Titular da função e reservas já ocupados.' };
-    q.slots[slot] = { id: player.id, n: player.n, o: player.o, a: player.a, r: player.r, t: player.t, l: player.l, fee: f, ct: CONTRATO };
+    q.slots[slot] = { id: player.id, n: player.n, o: player.o, a: player.a, c: player.c, r: player.r, t: player.t, l: player.l, fee: f, ct: CONTRATO };
     S.org.caixa -= f; log(`Contratou ${player.n} (${player.o}) para o ${SQUADS[sq].nome}`); save();
     return { ok: true, msg: `${player.n} contratado${slot >= n ? ' como reserva' : ''}.` };
   }
