@@ -342,18 +342,98 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     return h;
   }
   /* ---------- Avanço contínuo (para ao clicar em Parar ou quando surgir um evento importante) ---------- */
-  const PL = { on: false, h: null, vel: 1 }, VEL = [900, 450, 150], VELN = ['1x', '2x', '6x'];
+  const PL = { on: false, h: null, vel: 1, auto: (() => { try { return localStorage.getItem('esc-auto') === '1'; } catch (e) { return false; } })() }, VEL = [900, 450, 150], VELN = ['1x', '2x', '6x'];
   function playCtl() {
     return `<button class="btn play ${PL.on ? 'on' : ''}" data-act="play">${PL.on ? '⏸ Parar' : '▶ Avançar'}</button>
+      <div class="chips" style="margin-top:8px;justify-content:center"><button class="chip ${PL.auto ? 'on' : ''}" data-act="auto" aria-pressed="${PL.auto}">⏩ Pular partidas</button></div>
       <div class="chips" style="margin-top:8px;justify-content:center">${VELN.map((n, i) => `<button class="chip ${PL.vel === i ? 'on' : ''}" data-act="vel" data-id="${i}">${n}</button>`).join('')}<button class="chip" data-act="avancar" data-n="1" ${PL.on ? 'disabled' : ''}>+1 semana</button></div>
-      <p class="hint" style="text-align:center">Avança sozinho até você parar ou surgir um evento (contrato, fim de split, decisão...).</p>`;
+      <p class="hint" style="text-align:center">${PL.auto ? 'Modo automático: não para nas suas partidas.' : 'Para na semana em que você tem partida (qualquer time seu) e mostra o confronto.'} Também para em eventos (contrato, fim de split, decisão...).</p>`;
   }
   function playStop(msg) { PL.on = false; clearTimeout(PL.h); if (msg) toast(msg); render(); }
   function playTick() {
-    if (!PL.on) return; const r = O.passo(); render();
+    if (!PL.on || PT.on) return; const r = O.passo({ parar: !PL.auto });
+    if (r.parou) { ptAbrir(r); return; }
+    render();
     if (r.motivo || O.get().setup) playStop(r.motivo || ''); else PL.h = setTimeout(playTick, VEL[PL.vel]);
   }
-  function playToggle() { if (PL.on) { playStop(); return; } if (O.get().setup) return; PL.on = true; render(); PL.h = setTimeout(playTick, 120); }
+  function playToggle() { if (PL.on) { playStop(); return; } if (PT.on) return; if (O.get().setup) return; PL.on = true; render(); PL.h = setTimeout(playTick, 120); }
+  /* ---------- Partida: o avanço para quando o usuário joga; modal de confronto + simulação rápida narrada ---------- */
+  const PT = { on: false, fila: [], i: 0, fase: 'pre', r: null, det: null, g: 0, p: 0, hold: 0, h: null };
+  const PT_MS = { moba: 1500, rounds: 1700, ff: 1300, gols: 1800 }, PT_TICK = 70;
+  const ptFmtTxt = d => { const f = O.GAMES[d.game] && ({ moba: 'jogos', rounds: 'mapas', ff: 'quedas', gols: 'jogos' })[d.fmt || ({ lol: 'moba', wr: 'moba', dota2: 'moba', cs2: 'rounds', valorant: 'rounds', r6: 'rounds', ff: 'ff', fifa: 'gols' })[d.game]];
+    return d.bo > 1 ? `Melhor de ${d.bo} · ${f}` : ({ cs2: 'Mapa único', valorant: 'Mapa único', r6: 'Mapa único', ff: 'Partida de pontos da rodada' })[d.game] || 'Partida única'; };
+  const ptAtual = () => (PT.det && PT.det[PT.i]) || PT.fila[PT.i];
+  function ptConfronto(d, placar, res) { // reaproveita .m .mt .tn .sc .od .ol
+    const S = O.get(), pw = d.p, cls = res == null ? ['', ''] : res ? ['win', 'lose'] : ['lose', 'win'];
+    return `<div class="m"><span class="zb g">${esc(d.tag || '')}</span><div class="mt"><div class="tn ${cls[0]}">${logo(S.org.logo, 34)}<span>${esc(d.euNome)}</span></div><div class="sc" id="pt-sc">${placar || '<em>VS</em>'}</div><div class="tn b ${cls[1]}">${crest(d.op, 'md')}<span>${esc(d.op)}</span></div></div>`
+      + `<div class="od"><i style="flex:${Math.round(pw * 100)}"></i><i class="o2" style="flex:${Math.round((1 - pw) * 100)}"></i></div><div class="ol"><span>Chance de vitória <b>${Math.round(pw * 100)}%</b></span><span>Força ${d.fMeu.toFixed(1)} x ${d.fOp.toFixed(1)}</span></div></div>`;
+  }
+  const ptPlacar = () => { const d = ptAtual(); if (!d || !d.nar) return ''; const n = d.nar; let a = 0, b = 0;
+    n.jogos.forEach((j, k) => { if (PT.fase === 'fim' || k < PT.g || (k === PT.g && PT.p >= 1)) { if (j.venc === 'm') a++; else b++; } }); return `${a}<i>-</i>${b}`; };
+  function ptValor(j, m, f) { // valor ao vivo de uma métrica do jogo j com o jogo f (0..1) concluído
+    if (f >= 1) return [m.a, m.b];
+    if (m.fixo) return null;
+    if (m.seq) { const k = Math.round(j.seq.length * f), s = j.seq.slice(0, k), a = s.filter(x => x === 'm').length; return [a, s.length - a]; }
+    if (m.gols) { const min = 90 * f, g = j.gols.filter(x => x[0] <= min); return [g.filter(x => x[1] === 'm').length, g.filter(x => x[1] === 'o').length]; }
+    return [Math.floor(m.a * f), Math.floor(m.b * f)];
+  }
+  function ptLinha(j, f, done) {
+    const ms = j.m.map(m => { const v = ptValor(j, m, f), w = done && j.venc; const cls = (x) => done && ((x === 'a' && j.venc === 'm') || (x === 'b' && j.venc === 'o')) ? ' w' : '';
+      return `<div class="pgk"><span class="a${cls('a')}">${v ? v[0] : '·'}</span><small>${esc(m.n)}</small><span class="b${cls('b')}">${v ? v[1] : '·'}</span></div>`; }).join('');
+    const s = j.seq ? Math.round(j.seq.length * f) : 0, dots = j.seq ? `<div class="dots" aria-hidden="true">${j.seq.slice(0, s).map(x => `<i class="${x}"></i>`).join('')}</div>` : '';
+    const clock = j.gols && !done ? ` · ${Math.round(90 * f)}'` : '';
+    return `<div class="pg ${done ? 'done' : 'now'}"><div class="pgh"><b>${esc(j.lbl)}</b><small>${esc(j.sub)}${clock}</small>${done ? `<span class="pgv ${j.venc === 'm' ? 'pos' : 'neg'}">${j.venc === 'm' ? (j.booyah ? 'Booyah!' : 'Vitória') : 'Derrota'}</span>` : ''}</div>${ms}${dots}</div>`;
+  }
+  function ptLive() {
+    const d = ptAtual(), n = d && d.nar; if (!n) return '';
+    const fim = PT.fase === 'fim', rows = n.jogos.map((j, k) => (!fim && k > PT.g) ? '' : ptLinha(j, fim || k < PT.g ? 1 : PT.p, fim || k < PT.g)).join('');
+    const ms = n.momentos.filter(m => fim || m.g < PT.g || (m.g === PT.g && m.p <= PT.p));
+    const feed = ms.length ? `<ul class="pf" aria-live="polite">${ms.map((m, k) => `<li class="${m.lado === 'm' ? 'me' : 'op'}${k === ms.length - 1 && !fim ? ' nw' : ''}"><i></i>${n.jogos.length > 1 ? `<small>${n.fmt === 'rounds' ? 'M' : 'J'}${m.g + 1}</small>` : ''}<span>${esc(m.txt)}</span></li>`).join('')}</ul>` : '';
+    return rows + feed;
+  }
+  function ptResultado(d) {
+    const n = d.nar, e = d.efeito || { caixa: 0, rep: 0, seg: 0 }, mv = n.mvp, sg = (x, f) => (x >= 0 ? '+' : '−') + f(Math.abs(x));
+    const kv = [`<div class="kv"><span>Premiação</span><b class="${e.caixa > 0 ? 'pos' : ''}">${e.caixa > 0 ? '+' + O.money(e.caixa) : '—'}</b></div>`];
+    if (Math.abs(e.rep) >= 0.005) kv.push(`<div class="kv"><span>Reputação</span><b class="${e.rep >= 0 ? 'pos' : 'neg'}">${sg(e.rep, x => x.toFixed(2).replace('.', ','))}</b></div>`);
+    kv.push(`<div class="kv"><span>Torcida (seguidores)</span><b class="${e.seg >= 0 ? 'pos' : 'neg'}">${sg(e.seg * 100, x => x.toFixed(1).replace('.', ',') + '%')}</b></div>`);
+    return `<div class="pt-res ${d.v ? 'w' : 'l'}"><b>${d.v ? 'Vitória' : 'Derrota'}</b><span>${d.meus} <i>-</i> ${d.deles}</span></div>`
+      + `<div class="pt-mvp">${avatar(mv.n)}<div><small>⭐ MVP da partida</small><b>${esc(mv.n)}</b><small>${esc([mv.r, mv.time].filter(Boolean).join(' · '))} · ${esc(mv.stat)}</small></div></div>`
+      + `<div class="pt-fx">${kv.join('')}${(d.notas || []).map(x => `<p class="hint">${esc(x)}</p>`).join('')}</div>`;
+  }
+  function ptHtml() {
+    const d = ptAtual(), q = PT.fila.length, ult = PT.i >= q - 1;
+    const topo = `<div class="pt-h"><div><small>${esc(d.tag || '')}</small><b>${esc(d.fase)}</b></div>${q > 1 ? `<span class="chip on pt-q">${PT.i + 1}/${q}</span>` : ''}</div>`;
+    if (PT.fase === 'pre') return topo + `<p class="pt-mot">${esc(PT.motivo && q === 1 ? PT.motivo : `Partida: ${d.tag} vs ${d.op}`)}</p>` + ptConfronto(d) + `<p class="hint" style="text-align:center">${esc(ptFmtTxt(d))}</p>`
+      + `<div class="pt-btns row"><button class="btn" data-act="p-sim">▶ Simular rápido</button><button class="btn alt" data-act="p-pular">⏭ Pular (só resultado)</button></div>`;
+    if (PT.fase === 'sim') return topo + ptConfronto(d, ptPlacar()) + `<div id="pt-live">${ptLive()}</div><div class="pt-btns"><button class="btn alt" data-act="p-pular">⏭ Pular animação</button></div>`;
+    return topo + ptConfronto(d, ptPlacar(), d.v) + `<div id="pt-live">${ptLive()}</div>` + ptResultado(d) + `<div class="pt-btns"><button class="btn" data-act="p-cont">${ult ? 'Continuar' : `Próxima partida (${PT.i + 2}/${q})`}</button></div>`;
+  }
+  function ptDesenha() {
+    let m = $('partida'); if (!PT.on) { if (m) m.remove(); return; }
+    if (!m) { m = document.createElement('div'); m.id = 'partida'; document.body.appendChild(m); }
+    m.innerHTML = `<div class="mbox pt" role="dialog" aria-modal="true" aria-label="Partida">${ptHtml()}</div>`;
+    const bx = m.firstChild; if (PT.fase === 'fim') bx.scrollTop = 0;
+  }
+  function ptAbrir(r) { PT.on = true; PT.fila = r.partidas; PT.motivo = r.motivo; PT.i = 0; PT.fase = 'pre'; PT.r = null; PT.det = null; PT.g = 0; PT.p = 0; clearTimeout(PL.h); ptDesenha(); }
+  function ptResolve() { // resolve a semana de verdade uma única vez (o resultado vem do motor); a fila usa os detalhes devolvidos
+    if (PT.r) return; PT.r = O.passo(); PT.det = PT.fila.map(f => PT.r.partidas.find(x => x.key === f.key) || f);
+  }
+  function ptParar() { clearInterval(PT.h); PT.h = null; }
+  function ptTick() {
+    const d = ptAtual(), n = d && d.nar; if (!PT.on || PT.fase !== 'sim' || !n) return ptParar();
+    if (PT.hold > 0) { if (--PT.hold === 0) { PT.g++; PT.p = 0; if (PT.g >= n.jogos.length) { ptParar(); PT.fase = 'fim'; ptDesenha(); return; } } }
+    else { PT.p = Math.min(1, PT.p + PT_TICK / PT_MS[n.fmt]); if (PT.p >= 1) PT.hold = 5; }
+    const lv = $('pt-live'), sc = $('pt-sc'); if (lv) lv.innerHTML = ptLive(); if (sc) sc.innerHTML = ptPlacar();
+  }
+  function ptSim() { ptResolve(); if (!ptAtual().nar) return ptCont(); PT.fase = 'sim'; PT.g = 0; PT.p = 0; PT.hold = 0; ptDesenha(); ptParar(); PT.h = setInterval(ptTick, PT_TICK); }
+  function ptPular() { ptResolve(); ptParar(); if (!ptAtual().nar) return ptCont(); PT.fase = 'fim'; ptDesenha(); }
+  function ptCont() {
+    ptParar(); PT.i++;
+    if (PT.i < PT.fila.length) { PT.fase = 'pre'; ptDesenha(); return; }
+    PT.on = false; ptDesenha(); const r = PT.r, S = O.get(); render();
+    if (PL.on && !(r && r.motivo) && !S.setup) PL.h = setTimeout(playTick, 250); else if (PL.on) playStop(r && r.motivo || ''); else if (r && r.motivo) toast(r.motivo);
+  }
+  const ptJogoAtual = () => { const d = PT.on && ptAtual(); if (d && O.GAMES[d.game]) UI.game = d.game; };   // as fichas abertas por cima do modal usam o jogo da partida
   function vEvento() {
     const S = O.get(); if (!S.evento) return '';
     const e = O.EVENTOS.find(x => x.id === S.evento.id);
@@ -426,11 +506,15 @@ const ANOS = a => a == null ? '—' : a + ' anos';
 
   document.addEventListener('click', e => {
     const tn = e.target.closest('.tn > span:not(.crest):not(.logo)'); // nome do time nos confrontos abre a ficha
-    if (tn && !e.target.closest('[data-act]')) { const nm = tn.textContent.trim(); if (nm && nm !== O.get().org.nome) { UI.ficha = nm; render(); } return; }
+    if (tn && !e.target.closest('[data-act]')) { const nm = tn.textContent.trim(); if (nm && nm !== O.get().org.nome) { ptJogoAtual(); UI.ficha = nm; render(); } return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
     if (a === 'play') playToggle();
-    else if (a === 'ficha') { UI.ficha = id; render(); }
+    else if (a === 'p-sim') ptSim();
+    else if (a === 'p-pular') ptPular();
+    else if (a === 'p-cont') ptCont();
+    else if (a === 'auto') { PL.auto = !PL.auto; try { localStorage.setItem('esc-auto', PL.auto ? '1' : '0'); } catch (e) {} render(); }
+    else if (a === 'ficha') { ptJogoAtual(); UI.ficha = id; render(); }
     else if (a === 'fecha') { UI.ficha = null; render(); }
     else if (a === 'hall') { UI.hall = id; render(); }
     else if (a === 'hfil') { UI.hf = id; render(); }
@@ -463,7 +547,9 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     else if (a === 'estgame') { UI.estGame = id; render(); }
     else if (a === 'infra') res(O.comprarInfra(id, b.dataset.g || UI.game));
     else if (a === 'loja') res(O.comprarLoja(id, b.dataset.g || UI.game));
-    else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
+    else if (a === 'avancar') {
+      if (+b.dataset.n === 1 && !PL.auto && !PT.on) { const r = O.passo({ parar: true }); if (r.parou) { ptAbrir(r); return; } toast(r.motivo || '1 semana passou.'); render(); return; }
+      O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
     else if (a === 'mrole') { UI.mk.role = id; UI.mk.n = 30; render(); }
     else if (a === 'mpay') { UI.mk.pay = !UI.mk.pay; UI.mk.n = 30; render(); }
     else if (a === 'masc') { UI.mk.asc = !UI.mk.asc; UI.mk.n = 30; render(); }

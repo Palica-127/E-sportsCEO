@@ -43,11 +43,47 @@ async def main():
             await pg.screenshot(path=f'{OUT}/elenco_{w}.png')
             await pg.click('[data-act=tab][data-id=estrutura]'); await pg.locator('[data-act=infra]:not([disabled])').first.click()
             await pg.screenshot(path=f'{OUT}/estrutura_{w}.png')
-            await pg.click('[data-act=tab][data-id=org]'); t0=(await pg.locator('#top').inner_text()).lower(); await pg.click('#main [data-act=play]'); await pg.wait_for_timeout(2500); await (pg.locator('#main [data-act=play].on').click() if await pg.locator('#main [data-act=play].on').count() else pg.wait_for_timeout(1)); await pg.wait_for_timeout(300); t1=(await pg.locator('#top').inner_text()).lower(); await pg.wait_for_timeout(1500); t2=(await pg.locator('#top').inner_text()).lower()
-            ok(t1!=t0 and t1==t2, f'{w}: avanço contínuo andou e parou')
+            await pg.click('[data-act=tab][data-id=org]'); t0=(await pg.locator('#top').inner_text()).lower(); await pg.click('#main [data-act=play]')
+            # ---- partida: o avanço para na semana de jogo e mostra o confronto
+            for _ in range(8): # o avanço também para em eventos (ex.: início do split): clica de novo até aparecer a partida
+                try: await pg.wait_for_selector('#partida .pt', timeout=4000); break
+                except Exception: await pg.click('#main [data-act=play]:not(.on)') if await pg.locator('#main [data-act=play]:not(.on)').count() else None
+            await pg.wait_for_selector('#partida .pt', timeout=3000); await pg.wait_for_timeout(200); t1=(await pg.locator('#top').inner_text()).lower(); await pg.wait_for_timeout(1200); t2=(await pg.locator('#top').inner_text()).lower()
+            ok(t1!=t0 and t1==t2, f'{w}: avanço contínuo andou e parou na partida')
+            pt0=(await pg.locator('#partida').inner_text()).lower()
+            ok('partida: lol · time principal vs' in pt0 and 'rodada' in pt0, f'{w}: motivo da parada e contexto da partida')
+            ok(await pg.locator('#partida .m .mt .tn').count() == 2 and await pg.locator('#partida .m .od').count() == 1 and 'chance de vitória' in pt0 and 'força' in pt0, f'{w}: confronto com escudos, nomes, forças e chance de vitória')
+            ok(await pg.locator('#partida [data-act=p-sim]').count() == 1 and await pg.locator('#partida [data-act=p-pular]').count() == 1, f'{w}: botões Simular rápido e Pular')
+            await pg.screenshot(path=f'{OUT}/partida_pre_{w}.png')
+            ok(await pg.evaluate("(()=>{const b=document.querySelector('#partida .mbox');return b.scrollWidth<=b.clientWidth+1&&b.getBoundingClientRect().right<=innerWidth})()"), f'{w}: modal de partida cabe na tela')
+            await pg.click('#partida .m .crest'); ok(await pg.locator('#modal .lineup .lp').count() == 5 and await pg.locator('#partida').count() == 1, f'{w}: escudo na partida abre a ficha por cima'); await pg.click('#modal [data-act=fecha]'); ok(await pg.locator('#modal').count() == 0 and await pg.locator('#partida .pt').count() == 1, f'{w}: ficha fecha e a partida continua')
+            await pg.click('#partida [data-act=p-sim]'); await pg.wait_for_timeout(700)
+            ok(await pg.locator('#partida .pg').count() >= 1 and await pg.locator('#partida #pt-sc').count() == 1, f'{w}: placar evolui durante a simulação')
+            await pg.screenshot(path=f'{OUT}/partida_sim_{w}.png')
+            await pg.wait_for_selector('#partida .pt-res', timeout=20000); pt1=(await pg.locator('#partida').inner_text()).lower()
+            ok(await pg.locator('#partida .pf li').count() >= 3 and await pg.locator('#partida .pt-mvp b').count() == 1 and ('vitória' in pt1 or 'derrota' in pt1) and 'torcida' in pt1 and 'premiação' in pt1, f'{w}: momentos, MVP e resultado com variações')
+            ok(await pg.evaluate("(()=>{const b=document.querySelector('#partida .mbox');return b.scrollWidth<=b.clientWidth+1})()"), f'{w}: resultado sem rolagem horizontal')
+            await pg.screenshot(path=f'{OUT}/partida_fim_{w}.png')
+            sem_a=(await pg.locator('#top .season small').inner_text())
+            await pg.click('#partida [data-act=p-cont]'); await pg.wait_for_timeout(200); ok(await pg.locator('#partida').count() == 0 or await pg.locator('#partida .pt-res').count() == 0, f'{w}: Continuar fecha a partida')
+            # o avanço continuou sozinho e para na partida seguinte; aqui testamos "Pular (só resultado)"
+            await pg.wait_for_selector('#partida .pt', timeout=20000); await pg.click('#partida [data-act=p-pular]'); ok(await pg.locator('#partida .pt-res').count() == 1 and await pg.locator('#partida .pf li').count() >= 3, f'{w}: Pular mostra o resultado na hora')
+            await pg.evaluate("document.querySelector('#top .hplay').click()"); await pg.click('#partida [data-act=p-cont]'); await pg.wait_for_timeout(500)
+            ok(await pg.locator('#partida').count() == 0, f'{w}: parar e continuar encerra o avanço'); s_a=(await pg.locator('#top .season small').inner_text()); await pg.wait_for_timeout(1200); ok(s_a == (await pg.locator('#top .season small').inner_text()), f'{w}: avanço parado depois da partida')
+            # "+1 semana" também respeita a partida
+            for _ in range(8):
+                if await pg.locator('#partida').count(): break
+                await pg.click('#main [data-act=avancar]:not([disabled])'); await pg.wait_for_timeout(120)
+            ok(await pg.locator('#partida .pt').count() == 1, f'{w}: +1 semana também para na partida'); await pg.click('#partida [data-act=p-pular]'); await pg.click('#partida [data-act=p-cont]')
+            # modo automático (Pular partidas): não abre modal
+            await pg.click('#main [data-act=auto]'); ok(await pg.locator('#main [data-act=auto].on').count() == 1, f'{w}: toggle Pular partidas liga')
+            sem_b=(await pg.locator('#top .season small').inner_text()); await pg.click('#main [data-act=play]'); await pg.wait_for_timeout(2600)
+            ok(await pg.locator('#partida').count() == 0 and sem_b != (await pg.locator('#top .season small').inner_text()), f'{w}: modo automático avança sem parar nas partidas')
+            await (pg.locator('#main [data-act=play].on').click() if await pg.locator('#main [data-act=play].on').count() else pg.wait_for_timeout(1)); await pg.click('#main [data-act=auto]'); await pg.wait_for_timeout(300)
+            ok(await pg.locator('#partida').count() == 0 and await pg.locator('#main [data-act=vel]').count() == 3, f'{w}: velocidades 1x/2x/6x preservadas')
             await pg.screenshot(path=f'{OUT}/org_{w}.png')
             await pg.click('[data-act=tab][data-id=calendario]'); ct = (await pg.locator('#main').inner_text()).lower()
-            ok('próximas partidas' in ct and 'agenda' in ct and 'próxima: rodada' in ct, f'{w}: calendário mostra fase, próximas partidas e agenda')
+            ok('próximas partidas' in ct and 'agenda' in ct and ('próxima: rodada' in ct or 'playoffs' in ct), f'{w}: calendário mostra fase, próximas partidas e agenda')
             await pg.evaluate("()=>{const S=Org.get();S.games.cs2.aberto=true;S.games.cs2.squads.t1.on=true;Org.save&&Org.save()}"); await pg.click('[data-act=tab][data-id=org]'); await pg.click('[data-act=tab][data-id=calendario]'); c2=(await pg.locator('#main').inner_text()).lower()
             ok('lol · ' in c2 and 'cs2 · ' in c2 and 'cs2 · ' in c2.split('resultados')[0], f'{w}: calendário geral junta LoL e CS2 (jogos de ambos)')
             await pg.click('[data-act=game][data-id=cs2]'); ok(c2 == (await pg.locator('#main').inner_text()).lower(), f'{w}: calendário é o mesmo em qualquer aba de jogo'); await pg.click('[data-act=game][data-id=lol]')

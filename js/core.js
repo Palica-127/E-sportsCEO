@@ -392,7 +392,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       if (bonus && venc === eu) S.org.caixa += Math.round(SQUADS[c.sq].premio * 0.01);
       ctx.jogou = true;
       const fm = fT(c, T[eu]), fo = fT(c, T[op]);
-      ULT.push({ key: c.game + '-' + c.sq, game: c.game, sq: c.sq, fase, bo: n, euNome: S.org.nome, op: nomeT(T[op]), fMeu: fm, fOp: fo, p: probVit(fm, fo), meus, deles, v: venc === eu, s: S.org.semana, y: S.org.ano,
+      ULT.push({ key: c.game + '-' + c.sq, game: c.game, sq: c.sq, tag: tagDe(c.game, c.sq), fase, bo: n, euNome: S.org.nome, op: nomeT(T[op]), fMeu: fm, fOp: fo, p: probVit(fm, fo), meus, deles, v: venc === eu, s: S.org.semana, y: S.org.ano,
         meusJ: elencoDe(c.game, c.sq), opJ: elencoOp(c.game, nomeT(T[op])) });
     }
     return venc;
