@@ -9,12 +9,12 @@ ROLES = {'cs2': ['IGL','AWP','ENT','LUR','SUP'], 'dota2': ['POS1','POS2','POS3',
 # (chave, nome da liga, região, T1 (8), T2 (7))
 L = {
  'cs2': [('AM','Américas','Américas','FURIA,paiN Gaming,MIBR,Imperial,Fluxo,Team Liquid,NRG,9z Team','Legacy,RED Canids,Sharks Esports,Case Esports,Keyd Stars,Isurus,ODDIK'),
-         ('EU','Europa','Europa','Vitality,NAVI,FaZe Clan,G2 Esports,Team Spirit,MOUZ,Falcons,Heroic','Astralis,BIG,Eternal Fire,GamerLegion,Ninjas in Pyjamas,Apeks,ENCE'),
+         ('EU','Europa','Europa','MOUZ,Vitality,Team Spirit,Aurora,Falcons,FUT,NAVI,G2 Esports','FaZe Clan,Astralis,Heroic,Eternal Fire,GamerLegion,Ninjas in Pyjamas,ENCE'),
          ('AP','Ásia-Pacífico','Ásia-Pacífico','The MongolZ,TYLOO,Lynn Vision,Rare Atom,Ground Zero,Rooster,ORDER,Grayhound','Chinggis Warriors,Wildcard,Divine,Paradox,Bad News Eagles,TeamOne,Renegades')],
  'dota2': [('SA','Am. do Sul','América do Sul','Heroic,paiN Gaming,Wildcard,beastcoast,Infinity,Thunder Predator,RED Canids,Team Waska','Furia Dota,Leviatán,Yawara,Gaimin SA,Elevate,Case Esports,Keyd Stars'),
-           ('EU','Europa/CEI','Europa e CEI','Team Spirit,Team Liquid,Tundra Esports,Gaimin Gladiators,BetBoom Team,Falcons,PARIVISION,Aurora','Nigma Galaxy,OG,Entity,Natus Vincere,1w Team,Team Secret,Cloud9'),
+           ('EU','Europa/CEI','Europa e CEI','Team Spirit,Team Liquid,1w Team,Team Yandex,BetBoom Team,Falcons,PARIVISION,Aurora','Nigma Galaxy,OG,Entity,Natus Vincere,Gaimin Gladiators,Team Secret,Cloud9'),
            ('AS','China/SEA','China e Sudeste Asiático','Xtreme Gaming,Team Tidebound,Azure Ray,Talon Esports,BOOM Esports,Team Nemesis,Aster,Vici Gaming','Execration,Geek Fam,Rex Regum Qeon,Invictus Gaming,EHOME,Team SMG,Neon Esports')],
- 'valorant': [('AM','VCT Américas','Américas','LOUD,FURIA,MIBR,Leviatán,Sentinels,100 Thieves,Cloud9,NRG','KRÜ Esports,Evil Geniuses,ENVY,Shopify Rebellion,Oxygen Esports,Sharks Esports,2Game'),
+ 'valorant': [('AM','VCT Américas','Américas','LOUD,FURIA,MIBR,Leviatán,Sentinels,100 Thieves,G2 Esports,NRG','KRÜ Esports,Cloud9,ENVY,Shopify Rebellion,Oxygen Esports,Sharks Esports,2Game'),
               ('EM','VCT EMEA','EMEA','Fnatic,Team Heretics,Team Vitality,Karmine Corp,FUT Esports,Team Liquid,BBL Esports,Gentle Mates','Natus Vincere,Apeks,GIANTX,Movistar KOI,ULF Esports,Eternal Fire,Futbolist'),
               ('PC','VCT Pacífico','Pacífico','Paper Rex,DRX,T1,Gen.G,Rex Regum Qeon,Talon Esports,Team Secret,ZETA DIVISION','DetonatioN FocusMe,Global Esports,BOOM Esports,FULL SENSE,Nongshim RedForce,Bleed Esports,Sengoku Gaming')],
  'ff': [('BR','Brasil','Brasil','LOUD,Corinthians,Fluxo,Vivo Keyd Stars,FURIA,Black Dragons,Team Liquid,Los Grandes','Flamengo,RED Canids,INTZ,paiN Gaming,Sharks Esports,KaBuM!,Vasco'),
@@ -27,12 +27,12 @@ L = {
 # (chave, nome da liga, região, T1 (8), T2 (7))
 L = {
  'cs2': [('AM','Américas','Américas','FURIA,paiN Gaming,MIBR,Imperial,Fluxo,Team Liquid,NRG,9z Team','Legacy,RED Canids,Sharks Esports,Case Esports,Keyd Stars,Isurus,ODDIK'),
-         ('EU','Europa','Europa','Vitality,NAVI,FaZe Clan,G2 Esports,Team Spirit,MOUZ,Falcons,Heroic','Astralis,BIG,Eternal Fire,GamerLegion,Ninjas in Pyjamas,Apeks,ENCE'),
+         ('EU','Europa','Europa','MOUZ,Vitality,Team Spirit,Aurora,Falcons,FUT,NAVI,G2 Esports','FaZe Clan,Astralis,Heroic,Eternal Fire,GamerLegion,Ninjas in Pyjamas,ENCE'),
          ('AP','Ásia-Pacífico','Ásia-Pacífico','The MongolZ,TYLOO,Lynn Vision,Rare Atom,Ground Zero,Rooster,ORDER,Grayhound','Chinggis Warriors,Wildcard,Divine,Paradox,Bad News Eagles,TeamOne,Renegades')],
  'dota2': [('SA','Am. do Sul','América do Sul','Heroic,paiN Gaming,Wildcard,beastcoast,Infinity,Thunder Predator,RED Canids,Team Waska','Furia Dota,Leviatán,Yawara,Gaimin SA,Elevate,Case Esports,Keyd Stars'),
-           ('EU','Europa/CEI','Europa e CEI','Team Spirit,Team Liquid,Tundra Esports,Gaimin Gladiators,BetBoom Team,Falcons,PARIVISION,Aurora','Nigma Galaxy,OG,Entity,Natus Vincere,1w Team,Team Secret,Cloud9'),
+           ('EU','Europa/CEI','Europa e CEI','Team Spirit,Team Liquid,1w Team,Team Yandex,BetBoom Team,Falcons,PARIVISION,Aurora','Nigma Galaxy,OG,Entity,Natus Vincere,Gaimin Gladiators,Team Secret,Cloud9'),
            ('AS','China/SEA','China e Sudeste Asiático','Xtreme Gaming,Team Tidebound,Azure Ray,Talon Esports,BOOM Esports,Team Nemesis,Aster,Vici Gaming','Execration,Geek Fam,Rex Regum Qeon,Invictus Gaming,EHOME,Team SMG,Neon Esports')],
- 'valorant': [('AM','VCT Américas','Américas','LOUD,FURIA,MIBR,Leviatán,Sentinels,100 Thieves,Cloud9,NRG','KRÜ Esports,Evil Geniuses,ENVY,Shopify Rebellion,Oxygen Esports,Sharks Esports,2Game'),
+ 'valorant': [('AM','VCT Américas','Américas','LOUD,FURIA,MIBR,Leviatán,Sentinels,100 Thieves,G2 Esports,NRG','KRÜ Esports,Cloud9,ENVY,Shopify Rebellion,Oxygen Esports,Sharks Esports,2Game'),
               ('EM','VCT EMEA','EMEA','Fnatic,Team Heretics,Team Vitality,Karmine Corp,FUT Esports,Team Liquid,BBL Esports,Gentle Mates','Natus Vincere,Apeks,GIANTX,Movistar KOI,ULF Esports,Eternal Fire,Futbolist'),
               ('PC','VCT Pacífico','Pacífico','Paper Rex,DRX,T1,Gen.G,Rex Regum Qeon,Talon Esports,Team Secret,ZETA DIVISION','DetonatioN FocusMe,Global Esports,BOOM Esports,FULL SENSE,Nongshim RedForce,Bleed Esports,Sengoku Gaming')],
  'ff': [('BR','Brasil','Brasil','LOUD,Corinthians,Fluxo,Vivo Keyd Stars,FURIA,Black Dragons,Team Liquid,Los Grandes','Flamengo,RED Canids,INTZ,paiN Gaming,Sharks Esports,KaBuM!,Vasco'),
@@ -68,16 +68,19 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'FURIA': ['FalleN','yuurih','YEKINDAR','KSCERATO','molodoy'], 'Team Spirit': ['donk','magixx','sh1ro','tN1R','zont1x'],
   'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS'],
   '9z Team': ['max','HUASOPEEK','luchov','meyern','dgt'], 'paiN Gaming': ['vsm','biguzera','piriajr','snow','saffee'],
-  'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['HooXi','phzy','jabbi','Staehr','ryu'],
+  'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['phzy','siuhy','Staehr','ryu','cmtry'],
   'NAVI': ['Aleksib','b1t','iM','w0nderful','makazze'], 'Heroic': ['nilo','susp','Chr1zN','MartinezSa','Brollan'],
   'FaZe Clan': ['Twistzz','JBOEN','frozen','jcobbb','Neityu'], 'G2 Esports': ['huNter-','NertZ','r1nkle','HeavyGod','MATYS'],
-  'Team Liquid': ['EliGE','NAF','JT','malbsMd','Jorko'], 'MIBR': ['brnz4n','insani','nqz','LNZ','venomzera']},
+  'Team Liquid': ['EliGE','NAF','JT','malbsMd','Jorko'], 'MIBR': ['tomaszin','insani','nqz','LNZ','venomzera'],
+  'Aurora': ['XANTARES','woxic','Jimpphat','kyxsan','Wicadia'], 'FUT': ['SunPayus','xfl0ud','dem0n','Krabeni','dziugss'], 'Legacy': ['arT','dumau','latto','n1ssim','try']},
  'dota2': {'Team Spirit': ['Yatoro','Larl','Collapse','not_me','rue'], 'Aurora': ['Nightfall','Mikoto','Ws','Mira','kaori'],
-  'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Nisha','Ace','Boxi','tOfu']},
+  'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Nisha','Ace','Boxi','tOfu'],
+  'Falcons': ['skiter','Malr1ne','ATF','Cr1t-','Sneyking'], '1w Team': ['Pure','bzm','33','Ari','Whitemon'], 'Xtreme Gaming': ['Ami','NothingToSay','Xxs','Fy','Xnova']},
  'valorant': {'100 Thieves': ['Asuna','Timotino','vora','bang','Cryo'], 'LOUD': ['DaviH','lukxo','erde','Darker','tkzin'],
   'NRG': ['skuba','brawk','Ethan','mada','keiko'], 'Karmine Corp': ['LewN','dos9','Avez','SUYGETSU','N4RRATE'], 'Nongshim RedForce': ['Ivy','Rb','Francis','Xross','Dambi'],
   'Paper Rex': ['something','f0rsakeN','d4v41','Jinggg','invy'], 'T1': ['Meteor','stax','Munchkin','iZu','BuZz'],
-  'BBL Esports': ['Rosé','Crewen','Lar0k','Loita','lovers rock']},
+  'BBL Esports': ['Rosé','Crewen','Lar0k','Loita','lovers rock'],
+  'Team Vitality': ['Sayonara','Jamppi','Derke','PROFEK','Chronicle'], 'G2 Esports': ['BABYBAY','valyn','jawgemo','leaf','trent']},
  'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
   'Team Liquid': ['Kheyze','FelipoX','Nade','Maia','Jv92'], 'LOUD': ['resetz','stemp','Gabu7z','live','Flastry'],
   'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Hotancold','GMZ','SpiriTz','Atom','Kason'],
@@ -108,7 +111,7 @@ _n('KZ','molodoy'); _n('LV','YEKINDAR'); _n('RU','donk','sh1ro','magixx','m0NESY
 _n('BA','NiKo','huNter-'); _n('DK','karrigan','TeSeS','HooXi','jabbi','Staehr','Chr1zN','Vejrgang','JBOEN'); _n('FI','Aleksib'); _n('RO','iM')
 _n('SE','nilo','susp','Brollan'); _n('ES','MartinezSa'); _n('CA','Twistzz','NAF'); _n('SK','frozen','MATYS'); _n('PL','jcobbb')
 _n('US','EliGE','Asuna','vora','bang','Cryo','skuba','brawk','Ethan','mada'); _n('ZA','JT'); _n('GT','malbsMd'); _n('BG','Jorko'); _n('HU','torzsi'); _n('CZ','Spinx')
-_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
+_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
 _n('KR','Meteor','stax','Munchkin','iZu','BuZz','Ivy','Rb','Francis','Xross','Dambi'); _n('RU','something'); _n('ID','f0rsakeN'); _n('MY','d4v41'); _n('SG','Jinggg')
 _n('TR','Rosé','Crewen','Lar0k','Loita','lovers rock'); _n('NL','ManuBachoore','Levi de Weerd'); _n('PT','Jafonso')
 def real_time(g, nm, base):
