@@ -8,7 +8,7 @@ ROLES = {'cs2': ['IGL','AWP','ENT','LUR','SUP'], 'dota2': ['POS1','POS2','POS3',
          'ff': ['IGL','RUSH','SNP','SUP'], 'r6': ['ENT','FLX','ANC','ROM','SUP'], 'fifa': ['JOG'], 'wr': ['TOP','JNG','MID','ADC','SUP']}
 # (chave, nome da liga, região, T1 (8), T2 (7))
 L = {
- 'cs2': [('AM','Américas','Américas','FURIA,paiN Gaming,MIBR,Imperial,Fluxo,Team Liquid,NRG,9z Team','Legacy,RED Canids,Sharks Esports,Case Esports,Keyd Stars,Isurus,ODDIK'),
+ 'cs2': [('AM','Américas','Américas','FURIA,paiN Gaming,MIBR,Imperial,DENDELE,Team Liquid,NRG,9z Team','Legacy,RED Canids,Sharks Esports,Case Esports,Keyd Stars,Isurus,ODDIK'),
          ('EU','Europa','Europa','MOUZ,Vitality,Team Spirit,Aurora,Falcons,FUT,NAVI,G2 Esports','FaZe Clan,Astralis,Heroic,Eternal Fire,GamerLegion,Ninjas in Pyjamas,ENCE'),
          ('AP','Ásia-Pacífico','Ásia-Pacífico','The MongolZ,TYLOO,Lynn Vision,Rare Atom,Ground Zero,Rooster,ORDER,Grayhound','Chinggis Warriors,Wildcard,Divine,Paradox,Bad News Eagles,TeamOne,Renegades')],
  'dota2': [('SA','Am. do Sul','América do Sul','Heroic,paiN Gaming,Wildcard,beastcoast,Infinity,Thunder Predator,RED Canids,Team Waska','Furia Dota,Leviatán,Yawara,Gaimin SA,Elevate,Case Esports,Keyd Stars'),
@@ -26,7 +26,7 @@ L = {
  'fifa': ['JOG'], 'wr': ['TOP','JNG','MID','ADC','SUP']}
 # (chave, nome da liga, região, T1 (8), T2 (7))
 L = {
- 'cs2': [('AM','Américas','Américas','FURIA,paiN Gaming,MIBR,Imperial,Fluxo,Team Liquid,NRG,9z Team','Legacy,RED Canids,Sharks Esports,Case Esports,Keyd Stars,Isurus,ODDIK'),
+ 'cs2': [('AM','Américas','Américas','FURIA,paiN Gaming,MIBR,Imperial,DENDELE,Team Liquid,NRG,9z Team','Legacy,RED Canids,Sharks Esports,Case Esports,Keyd Stars,Isurus,ODDIK'),
          ('EU','Europa','Europa','MOUZ,Vitality,Team Spirit,Aurora,Falcons,FUT,NAVI,G2 Esports','FaZe Clan,Astralis,Heroic,Eternal Fire,GamerLegion,Ninjas in Pyjamas,ENCE'),
          ('AP','Ásia-Pacífico','Ásia-Pacífico','The MongolZ,TYLOO,Lynn Vision,Rare Atom,Ground Zero,Rooster,ORDER,Grayhound','Chinggis Warriors,Wildcard,Divine,Paradox,Bad News Eagles,TeamOne,Renegades')],
  'dota2': [('SA','Am. do Sul','América do Sul','Heroic,paiN Gaming,Wildcard,beastcoast,Infinity,Thunder Predator,RED Canids,Team Waska','Furia Dota,Leviatán,Yawara,Gaimin SA,Elevate,Case Esports,Keyd Stars'),
@@ -38,7 +38,7 @@ L = {
  'ff': [('BR','Brasil','Brasil','LOUD,Corinthians,Fluxo,Vivo Keyd Stars,FURIA,Black Dragons,Team Liquid,Los Grandes','Flamengo,RED Canids,INTZ,paiN Gaming,Sharks Esports,KaBuM!,Vasco'),
         ('LA','América Latina','América Latina','Rebirth Esports,Dynamo,Cloud9 LATAM,Nova Esports,Infinity,Furious Gaming,Thunder Predator,Isurus','Tigres,Vorax,Estral,Leviatán,Marcos Gaming,Pixel Esports,Gaimin LATAM'),
         ('SE','Sudeste Asiático','Sudeste Asiático','EVOS Esports,Todak,Bigetron,ONIC Esports,Rex Regum Qeon,Alter Ego,Team Secret,Buriram United','Vampire Esports,Geek Fam,Talon Esports,Fire Flux,Habibi,Phoenix Force,Ghost')],
- 'r6': [('AM','Américas','Américas','w7m esports,FURIA,Team Liquid,Oxygen Esports,Wolves Esports,Elevate,Soniqs,M80','Black Dragons,Los Grandes,Nova Esports,Ninjas in Pyjamas,Dignitas,Spacestation,Cloud9'),
+ 'r6': [('AM','Américas','Américas','Fluxo W7M,FURIA,Team Liquid,Oxygen Esports,Wolves Esports,Elevate,Soniqs,M80','Black Dragons,Los Grandes,Nova Esports,Ninjas in Pyjamas,Dignitas,Spacestation,Cloud9'),
         ('EU','Europa','Europa','G2 Esports,Team BDS,FaZe Clan,Falcons,Virtus.pro,Heroic,Natus Vincere,Gentle Mates','Team Secret,Rebels Gaming,Movistar KOI,Vitality,MNM Gaming,Evil Geniuses,Fnatic'),
         ('AP','Ásia-Pacífico','Ásia-Pacífico','Team Falcons APAC,Rex Regum Qeon,Talon Esports,Nongshim,Alpha Esports,ZETA DIVISION,Burmese Ghouls,Alter Ego','Detonation,DeToNator,Wildcard,Bleed Esports,Geek Fam,Team Flash,Sengoku')],
  'fifa': [('BR','Brasil','Brasil','Flamengo,Corinthians,FURIA,paiN Gaming,LOUD,Fluxo,Vasco,Palmeiras','Santos,São Paulo,Grêmio,Cruzeiro,Athletico,Sharks Esports,Keyd Stars'),
@@ -72,7 +72,7 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'NAVI': ['Aleksib','b1t','iM','w0nderful','makazze'], 'Heroic': ['nilo','susp','Chr1zN','MartinezSa','Brollan'],
   'FaZe Clan': ['Twistzz','JBOEN','frozen','jcobbb','Neityu'], 'G2 Esports': ['huNter-','NertZ','r1nkle','HeavyGod','MATYS'],
   'Team Liquid': ['EliGE','NAF','JT','malbsMd','Jorko'], 'MIBR': ['tomaszin','insani','nqz','LNZ','venomzera'],
-  'Aurora': ['XANTARES','woxic','Jimpphat','kyxsan','Wicadia'], 'FUT': ['SunPayus','xfl0ud','dem0n','Krabeni','dziugss'], 'Legacy': ['arT','dumau','latto','n1ssim','try']},
+  'Aurora': ['XANTARES','woxic','Jimpphat','kyxsan','Wicadia'], 'FUT': ['SunPayus','xfl0ud','dem0n','Krabeni','dziugss'], 'Legacy': ['arT','dumau','latto','n1ssim','try'], 'DENDELE': ['WOOD7','Tuurtle','naitte','pesadelo','matios']},
  'dota2': {'Team Spirit': ['Yatoro','Larl','Collapse','not_me','rue'], 'Aurora': ['Nightfall','Mikoto','Ws','Mira','kaori'],
   'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Nisha','Ace','Boxi','tOfu'],
   'Falcons': ['skiter','Malr1ne','ATF','Cr1t-','Sneyking'], '1w Team': ['Pure','bzm','33','Ari','Whitemon'], 'Xtreme Gaming': ['Ami','NothingToSay','Xxs','Fy','Xnova']},
@@ -84,7 +84,8 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
  'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
   'Team Liquid': ['Kheyze','FelipoX','Nade','Maia','Jv92'], 'LOUD': ['resetz','stemp','Gabu7z','live','Flastry'],
   'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Hotancold','GMZ','SpiriTz','Atom','Kason'],
-  'Cloud9': ['Centir','Focal','Ewzy','Eddy','Kixhro']}}
+  'Cloud9': ['Centir','Focal','Ewzy','Eddy','Kixhro'],
+  'Fluxo W7M': ['L0BIN','Paluh','Dotz','Hatez','Fntzy'], 'Falcons': ['LikEfac','jume','Solotov','Yuzus','BriD'], 'G2 Esports': ['Stompn','Benjamaster','Shaiiko','Doki','Alem4o']}}
 # EA FC: pros reais do circuito FC Pro 2026 (EA/FUTWIZ/Red Bull). Nota por ranking mundial quando citado; sem time real (as orgs da liga são fictícias para este jogo).
 FC_RANK = {'Levi de Weerd': 6, 'GuiBarros': 7, 'Tekkz': 12, 'Umut': 21, 'LJR Peixoto': 23, 'HHezerS': 24, 'Yaskow': 49, 'Lukas': 62, 'AnasBadr': 70, 'tuga810': 81}
 FC_PROS = ['Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiBarros','Tekkz','Jafonso','Umut','Emre Yilmaz','Obrun','Yuval','Brice','LJR Peixoto','HHezerS','AboFawzi','The 1OS','Karimisbak','MarwanMC9','Bonanno','Yaskow','Lukas','AlihanLion','Darkley11','Nassada','Stingray','Caccia','Exeed','GugaFerrez','AnasBadr','tuga810']
@@ -111,11 +112,11 @@ _n('KZ','molodoy'); _n('LV','YEKINDAR'); _n('RU','donk','sh1ro','magixx','m0NESY
 _n('BA','NiKo','huNter-'); _n('DK','karrigan','TeSeS','HooXi','jabbi','Staehr','Chr1zN','Vejrgang','JBOEN'); _n('FI','Aleksib'); _n('RO','iM')
 _n('SE','nilo','susp','Brollan'); _n('ES','MartinezSa'); _n('CA','Twistzz','NAF'); _n('SK','frozen','MATYS'); _n('PL','jcobbb')
 _n('US','EliGE','Asuna','vora','bang','Cryo','skuba','brawk','Ethan','mada'); _n('ZA','JT'); _n('GT','malbsMd'); _n('BG','Jorko'); _n('HU','torzsi'); _n('CZ','Spinx')
-_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
+_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('BR','WOOD7','Tuurtle','naitte','pesadelo','matios','L0BIN','Paluh','Dotz','Hatez','Fntzy','Alem4o'); _n('FR','LikEfac','BriD'); _n('DE','jume'); _n('TR','Solotov'); _n('GB','Yuzus','Doki'); _n('US','Stompn'); _n('DK','Benjamaster'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
 _n('KR','Meteor','stax','Munchkin','iZu','BuZz','Ivy','Rb','Francis','Xross','Dambi'); _n('RU','something'); _n('ID','f0rsakeN'); _n('MY','d4v41'); _n('SG','Jinggg')
 _n('TR','Rosé','Crewen','Lar0k','Loita','lovers rock'); _n('NL','ManuBachoore','Levi de Weerd'); _n('PT','Jafonso')
 # idades em 20/11/2026 só com data de nascimento conferida (ZywOo 09/11/2000, donk 25/01/2007, NiKo 16/02/1997, yuurih 22/12/1999)
-AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26}
+AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26, 'Hatez': 23, 'Fntzy': 23, 'Paluh': 26, 'Dotz': 25, 'L0BIN': 24}
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
