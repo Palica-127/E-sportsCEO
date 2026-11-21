@@ -123,7 +123,7 @@
       return chips + `<section class="card"><h2>Títulos por time</h2><p class="hint">Majors e demais torneios levantados.</p>` + Object.entries(cm).sort((a, b) => b[1].M - a[1].M || b[1].o - a[1].o).map(([n, c]) => `<div class="tb"><span>${c.M}</span>${crest(n)}<b>${esc(n)}</b><em>${c.M ? c.M + ' ' + (TIPOS[MAIN] || MAIN) + ' · ' : ''}${c.o} outros</em></div>`).join('') + '</section>';
     }
     if (sub === 'bo') {
-      return chips + `<section class="card"><h2>Bola de Ouro · Top 10 do ano (HLTV)</h2>` + Object.keys(H.bo).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${flagIso(H.bo[y][0][1])}🥇 ${esc(H.bo[y][0][0])}</b><div class="lu">${H.bo[y].slice(1).map((r, i) => `<span>${i + 2}º ${flagIso(r[1])}${esc(r[0])}</span>`).join('')}</div></div></div>`).join('') + '</section>';
+      return chips + `<section class="card"><h2>Bola de Ouro · Top 10 do ano${H.boNota ? '' : ' (HLTV)'}</h2>${H.boNota ? `<p class="hint">${esc(H.boNota)}</p>` : ''}` + Object.keys(H.bo).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${flagIso(H.bo[y][0][1])}🥇 ${esc(H.bo[y][0][0])}</b><div class="lu">${H.bo[y].slice(1).map((r, i) => `<span>${i + 2}º ${flagIso(r[1])}${esc(r[0])}${r[3] != null ? ` <small>${r[3]}</small>` : ''}</span>`).join('')}</div></div></div>`).join('') + '</section>';
     }
     if (sub === 'leg') {
       const L = {}; const g = n => { const k = n.toLowerCase().replace('device', 'dev1ce'); return (L[k] = L[k] || { n: n === 'device' ? 'dev1ce' : n, bo1: [], top: 0, mvp: [], iso: '', maj: [], oth: [] }); };
