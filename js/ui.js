@@ -303,30 +303,42 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     let now = c.phase === 'reg' ? 1 : c.phase === 'po' ? 2 : c.phase === 'intl' ? 3 : (c.split > 0 && c.phase === 'off' ? 4 : 0);
     return `<ul class="trk">${et.map((t, i) => `<li class="${i < now ? 'done' : i === now ? 'now' : ''}"><i></i>${esc(t)}</li>`).join('')}</ul>`;
   }
+  /* Calendário geral: junta todos os times ativos de todos os jogos (as abas de jogo servem só para gestão) */
   function vCalendario() {
-    const g = gameGuard(); if (g) return g;
-    const S = O.get(), q = S.games[UI.game].squads[UI.squad];
-    let h = squadTabs();
-    if (!q.on) return h + `<section class="card empty"><h2>${O.SQUADS[UI.squad].nome}</h2><p>Crie este time na aba Elenco para entrar no calendário.</p></section>`;
-    const c = O.compFor(UI.game, UI.squad); if (!c) return h;
-    const ag = O.agenda(UI.game, UI.squad, 10), eu = c.teams.findIndex(t => t.eu), meu = O.forca(UI.game, UI.squad);
-    const lg = O.dataOf(UI.game).leagues[c.reg];
-    h += `<section class="card"><div class="banner"><div><small>${esc(O.GAMES[UI.game].nome)} · ${esc(lg.nome)}</small><br><b>${c.split ? 'Split ' + c.split : 'Pré-temporada'}</b></div><div><small>${O.SQUADS[UI.squad].nome.replace(/ \(.*\)/, '')}</small><br><b>${S.org.ano}</b></div></div>${trilha(c, UI.squad)}<p class="hint">${FASE[c.phase](c)}</p></section>`;
-    const nx = ag.find(x => x.tipo === 'jogo' || x.tipo === 'po' || x.tipo === 'int');
-    if (nx) {
-      const op = c.teams.find(t => !t.eu && O.nomeT(t) === nx.op), pw = op ? O.probVit(meu, op.f) : null;
-      h += `<section class="card"><h2>Próxima partida</h2><div class="m">${nx.tipo === 'jogo' ? '' : '<span class="zb g">' + esc(nx.tipo === 'int' ? 'Internacional' : 'Mata-mata') + '</span>'}<div class="mt"><div class="tn">${logo(S.org.logo, 34)}<span>${esc(S.org.nome)}</span></div><div class="sc"><em>VS</em></div><div class="tn b">${op ? crest(op.n, 'md') : ''}<span>${esc(nx.op && op ? nx.op : nx.label)}</span></div></div>`
-        + (pw !== null ? `<div class="od"><i style="flex:${Math.round(pw * 100)}"></i><i class="o2" style="flex:${Math.round((1 - pw) * 100)}"></i></div><div class="ol"><span>Chance de vitória <b>${Math.round(pw * 100)}%</b></span><span>Força ${meu.toFixed(1)} x ${op.f.toFixed(1)}</span></div>` : `<div class="ol"><span>${esc(nx.label)}</span><span>${nx.op ? esc(nx.op) : ''}</span></div>`)
-        + `</div><div class="kv"><span>Data</span><b>${nx.data.txt} · ${nx.ano}</b></div><div class="kv"><span>Faltam</span><b>${nx.em} semana(s)</b></div>${playCtl()}</section>`;
+    const S = O.get(), T = [];
+    for (const gi of Object.keys(O.GAMES)) {
+      if (!O.aberto(gi)) continue;
+      for (const sq of SQ_IDS) {
+        if (!S.games[gi].squads[sq].on) continue;
+        const c = O.compFor(gi, sq); if (!c) continue;
+        T.push({ gi, sq, c, G: O.GAMES[gi], ag: O.agenda(gi, sq, 12), meu: O.forca(gi, sq), tag: `${O.GAMES[gi].icone} ${O.GAMES[gi].curto} · ${O.SQUADS[sq].nome.replace(/ \(.*\)/, '')}` });
+      }
     }
-    // mês atual
+    if (!T.length) return '<section class="card empty"><h2>Calendário</h2><p>Crie um time na aba Elenco para entrar no calendário.</p></section>';
+    let h = `<section class="card"><div class="banner"><div><small>Calendário geral</small><br><b>${T.length} time${T.length > 1 ? 's' : ''} em competição</b></div><div><small>Semana ${S.org.semana}</small><br><b>${S.org.ano}</b></div></div>`
+      + '<ul class="ag">' + T.map(x => `<li><span class="dt">${esc(x.tag)}</span><span class="lb">${esc(O.dataOf(x.gi).leagues[x.c.reg].nome)} · ${x.c.split ? 'Split ' + x.c.split : 'Pré-temporada'}<small>${FASE[x.c.phase](x.c)}</small></span></li>`).join('') + '</ul></section>';
+    // próxima partida de cada time, da mais próxima para a mais distante
+    const prox = T.map(x => ({ x, nx: x.ag.find(a => a.tipo === 'jogo' || a.tipo === 'po' || a.tipo === 'int') })).filter(r => r.nx).sort((a, b) => a.nx.em - b.nx.em);
+    if (prox.length) {
+      h += '<section class="card"><h2>Próximas partidas</h2>' + prox.map(({ x, nx }) => {
+        const op = x.c.teams.find(t => !t.eu && O.nomeT(t) === nx.op), pw = op ? O.probVit(x.meu, op.f) : null;
+        return `<div class="m"><span class="zb g">${esc(x.tag)}</span>${nx.tipo === 'jogo' ? '' : ' <span class="zb g">' + esc(nx.tipo === 'int' ? 'Internacional' : 'Mata-mata') + '</span>'}<div class="mt"><div class="tn">${logo(S.org.logo, 34)}<span>${esc(S.org.nome)}</span></div><div class="sc"><em>VS</em></div><div class="tn b">${op ? crest(op.n, 'md') : ''}<span>${esc(nx.op && op ? nx.op : nx.label)}</span></div></div>`
+          + (pw !== null ? `<div class="od"><i style="flex:${Math.round(pw * 100)}"></i><i class="o2" style="flex:${Math.round((1 - pw) * 100)}"></i></div><div class="ol"><span>Chance de vitória <b>${Math.round(pw * 100)}%</b></span><span>Força ${x.meu.toFixed(1)} x ${op.f.toFixed(1)}</span></div>` : `<div class="ol"><span>${esc(nx.label)}</span><span>${nx.op ? esc(nx.op) : ''}</span></div>`)
+          + `<div class="kv"><span>Data</span><b>${nx.data.txt} · ${nx.ano}</b></div><div class="kv"><span>Faltam</span><b>${nx.em} semana(s)</b></div></div>`;
+      }).join('') + playCtl() + '</section>';
+    } else h += `<section class="card">${playCtl()}</section>`;
+    // mês atual com os jogos de todos os times
     const td = O.dataDe(S.org.semana, S.org.ano, 1), mes = td.m, n = O.MDN[mes], base = O.MDN.slice(0, mes).reduce((a, b) => a + b, 0), f = new Date(Date.UTC(S.org.ano, mes, 1)).getUTCDay();
-    const evs = {}; ag.forEach(x => { if (x.ano === S.org.ano && x.data.m === mes) evs[x.data.d] = x.tipo === 'int' ? 'int' : 'ev'; });
+    const evs = {}; T.forEach(x => x.ag.forEach(a => { if (a.ano === S.org.ano && a.data.m === mes) { const k = a.tipo === 'int' ? 'int' : 'ev'; if (evs[a.data.d] !== 'int') evs[a.data.d] = k; } }));
     const cells = []; for (let i = 0; i < f; i++) cells.push('<i></i>');
     for (let d = 1; d <= n; d++) { const past = base + d < td.doy; cells.push(`<span class="${base + d === td.doy ? 'td' : ''}${evs[d] ? ' ev ' + (evs[d] === 'int' ? 'int' : '') : ''}${past ? ' past' : ''}">${d}</span>`); }
     h += `<section class="card"><h2>Calendário</h2><p class="dbm">${['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes]} ${S.org.ano}</p><div class="dbcg">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<b>${x}</b>`).join('')}${cells.join('')}</div><p class="dblg"><span><i></i>Jogo</span><span><i class="t"></i>Internacional</span></p></section>`;
-    h += `<section class="card"><h2>Agenda</h2><ul class="ag">` + (ag.map(x => `<li><span class="dt">${x.data.txt}</span><span class="lb">${esc(x.label)}${x.op ? `<small>${x.tipo === 'jogo' ? 'vs ' : ''}${esc(x.op)}</small>` : ''}</span><span class="em">em ${x.em} sem.</span></li>`).join('') || '<li><span class="lb">Nada agendado.</span></li>') + '</ul></section>';
-    if (c.last.length) h += `<section class="card"><h2>Resultados</h2>` + c.last.slice(0, 5).map(m => { const [a, b2] = m.pl.split('-'); return `<div class="m"><div class="mt"><div class="tn ${m.v ? 'win' : 'lose'}">${logo(S.org.logo, 28)}<span>${esc(S.org.nome)}</span></div><div class="sc">${a}<i>-</i>${b2}</div><div class="tn b ${m.v ? 'lose' : 'win'}">${crest(m.op, 'sm')}<span>${esc(m.op)}</span></div></div><div class="ol"><span>${esc(m.f)}</span><span>${m.s}/${m.y}</span></div></div>`; }).join('') + '</section>';
+    // agenda unificada
+    const ags = T.flatMap(x => x.ag.map(a => ({ ...a, tag: x.tag }))).sort((a, b) => a.em - b.em).slice(0, 16);
+    h += '<section class="card"><h2>Agenda</h2><ul class="ag">' + ags.map(x => `<li><span class="dt">${x.data.txt}</span><span class="lb">${esc(x.label)}<small>${esc(x.tag)}${x.op ? ' · ' + (x.tipo === 'jogo' ? 'vs ' : '') + esc(x.op) : ''}</small></span><span class="em">em ${x.em} sem.</span></li>`).join('') + '</ul></section>';
+    // resultados recentes de todos os jogos
+    const rs = T.flatMap(x => x.c.last.map((m, i) => ({ m, tag: x.tag, i }))).sort((a, b) => (b.m.y - a.m.y) || (b.m.s - a.m.s) || (a.i - b.i)).slice(0, 10);
+    if (rs.length) h += '<section class="card"><h2>Resultados</h2>' + rs.map(({ m, tag }) => { const [a, b2] = m.pl.split('-'); return `<div class="m"><div class="mt"><div class="tn ${m.v ? 'win' : 'lose'}">${logo(S.org.logo, 28)}<span>${esc(S.org.nome)}</span></div><div class="sc">${a}<i>-</i>${b2}</div><div class="tn b ${m.v ? 'lose' : 'win'}">${crest(m.op, 'sm')}<span>${esc(m.op)}</span></div></div><div class="ol"><span>${esc(tag)} · ${esc(m.f)}</span><span>${m.s}/${m.y}</span></div></div>`; }).join('') + '</section>';
     return h;
   }
   /* ---------- Avanço contínuo (para ao clicar em Parar ou quando surgir um evento importante) ---------- */
