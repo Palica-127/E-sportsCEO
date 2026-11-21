@@ -62,14 +62,19 @@ def nick(r, usados):
 # Elencos REAIS (R6, Year 11, confirmados em SiegeGG/Ubisoft/100T). Nota = f(ranking SiegeGG Top 20 do Year 10) ou tier do time; idade em branco.
 # Funções (ENT..SUP) seguem a ordem listada: NÃO são as funções reais.
 SGG20 = ['Handyy','Noa','jume','Stompn','Jv92','Paluh','Kanzen','Shaiiko','Cyber','Dodez','Hotancold','dfuzr','Ambi','Gunnar','Reeps96','Solotov','Loira','Kheyze','FelipoX','Adrian']
-REAL = {'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
+# CS2: elencos de nov/2026 (HLTV, ranking Valve de 2/11/2026, clutchking.gg). Nota: top do HLTV Top 20 de 2025 (ZywOo 1º, ropz 3º, mezii 5º, flameZ 7º, NiKo 18º) ou tier do time.
+HLTV20 = {'ZywOo': 95, 'ropz': 92, 'mezii': 90, 'flameZ': 89, 'NiKo': 84}
+REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': ['apEX','ZywOo','flameZ','mezii','ropz'],
+  'FURIA': ['FalleN','yuurih','YEKINDAR','KSCERATO','molodoy'], 'Team Spirit': ['donk','magixx','sh1ro','tN1R','zont1x'],
+  'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS']},
+ 'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
   'Team Liquid': ['Kheyze','FelipoX','Nade','Maia','Jv92'], 'LOUD': ['resetz','stemp','Gabu7z','live','Flastry'],
   'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Hotancold','GMZ','SpiriTz','Atom','Kason'],
   'Cloud9': ['Centir','Focal','Ewzy','Eddy','Kixhro']}}
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
-        o = round(92 - SGG20.index(n) * 0.8) if n in SGG20 else max(55, min(90, round(base - 4 - k * 0.5)))
+        o = HLTV20[n] if g == 'cs2' and n in HLTV20 else round(92 - SGG20.index(n) * 0.8) if n in SGG20 else max(55, min(90, round(base - 4 - k * 0.5)))
         ps.append([n, o, None])
     return {'n': nm, 'p': ps}
 res = {}
