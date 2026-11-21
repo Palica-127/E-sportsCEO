@@ -57,7 +57,7 @@ async def main():
             await pg.screenshot(path=f'{OUT}/hall_{w}.png')
             await pg.click('[data-act=tab][data-id=ligas]'); await pg.click('.team button[data-act=time]'); await pg.click('[data-act=ficha]')
             ok(await pg.locator('#modal .lineup .lp').count() == 5 and await pg.locator('#modal img.flag').count() >= 3, f'{w}: ficha do time com line-up e bandeiras')
-            await pg.screenshot(path=f'{OUT}/ficha_{w}.png'); await pg.click('[data-act=fecha]')
+            await pg.screenshot(path=f'{OUT}/ficha_{w}.png'); await pg.click('#modal .lp a'); pt=(await pg.locator('#modal').inner_text()).lower(); ok('carreira' in pt or 'sem dados' in pt, f'{w}: ficha do jogador abre'); await pg.screenshot(path=f'{OUT}/jogador_{w}.png'); await pg.click('[data-act=fecha]')
             ok(await pg.locator('#modal').count() == 0, f'{w}: ficha fecha')
             await pg.screenshot(path=f'{OUT}/ligas_{w}.png')
             await pg.click('[data-act=time]') if await pg.locator('[data-act=time]').count() else None

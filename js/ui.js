@@ -77,14 +77,31 @@
     const ys = o => Object.keys(o).filter(y => al.has(o[y])).map(Number);
     return { wc: ys(x.wct), wcv: ys(x.wcv), msi: ys(x.msv), msiv: ys(x.mst) };
   }
+
+  const TT = { w: ['🏆', 'Mundial'], m: ['🥇', 'MSI'], l: ['🏅', 'Liga'], c: ['🎖️', 'Copa'], f: ['🥈', 'First Stand'] };
+  function achaJog(nick) { const L = (O.dataOf('lol') || {}).leagues || {}; for (const k in L) for (const tier of ['t1', 't2']) for (const t of (L[k][tier] || [])) { const i = (t.p || []).findIndex(p => p && p[0] === nick); if (i >= 0) return { p: t.p[i], i, time: t.n, liga: L[k].nome }; } return null; }
+  function fichaJog(nick) {
+    const x = X(), j = achaJog(nick), roles = (O.GAMES.lol || {}).roles || [], hon = x.hon[nick] || {}, tit = x.rtit[nick] || [], car = x.rcar[nick] || [], c = x.nat[nick], now = new Date().getFullYear();
+    let h = `<div class="mh">${avatar(nick)}<div><h2>${esc(nick)} </h2><small>${bandeira(nick)} ${c ? esc(x.natN[c] || c) : ''}${j ? ' · ' + roles[j.i] + ' · ' + j.p[2] + ' anos' : ''}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
+    if (j) h += `<div class="kvs"><div><small>Nota</small><b>${j.p[1]}</b></div><div><small>Time</small><b class="sm">${esc(j.time)}</b></div><div><small>Liga</small><b class="sm">${esc(j.liga)}</b></div><div><small>Salário</small><b class="sm">${O.money(O.salary(j.p[1]))}/sem</b></div></div>`;
+    const w = tit.filter(t => t[1] === 'w').length, m = tit.filter(t => t[1] === 'm').length || (hon.msi || []).length, l = tit.filter(t => t[1] === 'l').length;
+    if (tit.length || hon.wc) h += `<div class="kvs"><div><small>Mundiais</small><b>${Math.max(w, (hon.wc || []).length)}</b></div><div><small>MSI</small><b>${m}</b></div><div><small>Ligas</small><b>${Math.max(l, hon.lg || 0)}</b></div><div><small>Copas</small><b>${tit.filter(t => t[1] === 'c' || t[1] === 'f').length}</b></div></div>`;
+    if (car.length) h += '<h3>Carreira</h3><div class="car">' + car.map(([t, a, b]) => `<div class="cr">${crest(t, 'sm')}<b><a href="#" data-act="ficha" data-id="${esc(t)}">${esc(t)}</a></b><small>${a}${b ? (b === a ? '' : '–' + b) : '–hoje'}</small></div>`).join('') + '</div>';
+    if (tit.length) h += '<h3>Títulos</h3><div class="trof">' + tit.slice().sort((a, b) => b[0] - a[0]).map(([y, k, n]) => `<p>${(TT[k] || ['🏅'])[0]} <b>${y}</b> ${esc(n)}</p>`).join('') + '</div>';
+    if ((hon.mv || []).length) h += '<h3>MVPs</h3><div class="trof">' + hon.mv.map(([y, n]) => `<p>⭐ <b>${y}</b> ${esc(n)}</p>`).join('') + '</div>';
+    if (!j && !car.length && !tit.length && !hon.wc) h += '<p class="hint">Sem dados de carreira.</p>';
+    return h;
+  }
   function ficha(nome) {
+    if (String(nome).startsWith('p:')) return fichaJog(nome.slice(2));
     const f = achaTime(nome), tt = titulos(nome), x = X(), roles = (O.GAMES.lol || {}).roles || [];
     let h = `<div class="mh">${crest(nome, 'lg')}<div><h2>${esc(nome)}</h2><small>${f ? esc(f.liga) + ' · ' + f.tier : 'Time'}</small></div><button class="mini" data-act="fecha">✕</button></div>`;
     if (f && f.t.p) {
       const ovr = (f.t.p.reduce((a, p) => a + p[1], 0) / f.t.p.length).toFixed(1), idade = (f.t.p.reduce((a, p) => a + p[2], 0) / f.t.p.length).toFixed(1);
       h += `<div class="kvs"><div><small>Força</small><b>${ovr}</b></div><div><small>Idade média</small><b>${idade}</b></div><div><small>Mundiais</small><b>${tt.wc.length}</b></div><div><small>MSI</small><b>${tt.msi.length}</b></div></div>`;
-      h += `<h3>Line-up</h3><div class="lineup">` + f.t.p.map((p, i) => `<div class="lp">${avatar(p[0])}<i class="role ri${i}">${roles[i] || ''}</i><b>${esc(p[0])}</b>${bandeira(p[0])}<small>${p[2]} anos</small><span class="ovr">${p[1]}</span></div>`).join('') + '</div>';
+      h += `<h3>Line-up</h3><div class="lineup">` + f.t.p.map((p, i) => `<div class="lp">${avatar(p[0])}<i class="role ri${i}">${roles[i] || ''}</i><b><a href="#" data-act="ficha" data-id="p:${esc(p[0])}">${esc(p[0])}</a></b>${bandeira(p[0])}<small>${p[2]} anos</small><span class="ovr">${p[1]}</span></div>`).join('') + '</div>';
     }
+    const co = x && x.coach[nome]; if (co) h += `<h3>Técnico</h3><div class="lp">${avatar(co[0])}<b>${esc(co[0])}</b>${bandeira(co[0]) || (x.iso[co[1]] ? `<img class="flag" src="flags/${x.iso[co[1]]}.svg" alt="${esc(x.natN[co[1]] || co[1])}" title="${esc(x.natN[co[1]] || co[1])}" onerror="this.remove()">` : '')}<small>${(x.natN[co[1]] || '')}${co[2] ? ' · ' + (new Date().getFullYear() - +co[2].slice(0, 4)) + ' anos' : ''}</small></div>`;
     if (x && (tt.wc.length || tt.msi.length || (tt.wcv || []).length)) {
       h += '<h3>Troféus</h3><div class="trof">' + (tt.wc.length ? `<p>🏆 Mundial: <b>${tt.wc.sort().join(', ')}</b></p>` : '') + (tt.msi.length ? `<p>🥇 MSI: <b>${tt.msi.sort().join(', ')}</b></p>` : '') + ((tt.wcv || []).length ? `<p class="hint">Vice no Mundial: ${tt.wcv.sort().join(', ')}</p>` : '') + '</div>';
     }
@@ -97,12 +114,12 @@
     const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
     if (sub === 'leg') {
       const arr = Object.entries(x.hon).map(([n, o]) => ({ n, o, pts: (o.wc || []).length * 3 + (o.msi || []).length * 2 + (o.lg || 0) * .5 + (o.mv || []).length })).sort((a, b) => b.pts - a.pts);
-      return chips + '<section class="card"><h2>Lendas</h2>' + arr.map(({ n, o }) => `<div class="leg">${avatar(n)}<div class="who"><b>${esc(n)} ${bandeira(n) || ''}</b><small>${(o.wc || []).length ? '🏆 ' + o.wc.length + ' Mundial (' + o.wc.join(', ') + ') ' : ''}${(o.msi || []).length ? '🥇 ' + o.msi.length + ' MSI ' : ''}${o.lg ? '🏅 ' + o.lg + ' ligas ' : ''}</small>${(o.mv || []).length ? `<small>⭐ ${o.mv.map(m => m[0] + ' ' + esc(m[1].replace(/^MVP /, 'MVP '))).slice(0, 4).join(' · ')}</small>` : ''}</div></div>`).join('') + '</section>';
+      return chips + '<section class="card"><h2>Lendas</h2>' + arr.map(({ n, o }) => `<div class="leg">${avatar(n)}<div class="who"><b><a href="#" data-act="ficha" data-id="p:${esc(n)}">${esc(n)}</a> ${bandeira(n) || ''}</b><small>${(o.wc || []).length ? '🏆 ' + o.wc.length + ' Mundial (' + o.wc.join(', ') + ') ' : ''}${(o.msi || []).length ? '🥇 ' + o.msi.length + ' MSI ' : ''}${o.lg ? '🏅 ' + o.lg + ' ligas ' : ''}</small>${(o.mv || []).length ? `<small>⭐ ${o.mv.map(m => m[0] + ' ' + esc(m[1].replace(/^MVP /, 'MVP '))).slice(0, 4).join(' · ')}</small>` : ''}</div></div>`).join('') + '</section>';
     }
     const camp = sub === 'wc' ? x.wct : x.msv, vice = sub === 'wc' ? x.wcv : x.mst, tipo = sub === 'wc' ? 'Mundial' : 'MSI';
     return chips + `<section class="card"><h2>${sub === 'wc' ? 'Campeões do Mundial' : 'Campeões do MSI'}</h2>` + Object.keys(camp).sort((a, b) => b - a).map(y => {
       const lu = lineupHT(tipo, y), nm = camp[y];
-      return `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${crest(nm, 'sm')} 🏆 ${esc(nm)}</b><small>vice: ${esc(vice[y] || '—')}</small>${lu ? `<div class="lu">${lu.map(n => `<span>${bandeira(n) || ''}${esc(n)}</span>`).join('')}</div>` : ''}</div></div>`;
+      return `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${crest(nm, 'sm')} 🏆 ${esc(nm)}</b><small>vice: ${esc(vice[y] || '—')}</small>${lu ? `<div class="lu">${lu.map(n => `<span>${bandeira(n) || ''}<a href="#" data-act="ficha" data-id="p:${esc(n)}">${esc(n)}</a></span>`).join('')}</div>` : ''}</div></div>`;
     }).join('') + '</section>';
   }
   /* chaves (brackets) em colunas */

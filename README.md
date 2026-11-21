@@ -41,3 +41,4 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - Torneios → abrir um time → **Ficha do time** (line-up, idades, nacionalidades, força, troféus).
 - Aba **Campeões**: Mundial, MSI e Lendas.
 - Playoffs e torneios internacionais aparecem como chaves (brackets) em colunas.
+- Ficha do jogador (LoL): clique no nick → carreira por time, títulos (Mundial/MSI/ligas/copas), MVPs. A ficha do time agora mostra o técnico.
