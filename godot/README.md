@@ -19,3 +19,6 @@ com a mesma semente, o resultado é **idêntico ao do JS** (conferido em LoL, CS
 
 ## O que ainda não foi portado da versão web
 Fotos de jogadores (a versão web também usa só iniciais enquanto `fotos/` estiver vazia). Hall → Lendas e a aba Mundo já estão portados.
+
+## Android
+O preset "Android" já está em `export_presets.cfg`. No editor: Editor → Gerenciar modelos de exportação (instalar), configurar o Android SDK e o JDK em Configurações do Editor → Exportar → Android, criar um keystore de debug, depois Projeto → Exportar → Android → Exportar projeto (.apk) e instalar no celular.
