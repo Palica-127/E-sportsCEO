@@ -66,7 +66,9 @@ SGG20 = ['Handyy','Noa','jume','Stompn','Jv92','Paluh','Kanzen','Shaiiko','Cyber
 HLTV20 = {'ZywOo': 95, 'ropz': 92, 'mezii': 90, 'flameZ': 89, 'NiKo': 84}
 REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': ['apEX','ZywOo','flameZ','mezii','ropz'],
   'FURIA': ['FalleN','yuurih','YEKINDAR','KSCERATO','molodoy'], 'Team Spirit': ['donk','magixx','sh1ro','tN1R','zont1x'],
-  'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS']},
+  'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS'],
+  '9z Team': ['max','HUASOPEEK','luchov','meyern','dgt'], 'paiN Gaming': ['vsm','biguzera','piriajr','snow','saffee'],
+  'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['HooXi','phzy','jabbi','Staehr','ryu']},
  'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
   'Team Liquid': ['Kheyze','FelipoX','Nade','Maia','Jv92'], 'LOUD': ['resetz','stemp','Gabu7z','live','Flastry'],
   'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Hotancold','GMZ','SpiriTz','Atom','Kason'],
