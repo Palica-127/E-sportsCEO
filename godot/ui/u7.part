@@ -74,3 +74,33 @@ func vstaff() -> void:
 		var bb = VBoxContainer.new(); h.add_child(bb)
 		btn(bb, "Máximo" if n >= d.max else O.money(O.staff_custo(id)), func(): res(O.contratar_staff(id)), n >= d.max)
 		if n > 0: var bd = btn(bb, "Reduzir", func(): res(O.dispensar_staff(id))); bd.custom_minimum_size.y = 44; bd.add_theme_font_size_override("font_size", 20)
+
+# ---------- Olheiros e propostas (aba Mercado) ----------
+func vtransf() -> void:
+	var g = game; var n: int = O.scout_nivel()
+	var pr: Array = O.S.get("propostas", [])
+	if pr.size():
+		var cp = card("Propostas recebidas", null, OK)
+		for i in pr.size():
+			var x = pr[i]; var h = hrow(cp); var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(v)
+			lbl(v, "%s quer %s" % [x.time, x.nick], 25); lbl(v, "%s · nota %d · %s · expira em %d sem." % [gname(x.g), x.o, O.money(x.valor), x.sem], 19, DIM)
+			var bb = VBoxContainer.new(); h.add_child(bb)
+			btn(bb, "Vender", func(): res(O.aceitar_proposta(i)), false, true)
+			var br = btn(bb, "Recusar", func(): O.recusar_proposta(i); render()); br.custom_minimum_size.y = 44; br.add_theme_font_size_override("font_size", 20)
+	var c = card("Olheiros · nível %d/%d" % [n, O.SCOUT_MAX], null, ACC2)
+	lbl(c, "Descobrem jovens promissores com potencial revelado. A lista renova a cada 8 semanas. Salário: R$ 4 mil por nível por semana.", 19, DIM)
+	var h2 = hrow(c)
+	btn(h2, "Máximo" if n >= O.SCOUT_MAX else "Contratar nível · " + O.money(O.scout_custo()), func(): res(O.contratar_scout()), n >= O.SCOUT_MAX, true)
+	if n > 0: btn(h2, "Reduzir", func(): res(O.reduzir_scout()))
+	if n > 0:
+		var lst: Array = O.scout_lista(g)
+		if lst.is_empty(): lbl(c, "Nenhum alvo no momento para " + gname(g) + ".", 21, DIM)
+		for p in lst:
+			var pv: Dictionary = O.pot_visivel(p, g)
+			var rb = rowbtn(c, func(): ficha_mercado(g, p)); var rr: HBoxContainer = rb[1]
+			rr.add_child(crest(p.t, 44))
+			var cv = VBoxContainer.new(); cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; cv.add_theme_constant_override("separation", 0); rr.add_child(cv)
+			var l1 = Label.new(); l1.text = p.n; l1.add_theme_font_size_override("font_size", 26); cv.add_child(l1)
+			var l2 = Label.new(); l2.text = "%s · %sa · %s · pot %d" % [p.r, str(p.get("a", "?")), p.t, pv.est]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
+			var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 28); ov.add_theme_color_override("font_color", nota_col(p.o)); rr.add_child(ov)
+			ignore_mouse(rb[0])

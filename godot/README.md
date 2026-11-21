@@ -22,3 +22,6 @@ Fotos de jogadores (a versão web também usa só iniciais enquanto `fotos/` est
 
 ## Android
 O preset "Android" já está em `export_presets.cfg`. No editor: Editor → Gerenciar modelos de exportação (instalar), configurar o Android SDK e o JDK em Configurações do Editor → Exportar → Android, criar um keystore de debug, depois Projeto → Exportar → Android → Exportar projeto (.apk) e instalar no celular.
+
+## Novidades só do Godot
+Diretoria (objetivos anuais e confiança), aba Finanças, bônus por título e rescisão de patrocínio, comissão técnica, vestiário (conversas e eventos), olheiros e propostas de compra. Tudo isso está em `core/p8.part` e `ui/u7.part` e não existe na versão web. Os testes de paridade com o JS (`tests/trace.gd`) ligam `dir_off` para desativar essas regras e continuarem idênticos.

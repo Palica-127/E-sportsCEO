@@ -54,6 +54,7 @@ func iniciar_jogador(p):
 func pot_visivel(p, g = "lol") -> Dictionary:
 	var a = 25 if p.get("a") == null else p.a; var w: int = cl(jr(23 - a), 0, 6)
 	w = max(0, w - floori(p.get("tmp", 0) / 26.0) - floori(infra_nivel("base", g) / 2.0))
+	if scouted(p): w = 0
 	var pot = pot_inicial(p) if p.get("pot") == null else p.pot
 	var est = cl(jr(pot + (hs(str(p.id) + "v") * 2 - 1) * w), p.o, 99) if w else pot
 	return {"est": est, "lo": max(p.o, est - w), "hi": est + w, "incerto": w > 0, "estrelas": cl(jr((est - 60) / 7.0), 1, 5)}

@@ -528,6 +528,7 @@ func iniciar_jogador(p):
 func pot_visivel(p, g = "lol") -> Dictionary:
 	var a = 25 if p.get("a") == null else p.a; var w: int = cl(jr(23 - a), 0, 6)
 	w = max(0, w - floori(p.get("tmp", 0) / 26.0) - floori(infra_nivel("base", g) / 2.0))
+	if scouted(p): w = 0
 	var pot = pot_inicial(p) if p.get("pot") == null else p.pot
 	var est = cl(jr(pot + (hs(str(p.id) + "v") * 2 - 1) * w), p.o, 99) if w else pot
 	return {"est": est, "lo": max(p.o, est - w), "hi": est + w, "incerto": w > 0, "estrelas": cl(jr((est - 60) / 7.0), 1, 5)}
@@ -1487,7 +1488,7 @@ func projecao(g) -> Dictionary:
 	despesa += custo_base(g)
 	return {"receita": receita, "despesa": despesa, "saldo": receita - despesa}
 func projecao_org() -> Dictionary:
-	var receita = renda_patro() + renda_social() + renda_merch(); var despesa = upkeep_semanal() + custo_foco() + staff_folha()
+	var receita = renda_patro() + renda_social() + renda_merch(); var despesa = upkeep_semanal() + custo_foco() + staff_folha() + scout_folha()
 	for g in GAMES:
 		if ativo(g):
 			var p = projecao(g); receita += p.receita; despesa += p.despesa
@@ -1510,7 +1511,7 @@ func avancar(semanas: int) -> bool:
 					for x in S.log.slice(0, min(S.logN - l0, S.log.size())):
 						var rx = RegEx.new(); rx.compile("^S\\d+/\\d+: "); notas.append(rx.sub(x, ""))
 					d["notas"] = notas
-		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick()
+		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick()
 		S.org.semana += 1
 		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
 		mundo_tick()
@@ -1882,7 +1883,7 @@ func fin_resumo() -> Dictionary:
 		folha_t += fj; base_t += custo_base(g)
 		if p.receita > 0 or p.despesa > 0: por_jogo.append([g, p.saldo])
 	var rec = [["Patrocínios", renda_patro()], ["Seguidores e redes", renda_social()], ["Loja e itens", renda_merch()], ["Competições e streaming", comp]]
-	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Comissão técnica", staff_folha()], ["Foco de mídia", custo_foco()]]
+	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Comissão técnica", staff_folha()], ["Olheiros", scout_folha()], ["Foco de mídia", custo_foco()]]
 	return {"rec": rec, "des": des, "por_jogo": por_jogo}
 
 # ---------- Comissão técnica e vestiário (novo no Godot) ----------
@@ -1936,3 +1937,78 @@ func vestiario_tick() -> void:
 			if m / t.size() > 80.0 and rnd() < 0.06:
 				for p in t: p.mo = min(100.0, p.mo + 3.0)
 				noticia("Elenco unido: o ambiente está ótimo", g, "up")
+
+# ---------- Olheiros e propostas de transferência (novo no Godot) ----------
+const SCOUT_MAX := 5
+func scout_nivel() -> int:
+	if dir_off: return 0
+	var s = S.get("scout"); return int(s.get("n", 0)) if s is Dictionary else 0
+func scout_custo() -> int: return 40000 * (scout_nivel() + 1)
+func scout_folha() -> int: return scout_nivel() * 4000
+func contratar_scout() -> Dictionary:
+	var n = scout_nivel()
+	if n >= SCOUT_MAX: return {"ok": false, "msg": "Rede de olheiros no máximo."}
+	var c = scout_custo()
+	if S.org.caixa < c: return {"ok": false, "msg": "Caixa insuficiente (%s)." % money(c)}
+	S.org.caixa -= c
+	if not (S.get("scout") is Dictionary): S["scout"] = {"n": 0, "lst": {}, "ids": {}}
+	S.scout.n = n + 1; log_("Rede de olheiros no nível %d" % (n + 1)); save()
+	return {"ok": true, "msg": "Olheiros: nível %d." % (n + 1)}
+func reduzir_scout() -> Dictionary:
+	var n = scout_nivel()
+	if n <= 0: return {"ok": false, "msg": "Sem olheiros."}
+	S.scout.n = n - 1; save(); return {"ok": true, "msg": "Olheiros reduzidos para o nível %d." % (n - 1)}
+func scouted(p) -> bool:
+	if dir_off: return false
+	var s = S.get("scout"); return s is Dictionary and s.get("ids", {}).has(str(p.id))
+func scout_lista(g) -> Array:   # jovens promissores com potencial revelado; troca a cada 8 semanas
+	var n = scout_nivel()
+	if n <= 0: return []
+	if not (S.scout.get("lst") is Dictionary): S.scout["lst"] = {}
+	if not (S.scout.get("ids") is Dictionary): S.scout["ids"] = {}
+	var ciclo: int = S.tempo / 8; var cur = S.scout.lst.get(g)
+	if cur == null or cur.ciclo != ciclo or cur.n != n:
+		var cand: Array = livres(g).filter(func(p): return p.get("a") != null and p.a <= 22 and p.o >= 55)
+		cand.sort_custom(func(a, b): return pot_inicial(a) > pot_inicial(b) or (pot_inicial(a) == pot_inicial(b) and a.id < b.id))
+		var k = 2 + 2 * n; var off = (ciclo * 3) % max(1, cand.size() - k)
+		var ids = []
+		for p in cand.slice(off, off + k):
+			ids.append(str(p.id)); S.scout.ids[str(p.id)] = true
+		cur = {"ciclo": ciclo, "n": n, "ids": ids}; S.scout.lst[g] = cur
+	var out = []; var byid = {}
+	for p in pool(g): byid[str(p.id)] = p
+	for id in cur.ids:
+		if byid.has(id) and livres(g).any(func(p): return str(p.id) == id): out.append(byid[id])
+	return out
+func propostas_tick() -> void:
+	if dir_off: return
+	var pr: Array = S.get("propostas", [])
+	for x in pr: x.sem -= 1
+	pr = pr.filter(func(x): return x.sem > 0)
+	if S.tempo % 6 == 0 and pr.size() < 3 and rnd() < 0.6:
+		var cands = []
+		for g in GAMES:
+			if not ativo(g) or not aberto(g): continue
+			for sq in ["t1", "t2"]:
+				for p in S.games[g].squads[sq].slots:
+					if p != null and not p.get("estrela", false) and p.o >= 62 and not pr.any(func(x): return x.id == p.id): cands.append([g, sq, p])
+		if cands.size():
+			var c = cands[floori(rnd() * cands.size())]; var g2 = c[0]; var p2 = c[2]
+			var lgs = D(g2).leagues.keys(); var L = D(g2).leagues[lgs[floori(rnd() * lgs.size())]]
+			var tm = L.t1[floori(rnd() * L.t1.size())].n
+			pr.append({"g": g2, "sq": c[1], "id": p2.id, "nick": p2.n, "o": p2.o, "time": tm, "valor": jr(valor_venda(p2) * (1.15 + rnd() * 0.5) / 500.0) * 500, "sem": 3})
+			log_("Proposta de %s por %s: %s" % [tm, p2.n, money(pr[pr.size() - 1].valor)])
+	S["propostas"] = pr
+func aceitar_proposta(i) -> Dictionary:
+	var pr: Array = S.get("propostas", [])
+	if i >= pr.size(): return {"ok": false, "msg": "Proposta expirou."}
+	var x = pr[i]; var q = S.games[x.g].squads[x.sq]
+	for k in q.slots.size():
+		var p = q.slots[k]
+		if p != null and p.id == x.id:
+			q.slots[k] = null; S.org.caixa += x.valor; S.vendidos.append(p.id); log_("Vendeu %s para o %s por %s" % [p.n, x.time, money(x.valor)])
+			S.propostas = pr.filter(func(y): return y.id != x.id); save(); return {"ok": true, "msg": "%s vendido ao %s por %s." % [p.n, x.time, money(x.valor)]}
+	S.propostas = pr.filter(func(y): return y.id != x.id); return {"ok": false, "msg": "O jogador não está mais no elenco."}
+func recusar_proposta(i) -> void:
+	var pr: Array = S.get("propostas", [])
+	if i < pr.size(): pr.remove_at(i); S["propostas"] = pr; save()

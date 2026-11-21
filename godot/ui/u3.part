@@ -90,6 +90,7 @@ func ficha_base(g, p) -> void:
 # ---------- Mercado ----------
 func vmercado() -> void:
 	var g = game; var roles: Array = O.GAMES[g].roles
+	vtransf()
 	var c = card("Mercado · contratar para " + O.SQUADS[squad].nome)
 	if not O.S.games[g].squads[squad].on: lbl(c, "Crie esse time na aba Elenco.", 24, DIM); return
 	var its = [["", "Todos"]]; for r in roles: its.append([r, r])
