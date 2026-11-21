@@ -59,6 +59,10 @@ async def main():
             ok(await pg.locator('#modal .lineup .lp').count() == 5 and await pg.locator('#modal img.flag').count() >= 3, f'{w}: ficha do time com line-up e bandeiras')
             await pg.screenshot(path=f'{OUT}/ficha_{w}.png'); await pg.click('#modal .lp a'); pt=(await pg.locator('#modal').inner_text()).lower(); ok('carreira' in pt or 'sem dados' in pt, f'{w}: ficha do jogador abre'); await pg.screenshot(path=f'{OUT}/jogador_{w}.png'); await pg.click('[data-act=fecha]')
             ok(await pg.locator('#modal').count() == 0, f'{w}: ficha fecha')
+            await pg.click('[data-act=game][data-id=cs2]'); await pg.click('[data-act=tab][data-id=hall]'); await pg.click('[data-act=hall][data-id=tor]'); cs = (await pg.locator('#main').inner_text()).lower()
+            ok('shanghai' in cs, f'{w}: histórico CS2 lista Majors')
+            await pg.click('[data-act=hall][data-id=leg]'); ok('zywoo' in (await pg.locator('#main').inner_text()).lower(), f'{w}: MVPs CS2')
+            await pg.click('[data-act=game][data-id=lol]')
             await pg.screenshot(path=f'{OUT}/ligas_{w}.png')
             await pg.click('[data-act=time]') if await pg.locator('[data-act=time]').count() else None
             antes = await pg.locator('#top').inner_text()

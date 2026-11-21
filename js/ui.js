@@ -109,7 +109,21 @@
   }
   function modal() { let m = document.getElementById('modal'); if (!UI.ficha) { if (m) m.remove(); return; } if (!m) { m = document.createElement('div'); m.id = 'modal'; document.body.appendChild(m); } m.innerHTML = `<div class="mbox" role="dialog">${ficha(UI.ficha)}</div>`; }
   function lineupHT(tipo, y) { const x = X(); const r = x && x.ht.find(r => r[1] === tipo && r[2] === +y); return r ? r[4] : null; }
+
+  function vHallGen() {
+    const H = (window.HIST || {})[UI.game];
+    if (!H) return `<section class="card empty"><h2>${O.GAMES[UI.game].nome}</h2><p>Histórico deste jogo ainda não foi levantado.</p></section>`;
+    const T = H.torneios.slice().sort((a, b) => b.a - a.a), cnt = {}, mv = {};
+    H.torneios.forEach(t => { cnt[t.c] = (cnt[t.c] || 0) + 1; if (t.mvp) { const k = t.mvp[0]; (mv[k] = mv[k] || { n: k, t: t.mvp[1], pais: t.mvp[2], y: [] }).y.push(t.a); } });
+    const tit = Object.entries(cnt).sort((a, b) => b[1] - a[1]), leg = Object.values(mv).sort((a, b) => b.y.length - a.y.length || a.y[0] - b.y[0]);
+    const sub = UI.hall === 'leg' || UI.hall === 'tit' ? UI.hall : 'tor';
+    const chips = `<div class="chips">${[['tor', '🏆 Torneios'], ['tit', '🏅 Títulos por time'], ['leg', '⭐ MVPs / Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    if (sub === 'tit') return chips + `<section class="card"><h2>Títulos por time</h2>` + tit.map(([n, c]) => `<div class="tb"><span>${c}</span>${crest(n)}<b>${esc(n)}</b><em>${'🏆'.repeat(Math.min(c, 6))}</em></div>`).join('') + '</section>';
+    if (sub === 'leg') return chips + `<section class="card"><h2>MVPs de ${esc(H.nome)}</h2>` + leg.map(m => `<div class="leg">${avatar(m.n)}<div class="who"><b>${esc(m.n)}</b><small>⭐ ${m.y.length} MVP${m.y.length > 1 ? 's' : ''} (${m.y.join(', ')}) · ${esc(m.t)} · ${esc(m.pais)}</small></div></div>`).join('') + '</section>';
+    return chips + `<section class="card"><h2>${esc(H.nome)}</h2>` + T.map(t => `<div class="hrow"><span class="yr">${t.a}</span><div class="who"><b>${crest(t.c, 'sm')} 🏆 ${esc(t.c)} <small>${esc(t.p || '')}</small></b><small>${esc(t.n)} · vice: ${esc(t.v)}</small>${t.mvp ? `<small>⭐ MVP: ${esc(t.mvp[0])}</small>` : ''}</div></div>`).join('') + '</section>';
+  }
   function vHall() {
+    if (UI.game !== 'lol') return vHallGen();
     const x = X(); if (!x) return '<section class="card empty"><p>Sem dados.</p></section>';
     const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['bo', '🥇 Bola de Ouro'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
     if (sub === 'bo') {

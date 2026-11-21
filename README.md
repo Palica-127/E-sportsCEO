@@ -42,3 +42,5 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - Aba **Campeões**: Mundial, MSI e Lendas.
 - Playoffs e torneios internacionais aparecem como chaves (brackets) em colunas.
 - Ficha do jogador (LoL): clique no nick → carreira por time, títulos (Mundial/MSI/ligas/copas), MVPs. A ficha do time agora mostra o técnico.
+- Bola de Ouro do LoL (top 10 por ano) na aba Campeões.
+- `js/data/hist.js`: histórico real dos outros jogos (aba Campeões genérica: torneios, títulos por time, MVPs). Preenchido: Majors de CS (2013–2026). Só entra dado conferido na web.
