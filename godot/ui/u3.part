@@ -92,7 +92,7 @@ func vmercado() -> void:
 	lst.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
 	var c2 = card("%d jogadores" % lst.size())
 	for p in lst.slice(0, merc.n):
-		var h = hrow(c2); var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.clip_text = true
+		var h = hrow(c2); h.add_child(crest(p.t, 44)); var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.clip_text = true
 		b.text = "%s %s · %d · %sa · %s" % [p.r, p.n, p.o, str(p.get("a", "?")), p.t]; b.pressed.connect(func(): ficha_mercado(g, p)); h.add_child(b)
 		btn(h, O.money(O.fee(p.o)), func(): res(O.contratar(g, squad, p)), O.S.org.caixa < O.fee(p.o))
 	if lst.size() > merc.n: btn(c2, "Mostrar mais", func(): merc.n += 25; render())

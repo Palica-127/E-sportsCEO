@@ -88,7 +88,7 @@ func mostra_pre(r: Dictionary) -> void:
 	var v = modal("Partida na semana %d" % r.semana)
 	for p in r.partidas:
 		var c = card("", v)
-		lbl(c, p.tag, 24, DIM); lbl(c, "%s  vs  %s" % [p.euNome, p.op], 30, TXT)
+		lbl(c, p.tag, 24, DIM); var hv := hrow(c); hv.add_child(crest(p.euNome, 56)); lbl(hv, "vs", 26, DIM); hv.add_child(crest(p.op, 56)); lbl(c, "%s  vs  %s" % [p.euNome, p.op], 30, TXT)
 		lbl(c, "%s · Bo%d · força %.1f x %.1f · chance %d%%" % [p.fase, p.bo, p.fMeu, p.fOp, jr100(p.p)], 24)
 	btn(v, "Simular partida", func(): _simular(), false, true)
 func _simular() -> void:
@@ -100,7 +100,7 @@ func mostra_res(ps: Array) -> void:
 	for d in ps:
 		var nar: Dictionary = d.nar; var c = card("", v)
 		lbl(c, d.tag + " · " + d.fase, 22, DIM)
-		lbl(c, "%s %d x %d %s" % [d.euNome, d.meus, d.deles, d.op], 34, OK if d.v else BAD)
+		var hv := hrow(c); hv.add_child(crest(d.euNome, 56)); hv.add_child(crest(d.op, 56)); lbl(c, "%s %d x %d %s" % [d.euNome, d.meus, d.deles, d.op], 34, OK if d.v else BAD)
 		lbl(c, "VITÓRIA" if d.v else "DERROTA", 26, OK if d.v else BAD)
 		for j in nar.jogos:
 			var t = "%s (%s)" % [j.lbl, j.sub]; for m in j.m: t += "  %s %d-%d" % [m.n, m.a, m.b]

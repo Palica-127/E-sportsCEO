@@ -32,11 +32,11 @@ func vligas() -> void:
 	if c.phase == "reg" or c.phase == "po":
 		var cls: Array = O.classificacao(c); var k = 0
 		for r in cls:
-			k += 1; lbl(cc, "%2d. %s  %d-%d  (força %.1f)" % [r.pos, r.n, r.w, r.l, r.f], 22, GOLD if r.eu else TXT)
+			k += 1; time_row(cc, r.n, "   %d-%d · %.1f" % [r.w, r.l, r.f]); cc.get_child(cc.get_child_count() - 1).move_child(cc.get_child(cc.get_child_count() - 1).get_child(1), 1); (cc.get_child(cc.get_child_count() - 1).get_child(1) as Button).text = "%d. %s   %d-%d · %.1f" % [r.pos, r.n, r.w, r.l, r.f]
 	else: lbl(cc, "Fase: " + {"off": "entressafra", "wait": "aguardando titulares", "intl": "internacional"}.get(c.phase, c.phase), 24, DIM)
 	if c.phase == "intl":
 		var ci = card("Internacional: " + O.intl_def(g)[c.intl.tipo].nome)
-		for i in c.intl.alive: lbl(ci, O.nome_t(c.intl.teams[i]), 22, GOLD if c.intl.teams[i].eu else TXT)
+		for i in c.intl.alive: time_row(ci, O.nome_t(c.intl.teams[i]))
 	var ch = card("Campeões recentes")
 	for h in c.hist: lbl(ch, "%d · split %d · %s (vice %s)%s" % [h.y, h.s, h.camp, h.vice, (" · você: " + str(h.eu)) if h.eu != null else ""], 22)
 	var ci2 = card("Internacionais")
@@ -104,12 +104,14 @@ func vhall() -> void:
 	for t in tor:
 		if int(t.a) != hy: continue
 		var ct = card("%s%s" % [t.n, " (simulado)" if t.get("sim", 0) else ""])
-		lbl(ct, "Campeão: %s  ·  vice %s%s" % [t.c, str(t.v), (" · " + str(t.p)) if str(t.get("p", "")) != "" else ""], 24, GOLD if t.c == O.S.org.nome else TXT)
-		if t.get("mvp") != null: lbl(ct, "MVP: %s (%s)" % [t.mvp[0], t.mvp[1]], 20, DIM)
+		time_row(ct, t.c, "   (campeão)"); lbl(ct, "Vice: %s%s" % [str(t.v), (" · " + str(t.p)) if str(t.get("p", "")) != "" else ""], 22, DIM)
+		if t.get("mvp") != null:
+			var hm := hrow(ct); hm.add_child(avatar(t.mvp[0], 40, g)); lbl(hm, "MVP: %s (%s)" % [t.mvp[0], t.mvp[1]], 22, DIM)
 	var B = O.S.bo.get(g, {}).get(str(hy))
 	if B != null:
 		var cb = card("Bola de Ouro %d (Top 10)" % hy)
-		for k in B.t.size(): lbl(cb, "%d. %s (%s) · nota %s" % [k + 1, B.t[k][0], B.t[k][1], str(B.t[k][2])], 22, GOLD if k == 0 else TXT)
+		for k in B.t.size():
+			var hb := hrow(cb); hb.add_child(avatar(B.t[k][0], 40, g)); lbl(hb, "%d. %s (%s) · nota %s" % [k + 1, B.t[k][0], B.t[k][1], str(B.t[k][2])], 22, GOLD if k == 0 else TXT)
 		var ctoy = card("Time do ano %d" % hy)
 		for x in B.a: lbl(ctoy, "%s · %s (%s)" % [x[0], x[1], x[2]], 22)
 	var cl_ = card("Aposentadorias de lendas")

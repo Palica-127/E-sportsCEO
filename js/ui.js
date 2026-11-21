@@ -102,7 +102,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     const x = X(); if (!x) return { wc: [], msi: [] };
     const al = new Set([nome]); x.ht.forEach(r => { if (r[0] === nome) al.add(r[3]); }); const og = orgOf(nome); if (og) og.nm.forEach(n => al.add(n[0]));
     const ys = o => Object.keys(o).filter(y => al.has(o[y])).map(Number);
-    return { wc: ys(x.wct), wcv: ys(x.wcv), msi: ys(x.msv), msiv: ys(x.mst) };
+    return { wc: ys(x.wct), wcv: ys(x.wcv), msi: ys(x.mst), msiv: ys(x.msv) };
   }
 
   const TT = { w: ['🏆', 'Mundial'], m: ['🥇', 'MSI'], l: ['🏅', 'Liga'], c: ['🎖️', 'Copa'], f: ['🥈', 'First Stand'] };
