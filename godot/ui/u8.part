@@ -103,3 +103,39 @@ func vrank() -> void:
 		if ks.is_empty(): lbl(c, "Nenhuma final disputada ainda.", 22, DIM)
 		for k in ks.slice(0, 10):
 			var h = hrow(c); lbl(h, k, 24, TXT).size_flags_horizontal = Control.SIZE_EXPAND_FILL; lbl(h, "%d vit. · %d der." % [riv[k][0], riv[k][1]], 22, TXT)
+
+# ---------- Legado e metas de longo prazo (bloco 6) ----------
+const LEG_NIVEIS := [[0, "Org em formação"], [15, "Competidora"], [45, "Potência regional"], [100, "Gigante dos esports"], [200, "Dinastia"], [350, "Lenda viva"]]
+func _legado_dados() -> Dictionary:
+	var S = O.S; var me: String = S.org.nome; var tit = 0; var vice = 0; var anos = {}; var jogos = 0
+	for g in O.GAMES:
+		if not O.ativo(g): continue
+		jogos += 1
+		for t in O.hist_de(g).torneios:
+			if org_cur(str(t.c)) == me: tit += 1; anos[int(t.a)] = true
+			elif org_cur(str(t.v)) == me: vice += 1
+	var pts: int = tit * 12 + vice * 4 + int(S.org.rep * 6) + jogos * 3 + int(S.social.seg / 50000.0)
+	return {"tit": tit, "vice": vice, "anos": anos.size(), "jogos": jogos, "pts": pts}
+func vlegado() -> void:
+	var S = O.S; var D = _legado_dados(); var nv = LEG_NIVEIS[0]; var prox = null
+	for x in LEG_NIVEIS:
+		if D.pts >= x[0]: nv = x
+		elif prox == null: prox = x
+	var c = card("Legado da " + S.org.nome, null, GOLD)
+	lbl(c, nv[1], 38, GOLD)
+	lbl(c, "%d pontos de legado" % D.pts, 22, DIM)
+	if prox != null: bar(c, "Próximo: " + prox[1], D.pts - nv[0], prox[0] - nv[0], GOLD, "%d/%d" % [D.pts, prox[0]])
+	lbl(c, "Pontos: título 12, vice 4, reputação, jogos ativos e seguidores.", 18, DIM)
+	var cm = card("Metas de longo prazo", null, ACC)
+	var metas = [
+		["Conquistar 3 títulos", D.tit, 3], ["Conquistar 10 títulos", D.tit, 10], ["Conquistar 25 títulos", D.tit, 25],
+		["Ter 4 jogos ativos", D.jogos, 4], ["Ter 8 jogos ativos", D.jogos, 8],
+		["Alcançar reputação 3", int(S.org.rep * 10), 30], ["Alcançar reputação 6", int(S.org.rep * 10), 60],
+		["Chegar a 1 milhão de seguidores", int(S.social.seg), 1000000],
+		["Acumular R$ 5 milhões em caixa", int(S.org.caixa), 5000000], ["Acumular R$ 50 milhões em caixa", int(S.org.caixa), 50000000],
+		["Anos com título: 5", D.anos, 5]]
+	var feitas = 0
+	for m in metas:
+		var ok: bool = m[1] >= m[2]; if ok: feitas += 1
+		bar(cm, m[0], min(m[1], m[2]), m[2], OK if ok else ACC, "Feito" if ok else "%d/%d" % [min(m[1], m[2]), m[2]] if m[2] < 100000 else _fmt_n(m[1]))
+	lbl(cm, "%d de %d metas concluídas" % [feitas, metas.size()], 22, GOLD)

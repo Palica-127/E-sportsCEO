@@ -3,13 +3,14 @@ extends Control
 
 const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const NAV_MAIN := [["org", "Painel"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"]]
-const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["rank", "Rankings e recordes"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
+const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["legado", "Legado e metas"], ["rank", "Rankings e recordes"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
 const BG := Color("0a0d16"); const SURF := Color("131929"); const SURF2 := Color("1b2338"); const LINE := Color("27314a")
 const CARD := SURF; const ACC := Color("4f8cff"); const ACC2 := Color("22d3ee"); const TXT := Color("eef1ff"); const DIM := Color("8a94b8")
 const OK := Color("3ddc97"); const BAD := Color("ff5d6c"); const GOLD := Color("ffc857")
 const GCOL := {"lol": Color("c89b3c"), "cs2": Color("f5a623"), "dota2": Color("e0453a"), "valorant": Color("ff4655"), "ff": Color("ff8a00"), "r6": Color("4cc3ff"), "fifa": Color("3ddc84"), "wr": Color("4aa8ff")}
 var O: Node
 var tab = "org"; var game = "lol"; var squad = "t1"
+var side: VBoxContainer; var side_p: PanelContainer; var nav_p: PanelContainer; var mgc: MarginContainer; var wide := false
 var content: VBoxContainer; var top: Label; var topsub: Label; var topchips: HBoxContainer; var gbar: HBoxContainer; var nav: HBoxContainer; var scroll: ScrollContainer
 var modal_layer: Control
 var play = false; var auto = false; var timer: Timer; var vel = 0.45
@@ -32,12 +33,16 @@ func _ready() -> void:
 	var gp = PanelContainer.new(); gp.add_theme_stylebox_override("panel", _sbf(BG, 0, LINE, 0, 8, 0)); root.add_child(gp)
 	var gs = ScrollContainer.new(); gs.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; gs.custom_minimum_size.y = 62; gp.add_child(gs)
 	gbar = HBoxContainer.new(); gbar.add_theme_constant_override("separation", 8); gs.add_child(gbar)
-	var mg = MarginContainer.new(); mg.size_flags_vertical = Control.SIZE_EXPAND_FILL; for k in ["left", "right"]: mg.add_theme_constant_override("margin_" + k, 14)
-	root.add_child(mg)
+	var rw = HBoxContainer.new(); rw.size_flags_vertical = Control.SIZE_EXPAND_FILL; rw.add_theme_constant_override("separation", 0); root.add_child(rw)
+	side_p = PanelContainer.new(); side_p.add_theme_stylebox_override("panel", _sbf(SURF, 0, LINE, 0, 12)); side_p.custom_minimum_size.x = 270; side_p.visible = false; rw.add_child(side_p)
+	var ssc = ScrollContainer.new(); ssc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; side_p.add_child(ssc)
+	side = VBoxContainer.new(); side.size_flags_horizontal = Control.SIZE_EXPAND_FILL; side.add_theme_constant_override("separation", 6); ssc.add_child(side)
+	var mg = MarginContainer.new(); mg.size_flags_vertical = Control.SIZE_EXPAND_FILL; mg.size_flags_horizontal = Control.SIZE_EXPAND_FILL; for k in ["left", "right"]: mg.add_theme_constant_override("margin_" + k, 14)
+	rw.add_child(mg); mgc = mg
 	scroll = ScrollContainer.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; mg.add_child(scroll)
 	content = VBoxContainer.new(); content.size_flags_horizontal = Control.SIZE_EXPAND_FILL; content.add_theme_constant_override("separation", 14); scroll.add_child(content)
 	# navegação inferior
-	var np = PanelContainer.new(); np.add_theme_stylebox_override("panel", _sbf(SURF, 0, LINE, 0, 6, 2, true)); root.add_child(np)
+	var np = PanelContainer.new(); np.add_theme_stylebox_override("panel", _sbf(SURF, 0, LINE, 0, 6, 2, true)); root.add_child(np); nav_p = np
 	nav = HBoxContainer.new(); nav.add_theme_constant_override("separation", 4); np.add_child(nav)
 	modal_layer = Control.new(); modal_layer.set_anchors_preset(Control.PRESET_FULL_RECT); modal_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(modal_layer)
 	toast_lbl = Label.new(); toast_lbl.visible = false; toast_lbl.add_theme_color_override("font_color", GOLD); toast_lbl.set_anchors_preset(Control.PRESET_CENTER_BOTTOM); toast_lbl.position.y -= 150; toast_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD; toast_lbl.custom_minimum_size.x = 640; toast_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; add_child(toast_lbl)
@@ -46,7 +51,8 @@ func _ready() -> void:
 	if O.tem_save() and O.load_save(): pass
 	else: O.reset_estado(); O.comecar()
 	if O.S.get("inicio") != null and O.GAMES.has(O.S.inicio): game = O.S.inicio if O.aberto(O.S.inicio) else "lol"
-	render()
+	get_viewport().size_changed.connect(_ajusta_largura)
+	_ajusta_largura(); render()
 
 # ---------- tema ----------
 func _sbf(c: Color, r := 14, bc = null, bw := 0, m := 14, bt := -1, topline := false) -> StyleBoxFlat:
@@ -179,6 +185,11 @@ func render() -> void:
 		if O.aberto(g):
 			var b = Button.new(); b.text = gname(g); b.toggle_mode = true; var on = (g == game); b.button_pressed = on; b.custom_minimum_size = Vector2(0, 50); chip_style(b, GCOL.get(g, ACC), on)
 			b.pressed.connect(func(): game = g; squad = "t1"; render()); gbar.add_child(b)
+	clear(side); side_p.visible = wide; nav_p.visible = not wide
+	if wide:
+		for t in TABS: _side_btn(t[1], t[0] == tab, func(): tab = t[0]; render())
+		for t in NAV_MORE:
+			if not TABS.any(func(x): return x[0] == t[0]): _side_btn(t[1], t[0] == tab, func(): tab = t[0]; render())
 	var mais_on = not NAV_MAIN.any(func(t): return t[0] == tab)
 	for t in NAV_MAIN:
 		_nav_btn(t[1], t[0] == tab, func(): tab = t[0]; render())
@@ -193,10 +204,23 @@ func render() -> void:
 		"noticias": vnoticias()
 		"fin": vfin()
 		"neg": vneg()
+		"legado": vlegado()
 		"rank": vrank()
 		"hall": vhall()
 		"mundo": vmundo()
 	scroll.scroll_vertical = 0
+	content.modulate.a = 0.0; create_tween().tween_property(content, "modulate:a", 1.0, 0.16)
+func _ajusta_largura() -> void:
+	var w: float = get_viewport_rect().size.x
+	var nw: bool = w >= 1000.0
+	var m: int = maxi(14, int((w - (270.0 if nw else 0.0) - 900.0) / 2.0)) if nw else 14
+	for k in ["left", "right"]: mgc.add_theme_constant_override("margin_" + k, m)
+	if nw != wide: wide = nw; render()
+func _side_btn(t: String, on: bool, cb: Callable) -> void:
+	var b = Button.new(); b.text = t; b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.custom_minimum_size.y = 58; b.add_theme_font_size_override("font_size", 23)
+	var n = _sbf(Color(ACC.r, ACC.g, ACC.b, 0.2) if on else Color(0, 0, 0, 0), 12, null, 0, 14)
+	for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, n)
+	b.add_theme_color_override("font_color", ACC2 if on else TXT); b.pressed.connect(cb); side.add_child(b)
 func _nav_btn(t: String, on: bool, cb: Callable) -> void:
 	var b = Button.new(); b.text = t; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 68; b.add_theme_font_size_override("font_size", 23)
 	var n = _sbf(Color(ACC.r, ACC.g, ACC.b, 0.18) if on else Color(0, 0, 0, 0), 14, null, 0, 10)
@@ -1147,3 +1171,39 @@ func vrank() -> void:
 		if ks.is_empty(): lbl(c, "Nenhuma final disputada ainda.", 22, DIM)
 		for k in ks.slice(0, 10):
 			var h = hrow(c); lbl(h, k, 24, TXT).size_flags_horizontal = Control.SIZE_EXPAND_FILL; lbl(h, "%d vit. · %d der." % [riv[k][0], riv[k][1]], 22, TXT)
+
+# ---------- Legado e metas de longo prazo (bloco 6) ----------
+const LEG_NIVEIS := [[0, "Org em formação"], [15, "Competidora"], [45, "Potência regional"], [100, "Gigante dos esports"], [200, "Dinastia"], [350, "Lenda viva"]]
+func _legado_dados() -> Dictionary:
+	var S = O.S; var me: String = S.org.nome; var tit = 0; var vice = 0; var anos = {}; var jogos = 0
+	for g in O.GAMES:
+		if not O.ativo(g): continue
+		jogos += 1
+		for t in O.hist_de(g).torneios:
+			if org_cur(str(t.c)) == me: tit += 1; anos[int(t.a)] = true
+			elif org_cur(str(t.v)) == me: vice += 1
+	var pts: int = tit * 12 + vice * 4 + int(S.org.rep * 6) + jogos * 3 + int(S.social.seg / 50000.0)
+	return {"tit": tit, "vice": vice, "anos": anos.size(), "jogos": jogos, "pts": pts}
+func vlegado() -> void:
+	var S = O.S; var D = _legado_dados(); var nv = LEG_NIVEIS[0]; var prox = null
+	for x in LEG_NIVEIS:
+		if D.pts >= x[0]: nv = x
+		elif prox == null: prox = x
+	var c = card("Legado da " + S.org.nome, null, GOLD)
+	lbl(c, nv[1], 38, GOLD)
+	lbl(c, "%d pontos de legado" % D.pts, 22, DIM)
+	if prox != null: bar(c, "Próximo: " + prox[1], D.pts - nv[0], prox[0] - nv[0], GOLD, "%d/%d" % [D.pts, prox[0]])
+	lbl(c, "Pontos: título 12, vice 4, reputação, jogos ativos e seguidores.", 18, DIM)
+	var cm = card("Metas de longo prazo", null, ACC)
+	var metas = [
+		["Conquistar 3 títulos", D.tit, 3], ["Conquistar 10 títulos", D.tit, 10], ["Conquistar 25 títulos", D.tit, 25],
+		["Ter 4 jogos ativos", D.jogos, 4], ["Ter 8 jogos ativos", D.jogos, 8],
+		["Alcançar reputação 3", int(S.org.rep * 10), 30], ["Alcançar reputação 6", int(S.org.rep * 10), 60],
+		["Chegar a 1 milhão de seguidores", int(S.social.seg), 1000000],
+		["Acumular R$ 5 milhões em caixa", int(S.org.caixa), 5000000], ["Acumular R$ 50 milhões em caixa", int(S.org.caixa), 50000000],
+		["Anos com título: 5", D.anos, 5]]
+	var feitas = 0
+	for m in metas:
+		var ok: bool = m[1] >= m[2]; if ok: feitas += 1
+		bar(cm, m[0], min(m[1], m[2]), m[2], OK if ok else ACC, "Feito" if ok else "%d/%d" % [min(m[1], m[2]), m[2]] if m[2] < 100000 else _fmt_n(m[1]))
+	lbl(cm, "%d de %d metas concluídas" % [feitas, metas.size()], 22, GOLD)
