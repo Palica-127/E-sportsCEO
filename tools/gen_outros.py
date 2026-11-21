@@ -68,11 +68,15 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'FURIA': ['FalleN','yuurih','YEKINDAR','KSCERATO','molodoy'], 'Team Spirit': ['donk','magixx','sh1ro','tN1R','zont1x'],
   'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS'],
   '9z Team': ['max','HUASOPEEK','luchov','meyern','dgt'], 'paiN Gaming': ['vsm','biguzera','piriajr','snow','saffee'],
-  'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['phzy','siuhy','Staehr','ryu','cmtry'],
+  'The MongolZ': ['bLitz','Techno','nin9','910','cobrazera'], 'Astralis': ['phzy','siuhy','Staehr','ryu','cmtry'],
   'NAVI': ['Aleksib','b1t','iM','w0nderful','makazze'], 'Heroic': ['nilo','susp','Chr1zN','MartinezSa','Brollan'],
   'FaZe Clan': ['Twistzz','JBOEN','frozen','jcobbb','Neityu'], 'G2 Esports': ['huNter-','NertZ','r1nkle','HeavyGod','MATYS'],
   'Team Liquid': ['EliGE','NAF','JT','malbsMd','Jorko'], 'MIBR': ['tomaszin','insani','nqz','LNZ','venomzera'],
-  'Aurora': ['XANTARES','woxic','Jimpphat','kyxsan','Wicadia'], 'FUT': ['SunPayus','xfl0ud','dem0n','Krabeni','dziugss'], 'Legacy': ['arT','dumau','latto','n1ssim','try'], 'DENDELE': ['WOOD7','Tuurtle','naitte','pesadelo','matios']},
+  'Aurora': ['XANTARES','woxic','Jimpphat','kyxsan','Wicadia'], 'FUT': ['SunPayus','xfl0ud','dem0n','Krabeni','dziugss'], 'Legacy': ['arT','dumau','latto','n1ssim','try'], 'DENDELE': ['WOOD7','Tuurtle','naitte','pesadelo','matios'],
+  'NRG': ['nitr0','Sonic','Grim','Jeorge','hallzerk'], 'Imperial': ['chelo','VINI','decenty','noway','saadzin'],
+  'Eternal Fire': ['MisteM','regali','soulfly','Kvem','jottAAA'], 'Ninjas in Pyjamas': ['stavn','sjuush','Krimbo','adamb','xKacpersky'],
+  'GamerLegion': ['REZ','shalfey','Tauson','FL4MUS','hypex'], 'TYLOO': ['JamYoung','Jee','Mercury','Moseyuh','Zero'],
+  'Lynn Vision': ['Westmelon','z4KR','Starry','EmiliaQAQ','C4LLM3SU3'], 'Rare Atom': ['Summer','kaze','ChildKing','L1haNg','3gl']},
  'dota2': {'Team Spirit': ['Yatoro','Larl','Collapse','not_me','rue'], 'Aurora': ['Nightfall','Mikoto','Ws','Mira','kaori'],
   'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Nisha','Ace','Boxi','tOfu'],
   'Falcons': ['skiter','Malr1ne','ATF','Cr1t-','Sneyking'], '1w Team': ['Pure','bzm','33','Ari','Whitemon'], 'Xtreme Gaming': ['Ami','NothingToSay','Xxs','Fy','Xnova']},
@@ -112,11 +116,11 @@ _n('KZ','molodoy'); _n('LV','YEKINDAR'); _n('RU','donk','sh1ro','magixx','m0NESY
 _n('BA','NiKo','huNter-'); _n('DK','karrigan','TeSeS','HooXi','jabbi','Staehr','Chr1zN','Vejrgang','JBOEN'); _n('FI','Aleksib'); _n('RO','iM')
 _n('SE','nilo','susp','Brollan'); _n('ES','MartinezSa'); _n('CA','Twistzz','NAF'); _n('SK','frozen','MATYS'); _n('PL','jcobbb')
 _n('US','EliGE','Asuna','vora','bang','Cryo','skuba','brawk','Ethan','mada'); _n('ZA','JT'); _n('GT','malbsMd'); _n('BG','Jorko'); _n('HU','torzsi'); _n('CZ','Spinx')
-_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('BR','WOOD7','Tuurtle','naitte','pesadelo','matios','L0BIN','Paluh','Dotz','Hatez','Fntzy','Alem4o'); _n('FR','LikEfac','BriD'); _n('DE','jume'); _n('TR','Solotov'); _n('GB','Yuzus','Doki'); _n('US','Stompn'); _n('DK','Benjamaster'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
+_n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('US','nitr0','Grim','Jeorge'); _n('ZA','Sonic','MisteM'); _n('NO','hallzerk'); _n('BR','chelo','VINI','decenty','noway','saadzin'); _n('RO','regali'); _n('TR','soulfly','jottAAA'); _n('UA','Kvem'); _n('DK','stavn','sjuush'); _n('DE','Krimbo'); _n('SE','adamb'); _n('PL','xKacpersky'); _n('MN','nin9'); _n('CN','JamYoung','Jee','Mercury','Moseyuh','Zero','Westmelon','z4KR','Starry','EmiliaQAQ','C4LLM3SU3','Summer','ChildKing','L1haNg','3gl'); _n('MY','kaze'); _n('RU','sh1ro','magixx','donk'); _n('BY','tN1R'); _n('LV','YEKINDAR'); _n('IL','flameZ'); _n('EE','ropz'); _n('FI','Aleksib'); _n('UA','b1t','w0nderful'); _n('BR','WOOD7','Tuurtle','naitte','pesadelo','matios','L0BIN','Paluh','Dotz','Hatez','Fntzy','Alem4o'); _n('FR','LikEfac','BriD'); _n('DE','jume'); _n('TR','Solotov'); _n('GB','Yuzus','Doki'); _n('US','Stompn'); _n('DK','Benjamaster'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
 _n('KR','Meteor','stax','Munchkin','iZu','BuZz','Ivy','Rb','Francis','Xross','Dambi'); _n('RU','something'); _n('ID','f0rsakeN'); _n('MY','d4v41'); _n('SG','Jinggg')
 _n('TR','Rosé','Crewen','Lar0k','Loita','lovers rock'); _n('NL','ManuBachoore','Levi de Weerd'); _n('PT','Jafonso')
 # idades em 20/11/2026 só com data de nascimento conferida (ZywOo 09/11/2000, donk 25/01/2007, NiKo 16/02/1997, yuurih 22/12/1999)
-AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26, 'Hatez': 23, 'Fntzy': 23, 'Paluh': 26, 'Dotz': 25, 'L0BIN': 24}
+AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26, 'FalleN': 35, 'karrigan': 36, 'Hatez': 23, 'Fntzy': 23, 'Paluh': 26, 'Dotz': 25, 'L0BIN': 24}
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
