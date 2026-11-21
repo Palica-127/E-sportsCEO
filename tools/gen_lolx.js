@@ -11,7 +11,7 @@ const NATM=grab('NATM'),NATFIX=grab('NATFIX'),NATN=grab('NATN'),ISO2=grab('ISO2'
 const nat={...NATM,...NATFIX};
 const lol=require('vm').runInNewContext('var window={};'+fs.readFileSync('js/data/lol.js','utf8')+';window.LOL');
 const used=new Set();
-const out={rtit:grab('RTIT'),rcar:grab('RCAR'),coach:grab('COACH'),nat:{},natN:{},iso:{},wct:grab('WCT'),wcv:grab('WCV'),msv:grab('MSV'),mst:grab('MST'),ht:grab('HT'),hon:grab('HON')};
+const out={pre:grab('PRE'),rtit:grab('RTIT'),rcar:grab('RCAR'),coach:grab('COACH'),nat:{},natN:{},iso:{},wct:grab('WCT'),wcv:grab('WCV'),msv:grab('MSV'),mst:grab('MST'),ht:grab('HT'),hon:grab('HON')};
 const need=new Set();
 for(const l of Object.values(lol.leagues))for(const t of l.t1.concat(l.t2||[]))for(const p of (t.p||[]))if(p)need.add(p[0]);
 for(const r of out.ht)for(const p of r[4])need.add(p);

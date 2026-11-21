@@ -111,7 +111,11 @@
   function lineupHT(tipo, y) { const x = X(); const r = x && x.ht.find(r => r[1] === tipo && r[2] === +y); return r ? r[4] : null; }
   function vHall() {
     const x = X(); if (!x) return '<section class="card empty"><p>Sem dados.</p></section>';
-    const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['bo', '🥇 Bola de Ouro'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    if (sub === 'bo') {
+      const R = (O.GAMES.lol || {}).roles || [];
+      return chips + '<section class="card"><h2>Bola de Ouro · Top 10 do ano</h2>' + Object.keys(x.pre).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${bandeira(x.pre[y][0][0]) || ''}🥇 <a href="#" data-act="ficha" data-id="p:${esc(x.pre[y][0][0])}">${esc(x.pre[y][0][0])}</a></b><small>${esc(x.pre[y][0][1])}</small><div class="lu">${x.pre[y].slice(1).map((r, i) => `<span>${i + 2}º ${bandeira(r[0]) || ''}<a href="#" data-act="ficha" data-id="p:${esc(r[0])}">${esc(r[0])}</a> <small>${R[r[2]] || ''}</small></span>`).join('')}</div></div></div>`).join('') + '</section>';
+    }
     if (sub === 'leg') {
       const arr = Object.entries(x.hon).map(([n, o]) => ({ n, o, pts: (o.wc || []).length * 3 + (o.msi || []).length * 2 + (o.lg || 0) * .5 + (o.mv || []).length })).sort((a, b) => b.pts - a.pts);
       return chips + '<section class="card"><h2>Lendas</h2>' + arr.map(({ n, o }) => `<div class="leg">${avatar(n)}<div class="who"><b><a href="#" data-act="ficha" data-id="p:${esc(n)}">${esc(n)}</a> ${bandeira(n) || ''}</b><small>${(o.wc || []).length ? '🏆 ' + o.wc.length + ' Mundial (' + o.wc.join(', ') + ') ' : ''}${(o.msi || []).length ? '🥇 ' + o.msi.length + ' MSI ' : ''}${o.lg ? '🏅 ' + o.lg + ' ligas ' : ''}</small>${(o.mv || []).length ? `<small>⭐ ${o.mv.map(m => m[0] + ' ' + esc(m[1].replace(/^MVP /, 'MVP '))).slice(0, 4).join(' · ')}</small>` : ''}</div></div>`).join('') + '</section>';
