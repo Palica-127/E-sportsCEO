@@ -407,7 +407,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
   const custoRenovar = p => Math.round(fee(p.o) * 0.5 / 1000) * 1000;
   /* ---------- Base (academia): jovens variados, com nome por país, potencial e traço ---------- */
   const capBase = nv => 3 + (nv >= 3 ? 1 : 0) + (nv >= 5 ? 1 : 0);
-  const custoBase = g => { const nv = infraNivel('base', g); return nv ? nv * 800 + (S.base[g] || []).length * 500 : 0; };   // por semana
+  const custoBase = g => { const nv = infraNivel('base', g); return nv ? nv * 400 + (S.base[g] || []).length * 250 : 0; };   // por semana
   const pick = a => a[Math.floor(rnd() * a.length)];
   const semAcento = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
   const capit = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -422,7 +422,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     for (const q of Object.values(S.games[g].squads)) q.slots.forEach(p => p && usados.add(p.n.toLowerCase())); (S.base[g] || []).forEach(p => usados.add(p.n.toLowerCase()));
     for (let t = 0; t < 12; t++) {
       const r = rnd(), nm = semAcento(pick(P.n)); let n;
-      if (r < 0.5) n = pick(P.a); else if (r < 0.7) n = capit(nm.slice(0, 3 + Math.floor(rnd() * 3)).toLowerCase() + pick(P.suf || [''])); else if (r < 0.88) n = capit(nm) + pick(['7', '10', '99', '9', '1']); else n = 'x' + capit(nm);
+      if (r < 0.4) n = pick(P.a); else if (r < 0.58) n = capit(nm.slice(0, 3 + Math.floor(rnd() * 3)).toLowerCase() + pick(P.suf || [''])); else if (r < 0.74) n = capit(nm) + pick(['7', '10', '99', '9', '1', '22', '77']); else if (r < 0.88) n = capit(nm) + pick(P.tag || ['gg', 'tv', 'jr', 'pro', 'xd']); else n = 'x' + capit(nm);
       if (!usados.has(n.toLowerCase())) return n;
     }
     return pick(P.a) + Math.floor(rnd() * 90 + 10);

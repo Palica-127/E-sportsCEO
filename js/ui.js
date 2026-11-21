@@ -6,7 +6,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   const O = window.Org;
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const UI = { tab: 'org', game: 'lol', squad: 't1', mk: { role: '', liga: '', q: '', n: 30, pay: false, asc: false }, ligaVer: null, aberto: null, resetArm: false };
+  const UI = { tab: 'org', game: 'lol', squad: 't1', mk: { role: '', liga: '', q: '', n: 30, pay: false, asc: false }, ligaVer: null, aberto: null, resetArm: false, ren: null, arm: null };
 
   const TABS = [['org', '🏢', 'Início'], ['calendario', '📅', 'Calendário'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🛍️', 'Loja'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Torneios'], ['hall', '👑', 'Campeões']];
 
@@ -267,16 +267,41 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       return h;
     }
     h += `<section class="card"><div class="kv"><span>Força</span><b>${O.forca(UI.game, UI.squad).toFixed(1)}</b></div>
-      <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
+      <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section>` + vTreino(q) + `<section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
       const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
-      return `<div class="slot">${p ? `${avatar(p.n)}<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}<a href="#" data-act="ficha" data-id="p:${esc(p.n)}">${esc(p.n)}</a> ${p.c ? flagIso(p.c) : bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div>${hex(p.o)}${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
+      return `<div class="slot">${p ? `${avatar(p.n)}<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}<a href="#" data-act="ficha" data-id="p:${esc(p.n)}">${esc(p.n)}</a> ${p.c ? flagIso(p.c) : bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small>${trnHtml(p, UI.squad, i < nT, `data-slot="${i}"`)}<div class="acts"><button class="mini" data-act="ren-abrir" data-slot="${i}">Renovar ▾</button>${p.estrela ? '' : `<button class="mini ${UI.arm === 'v' + i ? 'warn' : ''}" data-act="vender" data-slot="${i}">${UI.arm === 'v' + i ? 'Confirmar venda?' : 'Vender ' + O.money(O.valorVenda(p))}</button>`}${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div>${UI.ren && UI.ren.slot === i ? renPanel(p, i) : ''}</div>${hex(p.o)}${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
-    const bs = (S.base || {})[UI.game] || [];
-    h += `<section class="card"><h2>🌱 Base</h2>` + (O.infraNivel('base', UI.game) ? '' : '<p class="hint">Compre a Categoria de base na aba Estrutura para revelar jovens.</p>')
-      + bs.map(p => `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${ANOS(p.a)} · potencial ${p.pot}</small></div>${hex(p.o)}<button class="mini buy" data-act="base" data-id="${p.id}">Promover</button></div>`).join('') + '</section>';
-    return h;
+    return h + vBase(roles);
+  }
+  const estrelas = v => '★'.repeat(v.estrelas) + '☆'.repeat(5 - v.estrelas) + (v.incerto ? '?' : '');
+  const potTxt = (p, g) => { const v = O.potVisivel(p, g); return `${estrelas(v)} ${v.incerto ? v.lo + '–' + v.hi : v.est}`; };
+  /* linha de treino de um jogador: foco (botão que troca), barra de XP, tendência, potencial e moral */
+  function trnHtml(p, sq, tit, ref) {
+    const F = O.FOCOS[p.foco] || O.FOCOS.bal, need = O.xpNecessario(p.o), room = p.pot != null && p.o >= p.pot, td = O.tendencia(p, UI.game, sq, tit), tr = p.tr && O.TRACOS[p.tr];
+    const pct = room ? 100 : Math.min(100, Math.round((p.xp || 0) / need * 100)), mo = Math.round(p.mo == null ? 70 : p.mo);
+    return `<div class="trn"><button class="mini fc" data-act="foco-j" ${ref} data-sq="${sq}" title="${esc(F.desc)} Toque para trocar.">${F.icone} ${F.nome}</button><div class="bar ${room ? 'max' : ''}" title="Progresso até a próxima nota"><i style="width:${pct}%"></i></div>`
+      + `<small class="tnd">${td.s} ${room ? (p.a >= 30 ? 'em declínio' : 'no potencial') : 'XP ' + Math.floor(p.xp || 0) + '/' + need + ' · +' + td.anual.toFixed(1).replace('.', ',') + '/ano'}</small>`
+      + `<small class="tnd">Pot. ${potTxt(p, UI.game)} · Moral ${O.moralRot(mo)} ${mo}${tr ? ' · ' + tr.nome : ''}</small></div>`;
+  }
+  function renPanel(p, slot) {
+    const R = UI.ren, pr = O.propostaRenovar(p, R.oferta, R.anos), neg = p.neg > 0;
+    return `<div class="negoc"><small>Negociar renovação${neg ? ' (ele não quer conversar por ' + p.neg + ' sem.)' : ''}</small><div class="chips">${[1, 2, 3].map(n => `<button class="chip ${R.anos === n ? 'on' : ''}" data-act="ren-anos" data-id="${n}">${n} ano${n > 1 ? 's' : ''}</button>`).join('')}</div>`
+      + `<div class="chips">${Object.entries(O.OFERTAS).map(([k, v]) => `<button class="chip ${R.oferta === k ? 'on' : ''}" data-act="ren-of" data-id="${k}">${v.nome}</button>`).join('')}</div>`
+      + `<small>Luvas ${O.money(pr.custo)} · chance de aceitar ${Math.round(pr.chance * 100)}%${R.oferta === 'baixa' ? ' (recusa deixa o jogador chateado)' : R.oferta === 'alta' ? ' (melhora a moral)' : ''}</small><div class="acts"><button class="mini buy" data-act="ren-ok" data-slot="${slot}" ${neg ? 'disabled' : ''}>Propor</button><button class="mini" data-act="ren-abrir" data-slot="${slot}">Fechar</button></div></div>`;
+  }
+  function vTreino(q) {
+    const S = O.get(), g = UI.game, casa = O.infraNivel('casa', g), nn = (S.noticias || []).filter(x => x.g === g).slice(0, 5);
+    return `<section class="card"><h2>🏋️ Treino</h2><p class="hint">Cada jogador treina toda semana: o XP vira +1 de nota até o potencial. Jovens evoluem rápido, veteranos só mantêm. Gaming house nível ${casa} (+${casa * 10}% de XP)${S.foco === 'treino' ? ' e Foco da semana em treino (+25%)' : ''}.</p>`
+      + `<div class="chips"><small class="hint" style="align-self:center">Foco de todos:</small>${Object.values(O.FOCOS).map(f => `<button class="chip" data-act="foco-all" data-id="${f.id}" title="${esc(f.desc)}">${f.icone} ${f.nome}</button>`).join('')}</div>`
+      + (nn.length ? '<ul class="log">' + nn.map(x => `<li class="${x.k}">${x.k === 'up' ? '📈' : x.k === 'down' ? '📉' : '•'} ${esc(x.t)}</li>`).join('') + '</ul>' : '<p class="hint">As evoluções aparecem aqui.</p>') + '</section>';
+  }
+  function vBase(roles) {
+    const S = O.get(), g = UI.game, nv = O.infraNivel('base', g), bs = (S.base || {})[g] || [];
+    let h = `<section class="card"><h2>🌱 Base</h2>` + (nv ? `<p class="hint">Nível ${nv} · ${bs.length}/${O.capBase(nv)} jovens · manter custa ${O.money(O.custoBase(g))}/sem. Quem completa ${O.BASE_ANO_MAX} anos sai: promova, venda ou dispense. A cada split a base revela ${nv >= 3 ? '1 a 3' : 'um'} jovem(ns).</p>` : '<p class="hint">Compre a Categoria de base na aba Loja para revelar jovens.</p>');
+    h += bs.map(p => `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${p.genio ? '💎 ' : ''}${esc(p.n)} ${p.c ? flagIso(p.c) : ''}</b><small class="${p.a >= O.BASE_ANO_MAX - 1 ? 'neg' : ''}">${ANOS(p.a)}${p.a >= O.BASE_ANO_MAX - 1 ? ' · último ano na base' : ''}</small>${trnHtml(p, 'base', true, `data-id="${p.id}"`)}<div class="acts"><button class="mini buy" data-act="base" data-id="${p.id}">Promover</button><button class="mini ${UI.arm === 'bv' + p.id ? 'warn' : ''}" data-act="base-v" data-id="${p.id}">${UI.arm === 'bv' + p.id ? 'Confirmar venda?' : 'Vender ' + O.money(O.valorVenda(p))}</button><button class="mini" data-act="base-d" data-id="${p.id}">Dispensar</button></div></div>${hex(p.o)}</div>`).join('');
+    return h + '</section>';
   }
   function vMercado() {
     const g = gameGuard(); if (g) return g;
@@ -360,7 +385,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     return `<section class="card ev"><h2>⚡ Evento</h2><p>${esc(e.txt)}</p><p class="hint">Expira em ${S.evento.sem} semanas.</p>` + e.ops.map((o, i) => `<button class="btn ${i ? 'alt' : ''}" style="margin-top:6px" data-act="evento" data-id="${i}">${esc(o.t)}</button>`).join('') + '</section>';
   }
   function vNegocios() {
-    const S = O.get(), foco = [['nenhum', '😴 Normal', 'Sem efeito.'], ['treino', '🏋️ Treino', '+1 de força em todos os times.'], ['midia', '📣 Mídia', 'Seguidores crescem +2% por semana (R$ 3 mil/sem).']];
+    const S = O.get(), foco = [['nenhum', '😴 Normal', 'Sem efeito.'], ['treino', '🏋️ Treino', '+1 de força em todos os times e +25% de XP de treino dos jogadores.'], ['midia', '📣 Mídia', 'Seguidores crescem +2% por semana (R$ 3 mil/sem).']];
     let h = vEvento() + `<section class="card"><h2>🎯 Foco da semana</h2><div class="chips">${foco.map(([id, nm]) => `<button class="chip ${S.foco === id ? 'on' : ''}" data-act="foco" data-id="${id}">${nm}</button>`).join('')}</div><p class="hint">${foco.find(x => x[0] === S.foco)[2]}${S.buff ? ' Bootcamp ativo: +' + S.buff.f + ' de força por ' + S.buff.sem + ' sem.' : ''}</p></section>`;
     h += `<section class="card"><h2>📱 Redes sociais</h2><div class="kv"><span>Seguidores</span><b>${S.social.seg.toLocaleString('pt-BR')}</b></div><div class="kv"><span>Renda semanal (anúncios)</span><b class="pos">${O.money(O.rendaSocial())}</b></div><p class="hint">Vitórias e títulos fazem a base de fãs crescer.</p></section>`;
     h += `<section class="card"><h2>🤝 Patrocinadores (${S.patro.length}/3)</h2>` + (S.patro.map(x => `<div class="slot"><div class="who"><b>${esc(x.n)}</b><small>${x.sem} semanas restantes</small></div><b class="pos">${O.money(x.pay)}/sem</b></div>`).join('') || '<p class="hint">Nenhum patrocinador ainda.</p>') + '</section>';
@@ -454,7 +479,15 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     else if (a === 'ativar') res(O.ativarSquad(UI.game, UI.squad));
     else if (a === 'dispensar') res(O.dispensar(UI.game, UI.squad, +b.dataset.slot));
     else if (a === 'contratar') { const p = O.pool(UI.game).find(x => x.id === id); if (p) res(O.contratar(UI.game, UI.squad, p)); }
-    else if (a === 'renovar') res(O.renovar(UI.game, UI.squad, +b.dataset.slot));
+    else if (a === 'ren-abrir') { const sl = +b.dataset.slot; UI.ren = UI.ren && UI.ren.slot === sl ? null : { slot: sl, anos: 2, oferta: 'justa' }; render(); }
+    else if (a === 'ren-anos') { UI.ren.anos = +id; render(); }
+    else if (a === 'ren-of') { UI.ren.oferta = id; render(); }
+    else if (a === 'ren-ok') { const r = O.renovar(UI.game, UI.squad, +b.dataset.slot, UI.ren.oferta, UI.ren.anos); if (r.ok) UI.ren = null; res(r); }
+    else if (a === 'foco-j') { const sq = b.dataset.sq, ref = b.dataset.id || b.dataset.slot, p = sq === 'base' ? (S.base[UI.game] || []).find(x => x.id === ref) : S.games[UI.game].squads[sq].slots[+ref], ids = Object.keys(O.FOCOS); if (p) res(O.trocarFoco(UI.game, sq, ref, ids[(ids.indexOf(p.foco) + 1) % ids.length])); }
+    else if (a === 'foco-all') res(O.focoEquipe(UI.game, UI.squad, id));
+    else if (a === 'vender') { const k = 'v' + b.dataset.slot; if (UI.arm === k) { UI.arm = null; res(O.vender(UI.game, UI.squad, +b.dataset.slot)); } else { UI.arm = k; clearTimeout(UI.armH); UI.armH = setTimeout(() => { UI.arm = null; if (UI.tab === 'elenco') render(); }, 3000); render(); } }
+    else if (a === 'base-v') { const k = 'bv' + id; if (UI.arm === k) { UI.arm = null; res(O.venderBase(UI.game, id)); } else { UI.arm = k; clearTimeout(UI.armH); UI.armH = setTimeout(() => { UI.arm = null; if (UI.tab === 'elenco') render(); }, 3000); render(); } }
+    else if (a === 'base-d') res(O.dispensarBase(UI.game, id));
     else if (a === 'mover') res(O.mover(UI.game, UI.squad, id, +b.dataset.slot));
     else if (a === 'base') res(O.promoverBase(UI.game, UI.squad, id));
     else if (a === 'foco') res(O.setFoco(id));

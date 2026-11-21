@@ -153,3 +153,8 @@ input[type=range]{padding:0;min-height:28px;accent-color:var(--gold)}
 .av{overflow:hidden}.av img{width:100%;height:100%;object-fit:cover;display:block}
 
 .crest[data-act],.av[data-act],.tn>span:not(.crest):not(.logo),.team b[data-act],.who a[data-act]{cursor:pointer}.who a[data-act],.lp a[data-act],.leg a[data-act]{color:inherit;text-decoration:none;border-bottom:1px dotted rgba(217,179,95,.5)}
+/* treino e base */
+.trn{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin-top:4px}.trn .fc{min-width:0;min-height:30px;font-size:11px;padding:3px 8px}.trn .bar{flex:1;min-width:60px;margin:0}.trn .bar.max i{background:var(--pos)}
+.who .trn small,.who .tnd{white-space:normal;flex:1 1 100%;overflow:visible}.tnd{color:var(--mut);font-size:12px}
+.negoc{margin-top:6px;padding:8px;border:1px solid var(--line);background:rgba(255,255,255,.03)}.negoc small{display:block;white-space:normal;color:var(--mut)}
+.mini.warn{background:var(--neg);color:#fff;border:0}.log li.up{color:var(--pos)}.log li.down{color:var(--neg)}
