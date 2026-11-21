@@ -18,9 +18,9 @@
   const slotsDe = g => GAMES[g].roles.length + GAMES[g].subs;
   /* premio = bolsa do campeonato do nível; licenca = custo para criar o time */
   const SQUADS = {
-    t1:   { id: 't1',   nome: 'Time principal (T1)', licenca: 0,      premio: 600000 },
-    t2:   { id: 't2',   nome: 'Time T2',             licenca: 250000, premio: 150000 },
-    acad: { id: 'acad', nome: 'Academy',             licenca: 150000, premio: 50000 },
+    t1:   { id: 't1',   nome: 'Time principal (T1)', licenca: 0,      premio: 300000 },
+    t2:   { id: 't2',   nome: 'Time T2',             licenca: 250000, premio: 75000 },
+    acad: { id: 'acad', nome: 'Academy',             licenca: 150000, premio: 25000 },
   };
 
   /* Estrutura (gaming house, periféricos, staff...). bonus = pontos de força por nível. */
@@ -72,7 +72,7 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
-             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, aporte: 0, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
   }
   let S = novoJogo();
   const get = () => S;
@@ -206,11 +206,14 @@
     { id: 'pol', txt: 'Uma polêmica nas redes envolve um jogador.', ops: [{ t: 'Nota oficial (R$ 8 mil)', c: 8000 }, { t: 'Ignorar (-8% seguidores)', f: 'seg', v: 0.92 }] },
     { id: 'vaq', txt: 'Fãs organizam uma vaquinha para a org.', ops: [{ t: 'Aceitar R$ 10 mil', f: 'caixa', v: 10000 }] },
   ];
-  function seguidores(m) { S.social.seg = Math.max(500, Math.round(S.social.seg * m)); }
-  const rendaSocial = () => Math.round(S.social.seg * 0.02);
+  function seguidores(m) { // crescimento com rendimento decrescente (evita bola de neve) e teto de 10 mi
+    const g = m > 1 ? 1 + (m - 1) / (1 + S.social.seg / 5e5) : m;
+    S.social.seg = clamp(Math.round(S.social.seg * g), 500, 1e7);
+  }
+  const rendaSocial = () => Math.round(S.social.seg * 0.003);
   const custoFoco = () => S.foco === 'midia' ? 3000 : 0;
   function ofertas() {
-    if (!S.ofertas.length) S.ofertas = [0, 1, 2].map(() => ({ id: 'p' + Math.floor(rnd() * 1e9), n: MARCAS[Math.floor(rnd() * MARCAS.length)], pay: Math.round(8000 * Math.pow(S.org.rep, 1.2) * (1 + (S.estrela ? Math.max(0, S.estrela.o - 70) / 100 : 0)) * (0.8 + rnd() * 0.6) / 500) * 500, sem: [26, 52, 78][Math.floor(rnd() * 3)] }));
+    if (!S.ofertas.length) S.ofertas = [0, 1, 2].map(() => ({ id: 'p' + Math.floor(rnd() * 1e9), n: MARCAS[Math.floor(rnd() * MARCAS.length)], pay: Math.round(8000 * Math.pow(S.org.rep, 0.8) * (1 + (S.estrela ? Math.max(0, S.estrela.o - 70) / 100 : 0)) * (0.8 + rnd() * 0.6) / 500) * 500, sem: [26, 52, 78][Math.floor(rnd() * 3)] }));
     return S.ofertas;
   }
   const rendaPatro = () => S.patro.reduce((a, x) => a + x.pay, 0);
@@ -235,6 +238,8 @@
     S.patro.forEach(x => x.sem--); const fim = S.patro.filter(x => x.sem <= 0); S.patro = S.patro.filter(x => x.sem > 0); fim.forEach(x => log(`Patrocínio com ${x.n} terminou`));
     seguidores(1 + 0.002 + 0.0004 * S.org.rep + (S.estrela ? Math.max(0, S.estrela.o - 60) * 0.00004 : 0) + (S.foco === 'midia' ? 0.02 : 0));
     if (S.buff && --S.buff.sem <= 0) S.buff = null;
+    if (S.aporte > 0) S.aporte--;
+    if (S.org.caixa < 0 && !S.aporte && !Object.keys(GAMES).some(g => GAMES[g].ativo && prontos(g, 't1'))) { S.org.caixa += 300000; S.aporte = 52; log('Aporte emergencial: investidores injetaram R$ 300 mil na org'); }
     S.itens.forEach(x => x.sem--); S.itens = S.itens.filter(x => x.sem > 0);
     if (++S.lojaSem >= LOJA_CICLO) { S.lojaSem = 0; S.loja = []; lojaItens(); }
     if (++S.ofertaSem >= 6) { S.ofertaSem = 0; S.ofertas = []; ofertas(); }
@@ -320,8 +325,8 @@
      No fim do ano o pior time da IA do T1 é rebaixado e o melhor do T2 é promovido (na região da org).
      Resultado de cada jogo: força do elenco (+ estrutura) com sorteio por semente. */
   const INTL = {
-    MSI:    { nome: 'MSI',    bolsa: 1200000, rep: 0.4, semanas: 3, vagas: { LCK: 2, LPL: 2, LEC: 1, LCS: 1, CBLOL: 1, LCP: 1 } },
-    WORLDS: { nome: 'Mundial', bolsa: 3000000, rep: 0.8, semanas: 4, vagas: { LCK: 3, LPL: 3, LEC: 3, LCS: 2, CBLOL: 2, LCP: 3 } },
+    MSI:    { nome: 'MSI',    bolsa: 600000, rep: 0.4, semanas: 3, vagas: { LCK: 2, LPL: 2, LEC: 1, LCS: 1, CBLOL: 1, LCP: 1 } },
+    WORLDS: { nome: 'Mundial', bolsa: 1500000, rep: 0.8, semanas: 4, vagas: { LCK: 3, LPL: 3, LEC: 3, LCS: 2, CBLOL: 2, LCP: 3 } },
   };
   const PCT_INTL = { campeao: 1, vice: 0.5, semi: 0.25, quartas: 0.1, oitavas: 0.04 };
   const probVit = (fa, fb) => 1 / (1 + Math.exp(-(fa - fb) / 4));       // diferença de 4 pontos de força ≈ 73%
@@ -527,7 +532,7 @@
     let receita = 0, despesa = 0;
     for (const sq in SQUADS) {
       const q = S.games[game].squads[sq]; if (!q.on) continue;
-      if (prontos(game, sq)) receita += Math.round(14000 * S.org.rep * (sq === 't1' ? 1 : 0.2));
+      if (prontos(game, sq)) receita += Math.round(8000 * Math.pow(S.org.rep, 0.5) * (sq === 't1' ? 1 : 0.2));
       despesa += folha(game, sq);
     }
     return { receita, despesa, saldo: receita - despesa };

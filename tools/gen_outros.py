@@ -109,7 +109,7 @@ for gi, (g, regs) in enumerate(L.items()):
     ks = list(lig)
     n1, n2 = INTL[g]
     res[g] = {'roles': ROLES[g], 'inicio': ks[0], 'leagues': lig,
-              'intl': {'A': {'nome': n1, 'bolsa': 600000, 'rep': 0.3, 'semanas': 3, 'vagas': dict(zip(ks, VAG1))},
-                       'B': {'nome': n2, 'bolsa': 1500000, 'rep': 0.6, 'semanas': 4, 'vagas': dict(zip(ks, VAG2))}}}
+              'intl': {'A': {'nome': n1, 'bolsa': 300000, 'rep': 0.3, 'semanas': 3, 'vagas': dict(zip(ks, VAG1))},
+                       'B': {'nome': n2, 'bolsa': 750000, 'rep': 0.6, 'semanas': 4, 'vagas': dict(zip(ks, VAG2))}}}
 open(out, 'w', encoding='utf8').write('/* Dados dos outros jogos (tools/gen_outros.py). Orgs reais; jogadores GERADOS (fictícios). Jogador = [nick, nota, idade]. */\nwindow.DATA=' + json.dumps(res, ensure_ascii=False, separators=(',', ':')) + ';\n')
 print({g: sum(len(l['t1']) + len(l['t2']) for l in v['leagues'].values()) for g, v in res.items()})
