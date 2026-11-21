@@ -68,16 +68,24 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'FURIA': ['FalleN','yuurih','YEKINDAR','KSCERATO','molodoy'], 'Team Spirit': ['donk','magixx','sh1ro','tN1R','zont1x'],
   'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS'],
   '9z Team': ['max','HUASOPEEK','luchov','meyern','dgt'], 'paiN Gaming': ['vsm','biguzera','piriajr','snow','saffee'],
-  'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['HooXi','phzy','jabbi','Staehr','ryu']},
+  'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['HooXi','phzy','jabbi','Staehr','ryu'],
+  'NAVI': ['Aleksib','b1t','iM','w0nderful','makazze'], 'Heroic': ['nilo','susp','Chr1zN','MartinezSa','Brollan'],
+  'FaZe Clan': ['Twistzz','JBOEN','frozen','jcobbb','Neityu'], 'G2 Esports': ['huNter-','NertZ','r1nkle','HeavyGod','MATYS'],
+  'Team Liquid': ['EliGE','NAF','JT','malbsMd','Jorko'], 'MIBR': ['brnz4n','insani','nqz','LNZ','venomzera']},
  'dota2': {'Team Spirit': ['Yatoro','Larl','Collapse','not_me','rue'], 'Aurora': ['Nightfall','Mikoto','Ws','Mira','kaori'],
   'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Nisha','Ace','Boxi','tOfu']},
- 'valorant': {'Karmine Corp': ['LewN','dos9','Avez','SUYGETSU','N4RRATE'], 'Nongshim RedForce': ['Ivy','Rb','Francis','Xross','Dambi'],
+ 'valorant': {'100 Thieves': ['Asuna','Timotino','vora','bang','Cryo'], 'LOUD': ['DaviH','lukxo','erde','Darker','tkzin'],
+  'NRG': ['skuba','brawk','Ethan','mada','keiko'], 'Karmine Corp': ['LewN','dos9','Avez','SUYGETSU','N4RRATE'], 'Nongshim RedForce': ['Ivy','Rb','Francis','Xross','Dambi'],
   'Paper Rex': ['something','f0rsakeN','d4v41','Jinggg','invy'], 'T1': ['Meteor','stax','Munchkin','iZu','BuZz'],
   'BBL Esports': ['Rosé','Crewen','Lar0k','Loita','lovers rock']},
  'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
   'Team Liquid': ['Kheyze','FelipoX','Nade','Maia','Jv92'], 'LOUD': ['resetz','stemp','Gabu7z','live','Flastry'],
   'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Hotancold','GMZ','SpiriTz','Atom','Kason'],
   'Cloud9': ['Centir','Focal','Ewzy','Eddy','Kixhro']}}
+# EA FC: pros reais do circuito FC Pro 2026 (EA/FUTWIZ/Red Bull). Nota por ranking mundial quando citado; sem time real (as orgs da liga são fictícias para este jogo).
+FC_RANK = {'Levi de Weerd': 6, 'GuiBarros': 7, 'Tekkz': 12, 'Umut': 21, 'LJR Peixoto': 23, 'HHezerS': 24, 'Yaskow': 49, 'Lukas': 62, 'AnasBadr': 70, 'tuga810': 81}
+FC_PROS = ['Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiBarros','Tekkz','Jafonso','Umut','Emre Yilmaz','Obrun','Yuval','Brice','LJR Peixoto','HHezerS','AboFawzi','The 1OS','Karimisbak','MarwanMC9','Bonanno','Yaskow','Lukas','AlihanLion','Darkley11','Nassada','Stingray','Caccia','Exeed','GugaFerrez','AnasBadr','tuga810']
+_fc = iter(FC_PROS)
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
@@ -90,6 +98,9 @@ for gi, (g, regs) in enumerate(L.items()):
     for key, nome, regiao, t1, t2 in regs:
         def time(nm, base):
             if nm in REAL.get(g, {}): return real_time(g, nm, base)
+            if g == 'fifa':
+                n = next(_fc, None)
+                if n: return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), None]]}
             return {'n': nm, 'p': [[nick(r, used), max(55, min(90, round(base + r.uniform(-4, 4)))), r.randint(17, 30)] for _ in ROLES[g]]}
         a = t1.split(','); b = t2.split(',')
         assert len(set(a + b)) == 15, (g, key)
