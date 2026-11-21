@@ -75,7 +75,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     const o = orgOf(s0); if (o) { const c = slug(o.cur); if (L.has(c)) return c; }
     let b = ''; L.forEach(x => { if ((sl.startsWith(x + '-') || x.startsWith(sl + '-')) && x.length > b.length && (sl.startsWith(x + '-') || !b)) b = x; }); return b; };
   const crest = (n, sz) => { const sl = logoOf(slug(n)); return sl
-    ? `<span class="crest ${sz || 'sm'} real"><img src="logos/${sl}.webp" alt="${esc(n)}" loading="lazy" decoding="async"></span>`
+    ? `<span class="crest ${sz || 'sm'} real"><img src="logos/${sl}.${(window.LOGOX || {})[sl] || 'webp'}" alt="${esc(n)}" loading="lazy" decoding="async"></span>`
     : `<span class="crest ${sz || 'sm'}" style="--h:${hue(n)}">${esc(ini(n))}</span>`; };
   const crestT = (c, i, sz) => c.teams[i].eu ? logo(O.get().org.logo, { sm: 26, md: 44, lg: 60 }[sz || 'sm']) : crest(O.nome(c, i), sz);
   const DG = () => O.dataOf(UI.game);
