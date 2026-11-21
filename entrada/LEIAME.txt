@@ -1,0 +1,7 @@
+Jogue aqui as imagens com QUALQUER nome de arquivo:
+  entrada/logos/  -> logos dos times (ex.: "Team_Liquid_2024_allmode.png")
+  entrada/fotos/  -> fotos dos jogadores (ex.: "Faker 2025.jpg")
+Depois rode:  python3 tools/importar_imagens.py
+O script descobre de quem é cada imagem, recorta, redimensiona, converte para webp,
+tira o fundo dos logos e coloca em public/logos e public/fotos.
+A lista do que falta (com links) fica em public/pendencias.html (abra no navegador ou em /pendencias.html no site).

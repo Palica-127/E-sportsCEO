@@ -1,5 +1,0 @@
-ESCUDOS DOS TIMES
-Coloque aqui logos/<slug>.png (ou .webp, .jpg, .svg). O slug é o nome do time em minúsculas com hífens: "Team Liquid" -> team-liquid.png.
-logos/FALTAM.txt lista, por jogo, cada time que ainda não tem escudo e o nome de arquivo esperado.
-Depois de colocar os arquivos, rode: python3 tools/gen_logos.py (ou peça para eu rodar). Quem não tem escudo mostra a sigla colorida.
-Nomes antigos de times que mudaram de marca (ex.: SK Telecom T1 -> T1) usam o escudo da organização atual.

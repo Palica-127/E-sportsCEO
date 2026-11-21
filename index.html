@@ -1,41 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0d1017">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>eSports CEO</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-<div id="app">
-  <header id="top"></header>
-  <div id="games" class="chips scroll"></div>
-  <main id="main"></main>
-  <nav id="nav"></nav>
-</div>
-<div id="toast" role="status" aria-live="polite"></div>
-<script src="js/data/lol.js"></script>
-<script src="js/data/outros.js"></script>
-<script src="js/data/nomes.js"></script>
-<script src="js/data/logos.js"></script>
-<script src="js/data/lolx.js"></script>
-<script src="js/data/hist.js"></script>
-<script src="js/data/hist_val.js"></script>
-<script src="js/data/hist_ff.js"></script>
-<script src="js/data/hist_dota.js"></script>
-<script src="js/data/hist_r6.js"></script>
-<script src="js/data/hist_fifa.js"></script>
-<script src="js/data/hist_wr.js"></script>
-<script src="js/data/fotos.js"></script>
-  <script src="js/core.js"></script>
-<script src="js/ui.js"></script>
-<script>if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0f17" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon-192.png" />
+    <title>eSports CEO</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

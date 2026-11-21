@@ -1,56 +1,43 @@
 # eSports CEO
 
-Jogo de gerenciamento de uma organização de esports, em site estático (sem build, sem backend). Abra `index.html` ou publique no Vercel (Framework "Other", sem build command).
+Jogo de gestão de uma organização de esports, inspirado no Football Manager. Você é o **CEO**: os técnicos cuidam do jogo, você cuida da org (dinheiro, elenco, patrocínio, metas da diretoria).
 
-**Visual:** inspirado no BrasLOL (azul-marinho e dourado, fontes Barlow, painéis com cantos dourados, escudos por time, trilha de etapas). Logo: símbolos prontos ou imagem enviada por você (o fundo é removido automaticamente e ganha contorno branco; reduzida e salva no navegador). Aba Calendário com próxima partida, chance de vitória, mês e agenda. Os escudos dos times são gerados (iniciais + cor), não são os logos reais.
+Feito em **React + TypeScript + Vite**. Roda no navegador do PC e no celular (instalável), e é publicado no Vercel.
 
-**Layout:** feito principalmente para PC (barra lateral + cards em colunas a partir de 900px) e também funciona no celular.
+## Rodar
+```bash
+npm install
+npm run dev      # abre em http://localhost:5173
+npm test         # testes do motor (2 temporadas completas)
+npm run build    # gera dist/ (é isso que o Vercel publica)
+```
+No Vercel: Framework Preset **Vite** (build `npm run build`, saída `dist`).
 
-**Começo de jogo:** você cria a org (nome e logo), escolhe UM jogo e região para começar e tenta convencer uma estrela a assinar (3 convites; a chance cai com a nota: ~87% na 70, ~22% na 80, ~1% na 91). Os outros jogos abrem com o tempo (o 1º após 26 semanas, o 2º após 52...) pagando licença.
-
-## O que já tem (esqueleto)
-- **Org**: caixa, reputação, semana/ano, região (liga de origem), avançar 1 ou 4 semanas, histórico.
-- **Jogos**: os 8 estão ativos (LoL, CS2, Dota 2, Valorant, Free Fire, Rainbow Six Siege, EA FC, Wild Rift), cada um com elenco e funções próprias (ex.: Free Fire 4+2, EA FC 1+1) e 3 regiões com T1 e T2, liga, playoffs e 2 torneios internacionais por ano. LoL usa dados do BrasLOL (`tools/gen_lol.py`). Nos outros jogos os nomes das orgs são reais (aproximados), mas **jogadores, notas e idades são gerados/fictícios** (`tools/gen_outros.py`). Cada jogo tem sua própria região.
-- **Elenco**: por jogo, 3 times (T1, T2, Academy): 5 titulares (um por função) + 2 reservas. T1 já nasce ativo, T2 custa licença, Academy liberada no LoL.
-- **Mercado**: todos os jogadores do BrasLOL (T1 das 6 ligas + T2 com elenco), filtros por função, liga, nome, "posso pagar" e ordem por preço.
-- **Estrutura**: gaming house, teclados/mouses, fones/monitores, psicólogo, nutricionista, academia e cozinha, com níveis e bônus de força.
-- **Competições (LoL)**: calendário semanal. Cada time da org (T1 e T2) joga a liga da sua região: pontos corridos (todos contra todos, Bo1), playoffs com os 6 primeiros (quartas Bo3, semifinais Bo3, final Bo5), premiação em dinheiro, bônus por vitória, reputação e histórico de campeões. 2 splits por ano. O resultado de cada jogo vem da força dos elencos (média dos titulares + estrutura) com sorteio por semente salva no jogo. É preciso ter os titulares completos antes do split começar. O botão "Ir até a próxima partida" pula as semanas sem jogo.
-- **Ligas**: além da competição da org, dá para explorar todas as ligas e times (T1 e T2) com seus elencos.
-- Save automático no navegador (`localStorage`, chave `org-v1`).
+## O que já tem (Fase 1)
+- **Cenários de início:** Org nova (compra vaga na Challengers e monta o time na peneira), Org em crise (time da elite endividado) e Investidor (time forte, diretoria exigente). Rebrand do time assumido.
+- **Dois jogos desde o início:** LoL + 1 à escolha (CS2, VALORANT, Dota 2, Free Fire, R6, EA FC ou Wild Rift).
+- **Peneira:** agentes livres, talentos da solo queue e jogadores com contrato interessados no projeto, com notas aproximadas, custo de assinatura e comentário do técnico.
+- **Tempo dia a dia** com o botão **Continuar** (ou barra de espaço). Ele para em dia de jogo e quando chega uma decisão.
+- **Dia de jogo:** chance de vitória, resumo animado de ~30 s por série (placar ao vivo, eventos, gráfico de ouro no LoL/Dota/WR, MVP, estatísticas por mapa) e painel com todos os resultados do dia.
+- **Temporada:** 3 splits por ano, fase regular, playoffs (quartas, semis, final), premiação, acesso e rebaixamento entre elite e Challengers, histórico de campeões.
+- **Caixa de entrada** com decisões: patrocínios, reservas insatisfeitos, pedidos do técnico.
+- **Elenco:** nota, forma, moral, perfil, salário e contrato. O técnico escala sozinho, mas o CEO pode intervir trocando jogadores.
+- **Finanças:** receitas e despesas semanais, patrocinadores, gráfico do caixa. **Diretoria** com meta e confiança.
 
 ## Estrutura
-- `js/core.js`: regras, estado e simulação das competições (sem DOM, testável em Node)
-- `js/ui.js`: telas e eventos
-- `js/data/lol.js`: dados do LoL, gerado do BrasLOL com `python3 tools/gen_lol.py <braslol/index.html> js/data/lol.js`
-- `tests/core.js`: testes da lógica (`node tests/core.js`)
-- `tests/e2e.py`: teste de fumaça no navegador (Playwright)
+- `src/engine/`: motor sem interface (testável). `world.ts` (times/jogadores), `sim.ts` (calendário, ligas, playoffs, virada de ano), `match.ts` (partidas e resumos), `org.ts` (cenários, peneira, finanças, caixa de entrada).
+- `src/ui/`: telas em React. `src/styles.css`: tema escuro.
+- `src/data/*.json`: dados reais (times, elencos, históricos). Os geradores antigos estão em `tools/gen_*.py`. Para converter um `.js` antigo: `node tools/js2json.cjs <pasta-js> src/data`.
+- Save no navegador (`localStorage`, chave `esportsceo-v2`).
 
-## Próximos passos sugeridos
-1. ~~Calendário e partidas simples~~ (feito para o LoL: tabela, playoffs, premiação).
-2. ✓ Torneios internacionais (MSI com 8 times após o split 1, Mundial com 16 após o split 2), promoção e rebaixamento entre T2 e T1 (times da IA) e Academy do LoL.
-3. ✓ Dados e competições dos outros jogos (CS2, Dota 2, Valorant, Free Fire, R6, EA FC, Wild Rift).
-4. ✓ Contratos (2 anos, aviso 8 semanas antes, renovação por 50% da taxa), Categoria de base (revela jovens com potencial a cada split, evoluem) e mover jogadores entre T1, T2 e Academy.
-5. ✓ Patrocínios (até 3, propostas a cada 6 semanas), redes sociais (seguidores e anúncios), foco da semana (treino/mídia) e eventos aleatórios — aba Negócios.
-6. ✓ Nome do jogo: eSports CEO (o repositório você renomeia no GitHub).
+## Logos e fotos
+1. Abra `/pendencias.html` (no site ou em `public/pendencias.html`). Lá estão os times sem logo e os jogadores sem foto, com link direto para a Leaguepedia/Liquipedia.
+2. Salve as imagens com **qualquer nome** em `entrada/logos/` ou `entrada/fotos/`.
+3. Rode `python3 tools/importar_imagens.py` (precisa do Pillow). Ele reconhece de quem é cada arquivo, recorta, tira o fundo dos logos, converte para webp e atualiza as listas do jogo.
 
-## Avanço contínuo
-O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem parar, até você clicar em ⏸ ou acontecer algo importante (evento, contrato, final de torneio, caixa negativo). Velocidades 1x/2x/6x.
+Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa um avatar com as iniciais.
 
-## LoL: fichas, campeões e brackets
-- `tools/gen_lolx.js` extrai do BrasLOL nacionalidades, campeões do Mundial/MSI com line-ups e lendas (`js/data/lolx.js`) e copia só as bandeiras usadas (`flags/`). Fotos de pessoas não são copiadas (avatares com iniciais).
-- Torneios → abrir um time → **Ficha do time** (line-up, idades, nacionalidades, força, troféus).
-- Aba **Campeões**: Mundial, MSI e Lendas.
-- Playoffs e torneios internacionais aparecem como chaves (brackets) em colunas.
-- Ficha do jogador (LoL): clique no nick → carreira por time, títulos (Mundial/MSI/ligas/copas), MVPs. A ficha do time agora mostra o técnico.
-- Golden Crown (Bola de Ouro) do LoL (top 10 por ano) na aba Campeões.
-- `js/data/hist.js`: histórico real dos outros jogos (aba Campeões genérica: torneios, títulos por time, MVPs). Preenchido: Majors de CS (2013–2026). Só entra dado conferido na web.
-- CS2 completo (`tools/gen_hist_cs2.py` → `js/data/hist.js`): 89 torneios (Majors, IEM, ESL Pro League S1–S23, BLAST), MVPs, line-ups dos Majors (só as conferidas), Bola de Ouro = Top 10 anual da HLTV (2013–2025) e Lendas calculadas. Filtro por tipo de torneio.
-- Valorant (`tools/gen_hist_val.py` → `js/data/hist_val.js`): Champions 2021–2026, Masters (12), Esports World Cup 2025–26 e campeões das ligas VCT; MVPs só onde as fontes concordam (MVP de Masters não é oficial); Bola de Ouro provisória com os pesos do BrasLOL (só campeões pontuam).
-- Dota 2 (`tools/gen_hist_dota.py` → `js/data/hist_dota.js`): The International 2011–2026 com rosters, Riyadh Masters/EWC 2022–2026, ~60 Majors/Tier 1 (sem rosters); sem MVP oficial de TI; Bola de Ouro provisória só com TI e EWC.
-- Rainbow Six Siege (`tools/gen_hist_r6.py` → `js/data/hist_r6.js`): Six Invitational 2017–2026, EWC 2024–2026 e Majors 2018–2026 (inclui Osaka 2026) com MVPs conferidos; line-ups só das conferidas (a da época do título); Prêmio anual chamado "Golden Shield" (Top 10 do SiegeGG em 2021/22/23/26; 2024 por títulos, provisório).
-- Free Fire (`tools/gen_hist_ff.py` → `js/data/hist_ff.js`): Mundiais 2019–2025, EWC 2024–26, LBFF 3–8/2023 e FFWS Brasil 2024; rosters só dos campeões com line-up verificada; Bola de Ouro provisória 2019–2025 (pesos do BrasLOL; 2026 fica para depois do Mundial).
-
-
-- EA FC / FIFA (`tools/gen_hist_fifa.py` → `js/data/hist_fifa.js`): Mundial individual 2004–2026 (sem 2007, 2020 e 2021), eClub World Cup 2017–2023, Nations Cup 2019/2022/2023 e EWC 2024. Ballon d'Or por títulos conferidos, provisório. Line-ups de clubes só quando a fonte as cita.
-- Wild Rift (`tools/gen_hist_wr.py` → `js/data/hist_wr.js`): Horizon Cup 2021, Icons 2022 (únicos globais) e WRL Asia 2023 S1/S2. Golden Rift só 2021 e 2022 (line-ups conferidas), provisório.
-Nomes do prêmio anual por jogo (mapa `PREMIO` em `js/ui.js`): LoL Golden Crown, CS2 Golden Rifle, Valorant Radiant Award, Free Fire Golden Booyah, Dota 2 Golden Aegis, R6 Golden Shield, EA FC Ballon d'Or, Wild Rift Golden Rift.
+## Próximas fases
+2. Jogadores vivos e técnicos como pessoas, negociação em 2 etapas, olheiros (notas escondidas), mercado vivo com rivais, Rosto da Org. Sede visível (casa → mansão → prédio), cômodos, equipe técnica e periféricos.
+3. Expansão até 8 jogos (do zero, comprando uma org ou como investidor), Academies jogando, finanças e patrocínios completos, torneios internacionais.
+4. Históricos e prêmios (Golden Crown etc.), Hall da Fama, versão .exe.
