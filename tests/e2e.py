@@ -38,7 +38,7 @@ async def main():
             await pg.click('[data-act=mpay]'); await pg.click('[data-act=masc]')
             for _ in range(5): await pg.locator('[data-act=contratar]:not([disabled])').first.click()
             await pg.click('[data-act=tab][data-id=elenco]')
-            filled = await pg.locator('#main .slot .ovr').count()
+            filled = await pg.locator('#main .slot .hx').count()
             ok(filled >= 5, f'{w}: 5+ contratados no elenco ({filled})')
             await pg.screenshot(path=f'{OUT}/elenco_{w}.png')
             await pg.click('[data-act=tab][data-id=estrutura]'); await pg.locator('[data-act=infra]:not([disabled])').first.click()
