@@ -85,6 +85,8 @@ func fin_tick() -> void:
 	var h: Array = S.get("fin", [])
 	h.append(int(S.org.caixa)); if h.size() > 52: h = h.slice(h.size() - 52)
 	S["fin"] = h
+	var pf: Array = S.get("perf", []); pf.append(forca_media()); if pf.size() > 52: pf = pf.slice(pf.size() - 52)
+	S["perf"] = pf
 func fin_resumo() -> Dictionary:
 	var comp = 0; var folha_t = 0; var base_t = 0; var por_jogo = []
 	for g in GAMES:
@@ -252,3 +254,11 @@ func fin_ano_fechar(ano_ant) -> void:
 	var ini: int = int(S.get("fin_ini", S.org.caixa)); var fim: int = int(S.org.caixa)
 	var h: Array = S.get("fin_anos", []); h.push_front({"ano": ano_ant, "ini": ini, "fim": fim}); S["fin_anos"] = h.slice(0, 10); S["fin_ini"] = fim
 	msg("diretoria", "Relatório financeiro de %d" % ano_ant, "O caixa foi de %s para %s (%s%s) ao longo do ano." % [money(ini), money(fim), "+" if fim >= ini else "-", money(absi(fim - ini))], [], "")
+
+func forca_media() -> float:
+	var t = 0.0; var n = 0
+	for g in GAMES:
+		if not ativo(g) or not aberto(g): continue
+		var q = S.games[g].squads.t1
+		if q.on and titulares(g, "t1").all(func(p): return p != null): t += forca(g, "t1"); n += 1
+	return snappedf(t / n, 0.1) if n else 0.0

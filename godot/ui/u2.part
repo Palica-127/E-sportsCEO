@@ -27,54 +27,7 @@ func vestrela() -> void:
 		btn(h, "Convidar", func(): var r: Dictionary = O.convidar_estrela(p); toast(r.msg); render())
 func jr100(x) -> int: return int(round(x * 100))
 
-# ---------- Org ----------
-func vorg() -> void:
-	var S = O.S; var pr: Dictionary = O.projecao_org()
-	kpi(content, [["SALDO / SEMANA", O.money(pr.saldo), OK if pr.saldo >= 0 else BAD], ["RECEITA", O.money(pr.receita), TXT], ["DESPESA", O.money(pr.despesa), TXT]])
-	var c = card()
-	var h = hrow(c)
-	var b1 = btn(h, "Parar" if play else "Avançar", _toggle_play, false, true); b1.custom_minimum_size.y = 72; b1.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b1.add_theme_font_size_override("font_size", 30)
-	var b2 = btn(h, "+1 semana", func(): _manual(1)); b2.custom_minimum_size.y = 72
-	var b3 = btn(h, "Até o jogo", _ate_jogo); b3.custom_minimum_size.y = 72
-	var h2 = hrow(c)
-	var tg = CheckButton.new(); tg.text = "Pular partidas"; tg.button_pressed = auto; tg.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tg.toggled.connect(func(on):
-		auto = on
-		if on: FileAccess.open("user://auto", FileAccess.WRITE).store_string("1")
-		else: DirAccess.remove_absolute(ProjectSettings.globalize_path("user://auto"))); h2.add_child(tg)
-	lbl(h2, "Velocidade", 22, DIM, false)
-	var sp = OptionButton.new(); sp.add_item("1x"); sp.add_item("2x"); sp.add_item("6x"); sp.selected = [0.45, 0.22, 0.07].find(vel) if [0.45, 0.22, 0.07].has(vel) else 0
-	sp.item_selected.connect(func(i): vel = [0.45, 0.22, 0.07][i]; if play: timer.start(vel)); h2.add_child(sp)
-	# próximo jogo (o mais cedo entre todos os jogos)
-	var prox = null
-	for g in O.GAMES:
-		if not O.ativo(g) or not O.aberto(g): continue
-		for sq in O.SQUADS:
-			if O.comp_for(g, sq) == null: continue
-			for a in O.agenda(g, sq, 3):
-				a["g"] = g; a["tag"] = O.tag_de(g, sq)
-				if a.tipo != "ini" and (prox == null or a.em < prox.em): prox = a
-	var cp = card("Próximo jogo", null, GOLD)
-	if prox == null: lbl(cp, "Nada agendado: complete os titulares de um time.", 24, DIM)
-	else:
-		var hp = hrow(cp); pill(hp, gname(prox.g), GCOL.get(prox.g, ACC), true); pill(hp, prox.tag, DIM); pill(hp, "em %d sem." % prox.em if prox.em > 0 else "esta semana", GOLD)
-		lbl(cp, "%s%s" % [prox.label, ("  ×  " + str(prox.op)) if prox.op != null else ""], 30, TXT)
-		lbl(cp, str(prox.data.txt), 22, DIM)
-	vdiretoria()
-	for g in O.GAMES:
-		if not O.ativo(g) or not O.aberto(g): continue
-		var cg = card(O.GAMES[g].nome, null, GCOL.get(g, ACC))
-		for sq in O.SQUADS:
-			var cpt = O.comp_for(g, sq)
-			if cpt == null: continue
-			var st: String = {"off": "entressafra", "wait": "aguardando titulares", "reg": "rodada %d" % (cpt.round + 1), "po": "playoffs", "intl": "internacional"}[cpt.phase]
-			var hh = hrow(cg); lbl(hh, O.SQUADS[sq].nome, 24, TXT, false); var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hh.add_child(sl); pill(hh, st, ACC2)
-			var fo: float = O.forca(g, sq); bar(cg, "Força", fo, 100.0, nota_col(fo), "%.1f" % fo)
-	var cn = card("Notícias", null, ACC2)
-	for l in S.log.slice(0, 8): lbl(cn, l, 21, DIM)
-	var cr = card()
-	btn(cr, "Tem certeza? Toque de novo" if fm == "reset" else "Nova org (apaga o save)", func():
-		if fm == "reset": fm = ""; O.reset_estado(); O.comecar(); render()
-		else: fm = "reset"; render())
+# ---------- Org (painel: ver ua.part) ----------
 func _toggle_play() -> void:
 	play = not play
 	if play: timer.start(vel)

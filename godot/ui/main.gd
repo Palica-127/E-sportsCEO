@@ -2,16 +2,18 @@ extends Control
 ## Interface do eSports CEO (Godot). Tudo é montado por código; render() refaz a tela atual.
 
 const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
+const NAV_ICON := {"org": "home", "elenco": "users", "mercado": "search", "cal": "calendar", "ligas": "list", "neg": "brief", "hall": "trophy", "mundo": "globe", "inbox": "mail", "noticias": "news", "fin": "coin", "legado": "star", "rank": "chart"}
 const NAV_MAIN := [["org", "Painel"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"]]
 const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["legado", "Legado e metas"], ["rank", "Rankings e recordes"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
-const BG := Color("0a0d16"); const SURF := Color("131929"); const SURF2 := Color("1b2338"); const LINE := Color("27314a")
-const CARD := SURF; const ACC := Color("4f8cff"); const ACC2 := Color("22d3ee"); const TXT := Color("eef1ff"); const DIM := Color("8a94b8")
+const BG := Color("080812"); const SURF := Color("0e0f1f"); const SURF2 := Color("15162b"); const LINE := Color("201f3e")
+const CARD := SURF; const ACC := Color("7c4dff"); const ACC2 := Color("a78bfa"); const TXT := Color("eef0ff"); const DIM := Color("8c8fb3")
 const OK := Color("3ddc97"); const BAD := Color("ff5d6c"); const GOLD := Color("ffc857")
 const GCOL := {"lol": Color("c89b3c"), "cs2": Color("f5a623"), "dota2": Color("e0453a"), "valorant": Color("ff4655"), "ff": Color("ff8a00"), "r6": Color("4cc3ff"), "fifa": Color("3ddc84"), "wr": Color("4aa8ff")}
 var O: Node
 var tab = "org"; var game = "lol"; var squad = "t1"
-var side: VBoxContainer; var side_p: PanelContainer; var nav_p: PanelContainer; var mgc: MarginContainer; var wide := false
-var content: VBoxContainer; var top: Label; var topsub: Label; var topchips: HBoxContainer; var gbar: HBoxContainer; var nav: HBoxContainer; var scroll: ScrollContainer
+var side: VBoxContainer; var side_p: PanelContainer; var nav_p: PanelContainer; var mgc: MarginContainer; var wide = false
+var hero: Hero; var mono: Mono; var topbar_p: PanelContainer; var topbar_h: HBoxContainer; var gp_p: PanelContainer
+var content: VBoxContainer; var top: Label; var topsub: Label; var topchips: Container; var gbar: HBoxContainer; var nav: HBoxContainer; var scroll: ScrollContainer
 var modal_layer: Control
 var play = false; var auto = false; var timer: Timer; var vel = 0.45
 var merc = {"role": "", "pay": true, "n": 25, "liga": ""}
@@ -19,26 +21,36 @@ var hy = 0; var hall_mode = "ano"; var fm = ""   # ano do Hall; modo
 var toast_lbl: Label; var cfg = {"nome": "Minha Org", "game": "lol", "regiao": ""}
 
 func _ready() -> void:
-	O = get_node("/root/Org"); O.carregar_dados()
+	O = get_node("/root/Org"); O.carregar_dados(); _fonts()
 	set_theme(_build_theme())
 	var bg = ColorRect.new(); bg.color = BG; bg.set_anchors_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	var root = VBoxContainer.new(); root.set_anchors_preset(Control.PRESET_FULL_RECT); root.add_theme_constant_override("separation", 0); add_child(root)
-	# cabeçalho
-	var hb = PanelContainer.new(); hb.add_theme_stylebox_override("panel", _sbf(SURF, 0, LINE, 0, 16, 2)); root.add_child(hb)
-	var tv = VBoxContainer.new(); tv.add_theme_constant_override("separation", 4); hb.add_child(tv)
-	top = Label.new(); top.add_theme_font_size_override("font_size", 34); top.add_theme_color_override("font_color", TXT); top.clip_text = true; tv.add_child(top)
-	topsub = Label.new(); topsub.add_theme_color_override("font_color", DIM); topsub.add_theme_font_size_override("font_size", 22); tv.add_child(topsub)
-	topchips = HBoxContainer.new(); topchips.add_theme_constant_override("separation", 8); tv.add_child(topchips)
-	# barra de jogos
-	var gp = PanelContainer.new(); gp.add_theme_stylebox_override("panel", _sbf(BG, 0, LINE, 0, 8, 0)); root.add_child(gp)
-	var gs = ScrollContainer.new(); gs.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; gs.custom_minimum_size.y = 62; gp.add_child(gs)
-	gbar = HBoxContainer.new(); gbar.add_theme_constant_override("separation", 8); gs.add_child(gbar)
+	# cabeçalho (banner da org)
+	hero = Hero.new(); root.add_child(hero)
+	var hm = MarginContainer.new(); for k in ["left", "right"]: hm.add_theme_constant_override("margin_" + k, 16)
+	hm.add_theme_constant_override("margin_top", 12); hm.add_theme_constant_override("margin_bottom", 14); hero.add_child(hm)
+	var tv = VBoxContainer.new(); tv.add_theme_constant_override("separation", 10); hm.add_child(tv)
+	var hr = HBoxContainer.new(); hr.add_theme_constant_override("separation", 14); tv.add_child(hr)
+	mono = Mono.new(); mono.fnt = F_H; hr.add_child(mono)
+	var nv = VBoxContainer.new(); nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; nv.size_flags_vertical = Control.SIZE_SHRINK_CENTER; nv.add_theme_constant_override("separation", 0); hr.add_child(nv)
+	top = Label.new(); top.add_theme_font_size_override("font_size", 46); top.add_theme_color_override("font_color", Color.WHITE); top.clip_text = true; if F_H != null: top.add_theme_font_override("font", F_H)
+	nv.add_child(top)
+	topsub = Label.new(); topsub.add_theme_color_override("font_color", DIM); topsub.add_theme_font_size_override("font_size", 23); nv.add_child(topsub)
+	var tc = HFlowContainer.new(); tc.add_theme_constant_override("h_separation", 8); tc.add_theme_constant_override("v_separation", 6); tv.add_child(tc); topchips = tc
+	# corpo: barra lateral (PC) + coluna direita (topo, abas de jogo, conteúdo)
 	var rw = HBoxContainer.new(); rw.size_flags_vertical = Control.SIZE_EXPAND_FILL; rw.add_theme_constant_override("separation", 0); root.add_child(rw)
-	side_p = PanelContainer.new(); side_p.add_theme_stylebox_override("panel", _sbf(SURF, 0, LINE, 0, 12)); side_p.custom_minimum_size.x = 270; side_p.visible = false; rw.add_child(side_p)
+	side_p = PanelContainer.new(); side_p.add_theme_stylebox_override("panel", _sbf(Color("0b0b18"), 0, LINE, 0, 0)); side_p.custom_minimum_size.x = 230; side_p.visible = false; rw.add_child(side_p)
 	var ssc = ScrollContainer.new(); ssc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; side_p.add_child(ssc)
-	side = VBoxContainer.new(); side.size_flags_horizontal = Control.SIZE_EXPAND_FILL; side.add_theme_constant_override("separation", 6); ssc.add_child(side)
+	side = VBoxContainer.new(); side.size_flags_horizontal = Control.SIZE_EXPAND_FILL; side.add_theme_constant_override("separation", 4); ssc.add_child(side)
+	var rv = VBoxContainer.new(); rv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; rv.size_flags_vertical = Control.SIZE_EXPAND_FILL; rv.add_theme_constant_override("separation", 0); rw.add_child(rv)
+	topbar_p = PanelContainer.new(); topbar_p.add_theme_stylebox_override("panel", _sbf(Color("0b0b18"), 0, LINE, 0, 10, 2)); topbar_p.visible = false; rv.add_child(topbar_p)
+	var tsc = ScrollContainer.new(); tsc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER; tsc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; tsc.custom_minimum_size.y = 76; topbar_p.add_child(tsc)
+	topbar_h = HBoxContainer.new(); topbar_h.add_theme_constant_override("separation", 14); topbar_h.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tsc.add_child(topbar_h)
+	gp_p = PanelContainer.new(); gp_p.add_theme_stylebox_override("panel", _sbf(BG, 0, LINE, 0, 8, 0)); rv.add_child(gp_p)
+	var gs = ScrollContainer.new(); gs.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; gs.custom_minimum_size.y = 62; gp_p.add_child(gs)
+	gbar = HBoxContainer.new(); gbar.add_theme_constant_override("separation", 8); gs.add_child(gbar)
 	var mg = MarginContainer.new(); mg.size_flags_vertical = Control.SIZE_EXPAND_FILL; mg.size_flags_horizontal = Control.SIZE_EXPAND_FILL; for k in ["left", "right"]: mg.add_theme_constant_override("margin_" + k, 14)
-	rw.add_child(mg); mgc = mg
+	rv.add_child(mg); mgc = mg
 	scroll = ScrollContainer.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; mg.add_child(scroll)
 	content = VBoxContainer.new(); content.size_flags_horizontal = Control.SIZE_EXPAND_FILL; content.add_theme_constant_override("separation", 14); scroll.add_child(content)
 	# navegação inferior
@@ -67,6 +79,7 @@ func _sbf(c: Color, r := 14, bc = null, bw := 0, m := 14, bt := -1, topline := f
 func _sb(c: Color, r := 14) -> StyleBoxFlat: return _sbf(c, r, null, 0, 12)
 func _build_theme() -> Theme:
 	var th = Theme.new(); th.default_font_size = 26
+	if F_B != null: th.default_font = F_B
 	th.set_color("font_color", "Label", TXT)
 	for st in ["Button", "OptionButton", "CheckButton"]:
 		th.set_color("font_color", st, TXT); th.set_color("font_hover_color", st, TXT); th.set_color("font_pressed_color", st, Color.WHITE); th.set_color("font_focus_color", st, TXT); th.set_color("font_disabled_color", st, Color("5a6485"))
@@ -104,8 +117,9 @@ func card(title := "", parent = null, accent = null) -> VBoxContainer:
 	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(SURF, 16, LINE, 1, 16)); (parent if parent != null else content).add_child(pc)
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 10); pc.add_child(v)
 	if title != "":
-		var h = hrow(v); var bar = ColorRect.new(); bar.color = accent if accent != null else ACC; bar.custom_minimum_size = Vector2(5, 28); h.add_child(bar)
-		lbl(h, title, 28, TXT)
+		var h = hrow(v); var bar = ColorRect.new(); bar.color = accent if accent != null else ACC; bar.custom_minimum_size = Vector2(4, 24); bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER; h.add_child(bar)
+		var tl = lbl(h, title.to_upper(), 27, TXT)
+		if F_H != null: tl.add_theme_font_override("font", F_H)
 	return v
 func rowbtn(p, cb: Callable) -> Array:   # linha clicável com conteúdo livre: [botão, HBox interno]
 	var b = Button.new(); b.custom_minimum_size.y = 78; b.pressed.connect(cb); p.add_child(b)
@@ -129,7 +143,8 @@ func kpi(p, items: Array) -> void:   # linha de indicadores [rótulo, valor, cor
 	for it in items:
 		var pc = PanelContainer.new(); pc.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pc.add_theme_stylebox_override("panel", _sbf(SURF2, 14, LINE, 1, 12)); h.add_child(pc)
 		var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 2); pc.add_child(v)
-		lbl(v, it[0], 18, DIM, false); lbl(v, it[1], 28, it[2] if it.size() > 2 else TXT, false)
+		lbl(v, it[0], 17, DIM, false); var kv = lbl(v, it[1], 32, it[2] if it.size() > 2 else TXT, false)
+		if F_H != null: kv.add_theme_font_override("font", F_H)
 func bar(p, titulo, val, mx, col = null, txt := "") -> void:   # barra de progresso rotulada
 	var h = hrow(p)
 	if titulo != "": var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 215; l.size_flags_horizontal = Control.SIZE_FILL
@@ -175,25 +190,25 @@ func render() -> void:
 	if S.setup == "estrela": top.text = S.org.nome; topsub.text = "Convide uma estrela"; vestrela(); return
 	top.text = S.org.nome
 	topsub.text = "Semana %d · %d" % [S.org.semana, S.org.ano]
-	pill(topchips, "Caixa " + O.money(S.org.caixa), OK if S.org.caixa >= 0 else BAD, true)
-	pill(topchips, "Rep %.1f" % S.org.rep, GOLD); pill(topchips, _fmt_n(S.social.seg) + " seg.", ACC2)
+	var oc: Color = Color.from_hsv(hue(S.org.nome), 0.62, 1.0)
+	mono.txt = ini(S.org.nome); mono.col = oc; mono.queue_redraw(); hero.acc = oc; hero.queue_redraw()
+	rchip(topchips, "coin", O.money(S.org.caixa), OK if S.org.caixa >= 0 else BAD)
+	rchip(topchips, "star", "%.1f" % S.org.rep, GOLD); rchip(topchips, "users", _fmt_n(S.social.seg), ACC)
 	var nl: int = O.inbox_nao_lidas()
 	if nl > 0:
 		var ib = Button.new(); ib.text = "Msgs %d" % nl; ib.custom_minimum_size.y = 34; ib.add_theme_font_size_override("font_size", 20); chip_style(ib, BAD, true); ib.pressed.connect(func(): tab = "inbox"; render()); topchips.add_child(ib)
 	for g in O.GAMES:
 		if not O.ativo(g): continue
 		if O.aberto(g):
-			var b = Button.new(); b.text = gname(g); b.toggle_mode = true; var on = (g == game); b.button_pressed = on; b.custom_minimum_size = Vector2(0, 50); chip_style(b, GCOL.get(g, ACC), on)
+			var b = Button.new(); b.text = gname(g); b.toggle_mode = true; var on = (g == game); b.button_pressed = on; b.custom_minimum_size = Vector2(0, 54); _gtab(b, GCOL.get(g, ACC), on)
 			b.pressed.connect(func(): game = g; squad = "t1"; render()); gbar.add_child(b)
+	hero.visible = not wide; topbar_p.visible = wide; gp_p.visible = not (wide and tab == "org")
 	clear(side); side_p.visible = wide; nav_p.visible = not wide
-	if wide:
-		for t in TABS: _side_btn(t[1], t[0] == tab, func(): tab = t[0]; render())
-		for t in NAV_MORE:
-			if not TABS.any(func(x): return x[0] == t[0]): _side_btn(t[1], t[0] == tab, func(): tab = t[0]; render())
+	if wide: _topbar(); _sidebar()
 	var mais_on = not NAV_MAIN.any(func(t): return t[0] == tab)
 	for t in NAV_MAIN:
-		_nav_btn(t[1], t[0] == tab, func(): tab = t[0]; render())
-	_nav_btn("Mais", mais_on, _menu_mais)
+		_nav_btn(t[1], t[0] == tab, func(): tab = t[0]; render(), NAV_ICON.get(t[0], ""))
+	_nav_btn("Mais", mais_on, _menu_mais, "more")
 	match tab:
 		"org": vorg()
 		"elenco": velenco()
@@ -211,21 +226,42 @@ func render() -> void:
 	scroll.scroll_vertical = 0
 	content.modulate.a = 0.0; create_tween().tween_property(content, "modulate:a", 1.0, 0.16)
 func _ajusta_largura() -> void:
-	var w: float = get_viewport_rect().size.x
-	var nw: bool = w >= 1000.0
-	var m: int = maxi(14, int((w - (270.0 if nw else 0.0) - 900.0) / 2.0)) if nw else 14
+	var win: Window = get_window(); var ws: Vector2i = win.size
+	var want := Vector2i(2200, 1238) if (ws.y > 0 and float(ws.x) / float(ws.y) >= 1.25) else Vector2i(720, 1280)
+	if win.content_scale_size != want: win.content_scale_size = want
+	var w: float = float(want.x) if want.x > want.y else get_viewport_rect().size.x
+	var nw: bool = want.x > want.y
+	var avail: float = w - (230.0 if nw else 0.0)
+	var m: int = maxi(18, int((avail - 2000.0) / 2.0)) if nw else 14
 	for k in ["left", "right"]: mgc.add_theme_constant_override("margin_" + k, m)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER if nw else ScrollContainer.SCROLL_MODE_DISABLED
 	if nw != wide: wide = nw; render()
-func _side_btn(t: String, on: bool, cb: Callable) -> void:
+func _side_btn(t: String, on: bool, cb: Callable, icon := "") -> void:
 	var b = Button.new(); b.text = t; b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.custom_minimum_size.y = 58; b.add_theme_font_size_override("font_size", 23)
-	var n = _sbf(Color(ACC.r, ACC.g, ACC.b, 0.2) if on else Color(0, 0, 0, 0), 12, null, 0, 14)
+	var n = _sbf(Color(ACC.r, ACC.g, ACC.b, 0.14) if on else Color(0, 0, 0, 0), 12, null, 0, 14); n.content_margin_left = 56
 	for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, n)
-	b.add_theme_color_override("font_color", ACC2 if on else TXT); b.pressed.connect(cb); side.add_child(b)
-func _nav_btn(t: String, on: bool, cb: Callable) -> void:
-	var b = Button.new(); b.text = t; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 68; b.add_theme_font_size_override("font_size", 23)
-	var n = _sbf(Color(ACC.r, ACC.g, ACC.b, 0.18) if on else Color(0, 0, 0, 0), 14, null, 0, 10)
+	var fc: Color = ACC if on else TXT
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]: b.add_theme_color_override(k, fc)
+	if F_H != null: b.add_theme_font_override("font", F_H)
+	b.add_theme_font_size_override("font_size", 27)
+	var ic = ico(icon, 26, fc); ic.position = Vector2(16, 16); b.add_child(ic)
+	b.pressed.connect(cb); side.add_child(b)
+func _gtab(b: Button, c: Color, on: bool) -> void:   # aba de jogo (sublinhado na cor do jogo)
+	var n = _sbf(Color(c.r, c.g, c.b, 0.12) if on else Color(0, 0, 0, 0), 0, c if on else Color(0, 0, 0, 0), 0, 12, 4)
 	for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, n)
-	b.add_theme_color_override("font_color", ACC2 if on else DIM); b.add_theme_color_override("font_hover_color", ACC2 if on else TXT); b.add_theme_color_override("font_pressed_color", ACC2)
+	var fc: Color = Color.WHITE if on else DIM
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]: b.add_theme_color_override(k, fc)
+	if F_H != null: b.add_theme_font_override("font", F_H)
+	b.add_theme_font_size_override("font_size", 28 if on else 25)
+func _nav_btn(t: String, on: bool, cb: Callable, icon := "") -> void:
+	var b = Button.new(); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 78
+	var n = _sbf(Color(ACC.r, ACC.g, ACC.b, 0.10) if on else Color(0, 0, 0, 0), 14, null, 0, 6)
+	for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, n)
+	var v = VBoxContainer.new(); v.set_anchors_preset(Control.PRESET_FULL_RECT); v.alignment = BoxContainer.ALIGNMENT_CENTER; v.add_theme_constant_override("separation", 3); v.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(v)
+	var ic = ico(icon, 30, ACC if on else DIM); v.add_child(ic)
+	var l = Label.new(); l.text = t; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.add_theme_font_size_override("font_size", 20); l.add_theme_color_override("font_color", ACC if on else DIM)
+	if F_H != null: l.add_theme_font_override("font", F_H)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE; v.add_child(l)
 	b.pressed.connect(cb); nav.add_child(b)
 func _menu_mais() -> void:
 	var v = modal("Mais")
@@ -261,54 +297,7 @@ func vestrela() -> void:
 		btn(h, "Convidar", func(): var r: Dictionary = O.convidar_estrela(p); toast(r.msg); render())
 func jr100(x) -> int: return int(round(x * 100))
 
-# ---------- Org ----------
-func vorg() -> void:
-	var S = O.S; var pr: Dictionary = O.projecao_org()
-	kpi(content, [["SALDO / SEMANA", O.money(pr.saldo), OK if pr.saldo >= 0 else BAD], ["RECEITA", O.money(pr.receita), TXT], ["DESPESA", O.money(pr.despesa), TXT]])
-	var c = card()
-	var h = hrow(c)
-	var b1 = btn(h, "Parar" if play else "Avançar", _toggle_play, false, true); b1.custom_minimum_size.y = 72; b1.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b1.add_theme_font_size_override("font_size", 30)
-	var b2 = btn(h, "+1 semana", func(): _manual(1)); b2.custom_minimum_size.y = 72
-	var b3 = btn(h, "Até o jogo", _ate_jogo); b3.custom_minimum_size.y = 72
-	var h2 = hrow(c)
-	var tg = CheckButton.new(); tg.text = "Pular partidas"; tg.button_pressed = auto; tg.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tg.toggled.connect(func(on):
-		auto = on
-		if on: FileAccess.open("user://auto", FileAccess.WRITE).store_string("1")
-		else: DirAccess.remove_absolute(ProjectSettings.globalize_path("user://auto"))); h2.add_child(tg)
-	lbl(h2, "Velocidade", 22, DIM, false)
-	var sp = OptionButton.new(); sp.add_item("1x"); sp.add_item("2x"); sp.add_item("6x"); sp.selected = [0.45, 0.22, 0.07].find(vel) if [0.45, 0.22, 0.07].has(vel) else 0
-	sp.item_selected.connect(func(i): vel = [0.45, 0.22, 0.07][i]; if play: timer.start(vel)); h2.add_child(sp)
-	# próximo jogo (o mais cedo entre todos os jogos)
-	var prox = null
-	for g in O.GAMES:
-		if not O.ativo(g) or not O.aberto(g): continue
-		for sq in O.SQUADS:
-			if O.comp_for(g, sq) == null: continue
-			for a in O.agenda(g, sq, 3):
-				a["g"] = g; a["tag"] = O.tag_de(g, sq)
-				if a.tipo != "ini" and (prox == null or a.em < prox.em): prox = a
-	var cp = card("Próximo jogo", null, GOLD)
-	if prox == null: lbl(cp, "Nada agendado: complete os titulares de um time.", 24, DIM)
-	else:
-		var hp = hrow(cp); pill(hp, gname(prox.g), GCOL.get(prox.g, ACC), true); pill(hp, prox.tag, DIM); pill(hp, "em %d sem." % prox.em if prox.em > 0 else "esta semana", GOLD)
-		lbl(cp, "%s%s" % [prox.label, ("  ×  " + str(prox.op)) if prox.op != null else ""], 30, TXT)
-		lbl(cp, str(prox.data.txt), 22, DIM)
-	vdiretoria()
-	for g in O.GAMES:
-		if not O.ativo(g) or not O.aberto(g): continue
-		var cg = card(O.GAMES[g].nome, null, GCOL.get(g, ACC))
-		for sq in O.SQUADS:
-			var cpt = O.comp_for(g, sq)
-			if cpt == null: continue
-			var st: String = {"off": "entressafra", "wait": "aguardando titulares", "reg": "rodada %d" % (cpt.round + 1), "po": "playoffs", "intl": "internacional"}[cpt.phase]
-			var hh = hrow(cg); lbl(hh, O.SQUADS[sq].nome, 24, TXT, false); var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hh.add_child(sl); pill(hh, st, ACC2)
-			var fo: float = O.forca(g, sq); bar(cg, "Força", fo, 100.0, nota_col(fo), "%.1f" % fo)
-	var cn = card("Notícias", null, ACC2)
-	for l in S.log.slice(0, 8): lbl(cn, l, 21, DIM)
-	var cr = card()
-	btn(cr, "Tem certeza? Toque de novo" if fm == "reset" else "Nova org (apaga o save)", func():
-		if fm == "reset": fm = ""; O.reset_estado(); O.comecar(); render()
-		else: fm = "reset"; render())
+# ---------- Org (painel: ver ua.part) ----------
 func _toggle_play() -> void:
 	play = not play
 	if play: timer.start(vel)
@@ -1207,3 +1196,565 @@ func vlegado() -> void:
 		var ok: bool = m[1] >= m[2]; if ok: feitas += 1
 		bar(cm, m[0], min(m[1], m[2]), m[2], OK if ok else ACC, "Feito" if ok else "%d/%d" % [min(m[1], m[2]), m[2]] if m[2] < 100000 else _fmt_n(m[1]))
 	lbl(cm, "%d de %d metas concluídas" % [feitas, metas.size()], 22, GOLD)
+
+# ======================================================================
+#  SISTEMA VISUAL v2 — "Arena": fontes, ícones vetoriais e componentes
+# ======================================================================
+var F_B: Font = null; var F_BS: Font = null; var F_H: Font = null
+func _fonts() -> void:
+	for p in [["F_B", "Barlow-Medium"], ["F_BS", "Barlow-SemiBold"], ["F_H", "Rajdhani-Bold"]]:
+		var path = "res://assets/fonts/%s.ttf" % p[1]
+		if ResourceLoader.exists(path): set(p[0], load(path))
+const ROLE_COL := [Color("ff6b6b"), Color("ffb347"), Color("5ee6a8"), Color("5cc8ff"), Color("b28cff"), Color("8a94b8"), Color("8a94b8")]
+
+class Ico extends Control:
+	var kind = ""; var col = Color.WHITE
+	func _init(k := "", sz := 24, c := Color.WHITE) -> void:
+		kind = k; col = c; custom_minimum_size = Vector2(sz, sz); mouse_filter = Control.MOUSE_FILTER_IGNORE
+		size_flags_horizontal = Control.SIZE_SHRINK_CENTER; size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	func _pl(pts: Array, w := 2.0) -> void: draw_polyline(PackedVector2Array(pts), col, w, true)
+	func _ln(a: Vector2, b: Vector2, w := 2.0) -> void: draw_line(a, b, col, w, true)
+	func _draw() -> void:
+		var s: float = minf(size.x, size.y) / 24.0
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(s, s))
+		var w = 2.0
+		match kind:
+			"home":
+				_pl([Vector2(3, 11), Vector2(12, 3), Vector2(21, 11)]); _pl([Vector2(5.5, 9.5), Vector2(5.5, 20.5), Vector2(18.5, 20.5), Vector2(18.5, 9.5)]); _pl([Vector2(10, 20.5), Vector2(10, 14.5), Vector2(14, 14.5), Vector2(14, 20.5)])
+			"users":
+				draw_arc(Vector2(12, 8), 3.8, 0, TAU, 24, col, w, true); draw_arc(Vector2(12, 23), 8.5, PI, TAU, 24, col, w, true)
+			"search":
+				draw_arc(Vector2(10.5, 10.5), 6.5, 0, TAU, 28, col, w, true); _ln(Vector2(15.5, 15.5), Vector2(21, 21), 2.4)
+			"calendar":
+				draw_rect(Rect2(3, 5, 18, 16), col, false, w, true); _ln(Vector2(3, 10), Vector2(21, 10)); _ln(Vector2(8, 3), Vector2(8, 7)); _ln(Vector2(16, 3), Vector2(16, 7))
+				draw_rect(Rect2(7, 13, 3, 3), col); draw_rect(Rect2(14, 13, 3, 3), col)
+			"more":
+				for y in [6, 12, 18]: _ln(Vector2(4, y), Vector2(20, y), 2.4)
+			"coin":
+				draw_arc(Vector2(12, 12), 8.5, 0, TAU, 28, col, w, true); _ln(Vector2(12, 7), Vector2(12, 17)); _pl([Vector2(14.5, 9), Vector2(10.5, 9), Vector2(9.5, 10.5), Vector2(10.5, 12), Vector2(13.5, 12), Vector2(14.5, 13.5), Vector2(13.5, 15), Vector2(9.5, 15)], 1.6)
+			"star":
+				var pts = []
+				for i in 10:
+					var a: float = -PI / 2 + i * PI / 5.0; var r: float = 10.0 if i % 2 == 0 else 4.4
+					pts.append(Vector2(12 + cos(a) * r, 12.6 + sin(a) * r))
+				draw_colored_polygon(PackedVector2Array(pts), col)
+			"trophy":
+				_pl([Vector2(7, 4), Vector2(17, 4), Vector2(16, 10.5), Vector2(12, 13.5), Vector2(8, 10.5), Vector2(7, 4)]); _pl([Vector2(7, 6), Vector2(4, 6), Vector2(4, 8.5), Vector2(7.6, 10.4)]); _pl([Vector2(17, 6), Vector2(20, 6), Vector2(20, 8.5), Vector2(16.4, 10.4)]); _ln(Vector2(12, 13.5), Vector2(12, 18)); _ln(Vector2(8, 20), Vector2(16, 20), 2.4)
+			"mail":
+				draw_rect(Rect2(3, 5.5, 18, 13), col, false, w, true); _pl([Vector2(3, 6.5), Vector2(12, 13.5), Vector2(21, 6.5)])
+			"chart":
+				draw_rect(Rect2(4, 13, 4, 7), col); draw_rect(Rect2(10, 8, 4, 12), col); draw_rect(Rect2(16, 4, 4, 16), col)
+			"news":
+				draw_rect(Rect2(4, 4, 16, 16), col, false, w, true); _ln(Vector2(8, 9), Vector2(16, 9)); _ln(Vector2(8, 13), Vector2(16, 13)); _ln(Vector2(8, 17), Vector2(13, 17))
+			"list":
+				for y in [6, 12, 18]: draw_circle(Vector2(5, y), 1.5, col); _ln(Vector2(9, y), Vector2(21, y))
+			"brief":
+				draw_rect(Rect2(3, 8, 18, 12), col, false, w, true); _pl([Vector2(9, 8), Vector2(9, 5), Vector2(15, 5), Vector2(15, 8)]); _ln(Vector2(3, 13), Vector2(21, 13))
+			"globe":
+				draw_arc(Vector2(12, 12), 9, 0, TAU, 28, col, w, true); _ln(Vector2(3, 12), Vector2(21, 12), 1.6); _ln(Vector2(12, 3), Vector2(12, 21), 1.6)
+				var e = []
+				for i in 25: var a: float = i * TAU / 24.0; e.append(Vector2(12 + cos(a) * 4.2, 12 + sin(a) * 9))
+				_pl(e, 1.6)
+			"up": _ln(Vector2(12, 19), Vector2(12, 5)); _pl([Vector2(6, 11), Vector2(12, 5), Vector2(18, 11)])
+			"down": _ln(Vector2(12, 5), Vector2(12, 19)); _pl([Vector2(6, 13), Vector2(12, 19), Vector2(18, 13)])
+			"flat": _ln(Vector2(5, 12), Vector2(19, 12)); _pl([Vector2(14, 7), Vector2(19, 12), Vector2(14, 17)])
+			"chev": _pl([Vector2(9, 5), Vector2(16, 12), Vector2(9, 19)], 2.4)
+			"plus": _ln(Vector2(12, 5), Vector2(12, 19), 2.4); _ln(Vector2(5, 12), Vector2(19, 12), 2.4)
+			"check": _pl([Vector2(5, 12.5), Vector2(10, 17.5), Vector2(19, 7)], 2.6)
+			"clock":
+				draw_arc(Vector2(12, 12), 9, 0, TAU, 28, col, w, true); _pl([Vector2(12, 6.5), Vector2(12, 12), Vector2(16, 14)])
+			"bolt":
+				draw_colored_polygon(PackedVector2Array([Vector2(13, 2), Vector2(5, 13.5), Vector2(11, 13.5), Vector2(10, 22), Vector2(19, 10), Vector2(13, 10)]), col)
+			"shield":
+				_pl([Vector2(12, 3), Vector2(20, 6), Vector2(19, 13), Vector2(12, 21), Vector2(5, 13), Vector2(4, 6), Vector2(12, 3)])
+			"mood":
+				draw_arc(Vector2(12, 12), 9, 0, TAU, 28, col, w, true); draw_circle(Vector2(9, 10), 1.2, col); draw_circle(Vector2(15, 10), 1.2, col); draw_arc(Vector2(12, 12.5), 4.5, 0.25, PI - 0.25, 12, col, 1.8, true)
+			"bell":
+				draw_arc(Vector2(12, 10), 6, PI, TAU, 16, col, w, true); _ln(Vector2(6, 10), Vector2(6, 16)); _ln(Vector2(18, 10), Vector2(18, 16)); _ln(Vector2(4, 17), Vector2(20, 17)); draw_arc(Vector2(12, 19.5), 2.2, 0, PI, 8, col, w, true)
+			"gear":
+				draw_arc(Vector2(12, 12), 3.6, 0, TAU, 20, col, w, true); draw_arc(Vector2(12, 12), 7.6, 0, TAU, 28, col, w, true)
+				for i in 8: var a: float = i * TAU / 8.0; _ln(Vector2(12 + cos(a) * 7.6, 12 + sin(a) * 7.6), Vector2(12 + cos(a) * 10.2, 12 + sin(a) * 10.2), 2.6)
+			"play":
+				draw_colored_polygon(PackedVector2Array([Vector2(7, 4), Vector2(20, 12), Vector2(7, 20)]), col)
+			"pause":
+				draw_rect(Rect2(6, 4, 4, 16), col); draw_rect(Rect2(14, 4, 4, 16), col)
+			"fwd":
+				draw_colored_polygon(PackedVector2Array([Vector2(4, 5), Vector2(13, 12), Vector2(4, 19)]), col); draw_colored_polygon(PackedVector2Array([Vector2(12, 5), Vector2(21, 12), Vector2(12, 19)]), col)
+			"swap":
+				_ln(Vector2(4, 8), Vector2(19, 8)); _pl([Vector2(15, 4), Vector2(19, 8), Vector2(15, 12)]); _ln(Vector2(20, 16), Vector2(5, 16)); _pl([Vector2(9, 12), Vector2(5, 16), Vector2(9, 20)])
+			_:
+				draw_circle(Vector2(12, 12), 4, col)
+class Hero extends PanelContainer:
+	var c1 = Color("1a1236"); var c2 = Color("0a0a16"); var acc = Color("7c4dff"); var stripes = true; var crowd = false; var round_r = 0.0
+	func _init() -> void: add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	func _rr(w: float, h: float, r: float) -> PackedVector2Array:
+		var pts = PackedVector2Array()
+		if r <= 0.5: return PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, h), Vector2(0, h)])
+		var cs = [Vector2(w - r, r), Vector2(w - r, h - r), Vector2(r, h - r), Vector2(r, r)]; var st = [-PI / 2, 0.0, PI / 2, PI]
+		for k in 4:
+			for i in 7: var a: float = st[k] + i * (PI / 2) / 6.0; pts.append(cs[k] + Vector2(cos(a), sin(a)) * r)
+		return pts
+	func _draw() -> void:
+		var w: float = size.x; var h: float = size.y
+		var poly: PackedVector2Array = _rr(w, h, round_r); var cols = PackedColorArray()
+		for pt in poly: cols.append(c1.lerp(c2, clampf(pt.x / maxf(w, 1.0), 0.0, 1.0)))
+		draw_polygon(poly, cols)
+		if crowd:
+			for i in 3:
+				var x0: float = w * (0.38 + i * 0.2)
+				draw_colored_polygon(PackedVector2Array([Vector2(x0, 0), Vector2(x0 + 40, 0), Vector2(x0 + 190, h), Vector2(x0 - 110, h)]), Color(acc.r, acc.g, acc.b, 0.07))
+			var sd: int = 12345
+			for i in 150:
+				sd = (sd * 1103515245 + 12345) & 0x7fffffff; var px: float = w * 0.35 + (sd % 1000) / 1000.0 * w * 0.65
+				sd = (sd * 1103515245 + 12345) & 0x7fffffff; var py: float = h * 0.45 + (sd % 1000) / 1000.0 * h * 0.55
+				draw_circle(Vector2(px, py), 1.3 + (sd % 3) * 0.5, Color(0.8, 0.75, 1.0, 0.10 + (sd % 5) * 0.04))
+		if stripes:
+			for i in 3:
+				var x: float = minf(w * 0.60 + i * 54.0, w - 40.0)
+				draw_colored_polygon(PackedVector2Array([Vector2(x, 0), Vector2(x + 34, 0), Vector2(x - 34, h), Vector2(x - 68, h)]), Color(acc.r, acc.g, acc.b, 0.10 - i * 0.025))
+		draw_rect(Rect2(round_r * 0.5, h - 3, w - round_r, 3), Color(acc.r, acc.g, acc.b, 0.85))
+class Chart extends Control:
+	var vals: Array = []; var labels: Array = []; var col = Color("7c4dff"); var fnt: Font = null
+	func _draw() -> void:
+		var pl: float = 44.0; var pb: float = 26.0; var w: float = size.x - pl - 6.0; var h: float = size.y - pb - 6.0
+		for i in 4: draw_line(Vector2(pl, 6 + h * i / 3.0), Vector2(pl + w, 6 + h * i / 3.0), Color(1, 1, 1, 0.06), 1.0)
+		if vals.size() < 2: return
+		var mn: float = vals[0]; var mxv: float = vals[0]
+		for v in vals: mn = minf(mn, v); mxv = maxf(mxv, v)
+		var pad: float = maxf((mxv - mn) * 0.15, 1.0); mn -= pad; mxv += pad; var span: float = maxf(mxv - mn, 1.0); var pts = PackedVector2Array(); var n: int = vals.size()
+		for i in n: pts.append(Vector2(pl + w * i / float(n - 1), 6 + h - h * (vals[i] - mn) / span))
+		var fill = PackedVector2Array(pts); fill.append(Vector2(pl + w, 6 + h)); fill.append(Vector2(pl, 6 + h))
+		draw_colored_polygon(fill, Color(col.r, col.g, col.b, 0.16)); draw_polyline(pts, col, 2.6, true)
+		for i in n:
+			if n <= 14 or i % maxi(1, n / 12) == 0: draw_circle(pts[i], 3.0, col)
+		if fnt != null:
+			for i in 4:
+				var yv: float = mxv - span * i / 3.0
+				draw_string(fnt, Vector2(0, 6 + h * i / 3.0 + 6), (("%.1f" % yv if span < 6.0 else str(int(yv))) if absf(yv) < 1000 else "%.1fk" % (yv / 1000.0) if absf(yv) < 1e6 else "%.1fM" % (yv / 1e6)), HORIZONTAL_ALIGNMENT_LEFT, pl - 4, 15, Color("8c8fb3"))
+			for i in labels.size():
+				var lx: float = pl + w * i / float(maxi(1, labels.size() - 1)); var ts: Vector2 = fnt.get_string_size(str(labels[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
+				draw_string(fnt, Vector2(clampf(lx - ts.x / 2.0, pl - 10.0, size.x - ts.x), size.y - 4), str(labels[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("8c8fb3"))
+class Ring extends Control:
+	var val = 0.0; var mx = 100.0; var col = Color("1fc8ff"); var track = Color("202a46"); var txt = ""; var sub = ""; var fnt: Font = null; var thick = 9.0
+	func _draw() -> void:
+		var c: Vector2 = size / 2.0; var r: float = minf(size.x, size.y) / 2.0 - thick
+		draw_arc(c, r, 0, TAU, 64, track, thick, true)
+		draw_arc(c, r, -PI / 2, -PI / 2 + TAU * clampf(val / maxf(mx, 0.001), 0.0, 1.0), 64, col, thick, true)
+		if fnt != null:
+			var fs: int = int(r * 0.95)
+			var ts: Vector2 = fnt.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			draw_string(fnt, Vector2(c.x - ts.x / 2.0, c.y + fs * 0.28), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("eef1ff"))
+			if sub != "":
+				var ss: Vector2 = fnt.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, int(r * 0.30))
+				draw_string(fnt, Vector2(c.x - ss.x / 2.0, c.y + fs * 0.28 + r * 0.42), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, int(r * 0.30), Color("8a94b8"))
+class Spark extends Control:
+	var vals: Array = []; var col = Color("1fc8ff")
+	func _draw() -> void:
+		if vals.size() < 2: return
+		var mn: float = vals[0]; var mxv: float = vals[0]
+		for v in vals: mn = minf(mn, v); mxv = maxf(mxv, v)
+		var span: float = maxf(mxv - mn, 1.0); var pts = PackedVector2Array(); var n: int = vals.size()
+		for i in n: pts.append(Vector2(size.x * i / float(n - 1), size.y - 4.0 - (size.y - 8.0) * (vals[i] - mn) / span))
+		var fill = PackedVector2Array(pts); fill.append(Vector2(size.x, size.y)); fill.append(Vector2(0, size.y))
+		draw_colored_polygon(fill, Color(col.r, col.g, col.b, 0.14)); draw_polyline(pts, col, 2.4, true)
+class Mono extends Control:
+	var txt = "?"; var col = Color("1fc8ff"); var fnt: Font = null
+	func _init() -> void: custom_minimum_size = Vector2(84, 84); mouse_filter = Control.MOUSE_FILTER_IGNORE; size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	func _draw() -> void:
+		var c: Vector2 = size / 2.0; var r: float = minf(size.x, size.y) / 2.0 - 2.0; var pts = PackedVector2Array()
+		for i in 6: var a: float = -PI / 2 + i * TAU / 6.0; pts.append(c + Vector2(cos(a), sin(a)) * r)
+		draw_colored_polygon(pts, Color(col.r * 0.30, col.g * 0.30, col.b * 0.30, 1.0))
+		var closed = PackedVector2Array(pts); closed.append(pts[0]); draw_polyline(closed, col, 3.0, true)
+		if fnt != null:
+			var fs: int = int(r * 0.72); var ts: Vector2 = fnt.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+			draw_string(fnt, Vector2(c.x - ts.x / 2.0, c.y + fs * 0.32), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)
+
+func ico(k: String, sz := 24, col = null) -> Control: return Ico.new(k, sz, col if col != null else TXT)
+func hl(p, t, size := 30, col = null, wrap := false) -> Label:   # texto de título (fonte esportiva)
+	var l = lbl(p, t, size, col, wrap)
+	if F_H != null: l.add_theme_font_override("font", F_H)
+	return l
+func ovr_badge(o, sz := 62, pot_txt := "") -> Control:   # selo de nota
+	var c: Color = nota_col(o); var pc = PanelContainer.new(); pc.custom_minimum_size = Vector2(sz, sz * 0.86)
+	pc.add_theme_stylebox_override("panel", _sbf(Color(c.r, c.g, c.b, 0.16), 12, c, 2, 2))
+	var l = Label.new(); l.text = str(o); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", int(sz * 0.58)); l.add_theme_color_override("font_color", c)
+	if F_H != null: l.add_theme_font_override("font", F_H)
+	pc.add_child(l); return pc
+func role_tag(rl: String, col: Color, w := 56) -> Control:
+	var pc = PanelContainer.new(); pc.custom_minimum_size = Vector2(w, 0); pc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pc.add_theme_stylebox_override("panel", _sbf(Color(col.r, col.g, col.b, 0.18), 8, null, 0, 4))
+	var l = Label.new(); l.text = rl; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.add_theme_font_size_override("font_size", 21); l.add_theme_color_override("font_color", col)
+	if F_H != null: l.add_theme_font_override("font", F_H)
+	pc.add_child(l); return pc
+func thin(p, val, mx, col, h := 8, w := 0) -> ProgressBar:   # barra fina
+	var pb = ProgressBar.new(); pb.min_value = 0; pb.max_value = mx; pb.value = val; pb.show_percentage = false; pb.custom_minimum_size = Vector2(w, h)
+	pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if w == 0: pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pb.add_theme_stylebox_override("background", _sbf(Color("1a2340"), 6, null, 0, 0)); pb.add_theme_stylebox_override("fill", _sbf(col, 6, null, 0, 0)); p.add_child(pb); return pb
+func sec(p, titulo: String, icon := "", right := "") -> void:   # cabeçalho de seção
+	var h = hrow(p); h.add_theme_constant_override("separation", 8)
+	var sp = Control.new(); sp.custom_minimum_size.x = 2; h.add_child(sp)
+	if icon != "": h.add_child(ico(icon, 20, ACC))
+	var l = hl(h, titulo.to_upper(), 23, DIM); l.size_flags_horizontal = Control.SIZE_FILL
+	var ln = ColorRect.new(); ln.color = LINE; ln.custom_minimum_size.y = 2; ln.size_flags_horizontal = Control.SIZE_EXPAND_FILL; ln.size_flags_vertical = Control.SIZE_SHRINK_CENTER; h.add_child(ln)
+	if right != "": lbl(h, right, 20, DIM, false).size_flags_horizontal = Control.SIZE_FILL
+func seg(p, items: Array, sel, cb: Callable, col = null) -> void:   # controle segmentado
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(Color("0a0f1d"), 14, LINE, 1, 4)); p.add_child(pc)
+	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 4); pc.add_child(h)
+	var cc: Color = col if col != null else ACC
+	for it in items:
+		var on: bool = str(it[0]) == str(sel); var b = Button.new(); b.text = str(it[1]); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 52; b.clip_text = true
+		var sn = _sbf(cc if on else Color(0, 0, 0, 0), 11, null, 0, 8)
+		for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, sn)
+		var fc: Color = (Color("06101c") if cc.get_luminance() > 0.45 else Color.WHITE) if on else DIM
+		for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]: b.add_theme_color_override(k, fc)
+		if F_H != null: b.add_theme_font_override("font", F_H)
+		b.add_theme_font_size_override("font_size", 25); b.pressed.connect(cb.bind(it[0])); h.add_child(b)
+func rchip(p, icon: String, txt: String, col: Color) -> void:   # recurso do cabeçalho
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(Color(0, 0, 0, 0.35), 12, Color(col.r, col.g, col.b, 0.45), 1, 7)); p.add_child(pc)
+	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 6); pc.add_child(h)
+	h.add_child(ico(icon, 20, col)); var l = Label.new(); l.text = txt; l.add_theme_font_size_override("font_size", 23); l.add_theme_color_override("font_color", TXT)
+	if F_H != null: l.add_theme_font_override("font", F_H)
+	h.add_child(l)
+func cardbtn(p, cb: Callable, stripe: Color, minh := 96) -> Array:   # cartão clicável com tarja lateral: [botão, HBox]
+	var b = Button.new(); b.custom_minimum_size.y = minh; b.pressed.connect(cb); p.add_child(b)
+	var n = _sbf(Color("101730"), 14, LINE, 1, 0); var hv = _sbf(Color("172041"), 14, stripe, 1, 0)
+	for k in ["normal", "pressed"]: b.add_theme_stylebox_override(k, n)
+	for k in ["hover", "hover_pressed"]: b.add_theme_stylebox_override(k, hv)
+	var st = ColorRect.new(); st.color = stripe; st.set_anchors_preset(Control.PRESET_LEFT_WIDE); st.offset_left = 0; st.offset_right = 6; st.offset_top = 14; st.offset_bottom = -14; st.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(st)
+	var mc = MarginContainer.new(); mc.set_anchors_preset(Control.PRESET_FULL_RECT); mc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mc.add_theme_constant_override("margin_left", 20); mc.add_theme_constant_override("margin_right", 14); mc.add_theme_constant_override("margin_top", 8); mc.add_theme_constant_override("margin_bottom", 8)
+	b.add_child(mc); var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 12); h.alignment = BoxContainer.ALIGNMENT_CENTER; mc.add_child(h)
+	return [b, h]
+func vstack(p, sep := 0, grow := true) -> VBoxContainer:
+	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", sep)
+	if grow: v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.size_flags_vertical = Control.SIZE_SHRINK_CENTER; p.add_child(v); return v
+func gap(p, h := 6) -> void:
+	var c = Control.new(); c.custom_minimum_size.y = h; p.add_child(c)
+func tile(p, icon: String, titulo: String, valor: String, col: Color, hist = null) -> void:   # indicador com ícone
+	var pc = PanelContainer.new(); pc.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pc.add_theme_stylebox_override("panel", _sbf(Color("101730"), 14, LINE, 1, 12)); p.add_child(pc)
+	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 2); pc.add_child(v)
+	var h = hrow(v); h.add_theme_constant_override("separation", 6); h.add_child(ico(icon, 18, col)); lbl(h, titulo.to_upper(), 17, DIM, false)
+	hl(v, valor, 34, col)
+	if hist is Array and hist.size() > 2:
+		var sp = Spark.new(); sp.vals = hist.slice(max(0, hist.size() - 26)); sp.col = col; sp.custom_minimum_size.y = 34; v.add_child(sp)
+
+# ======================================================================
+#  PAINEL (início), barra superior e barra lateral — layout de referência
+# ======================================================================
+const MES_FULL := ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+const WIDE_NAV := [["org", "Início", "home"], ["elenco", "Equipes", "users"], ["mercado", "Mercado", "search"], ["ligas", "Competições", "trophy"], ["cal", "Agenda", "calendar"], ["fin", "Finanças", "coin"], ["noticias", "Notícias", "news"], ["inbox", "Mensagens", "mail"], ["neg", "Negócios", "brief"], ["rank", "Rankings", "chart"], ["legado", "Conquistas", "star"], ["hall", "Hall da Fama", "trophy"], ["mundo", "Mundo", "globe"]]
+var cls_game = ""
+func org_cor() -> Color: return Color.from_hsv(hue(O.S.org.nome), 0.62, 1.0)
+func ibtn(p, t: String, icon: String, cb: Callable, accent := false, minh := 56) -> Button:   # botão com ícone
+	var b = Button.new(); b.custom_minimum_size.y = minh; b.pressed.connect(cb)
+	var fc: Color = Color.WHITE
+	var n = _sbf(ACC if accent else Color("1a1b36"), 12, null if accent else LINE, 0 if accent else 1, 10); n.content_margin_left = 48; n.content_margin_right = 18
+	var hv = _sbf(Color("9366ff") if accent else Color("242549"), 12, null, 0, 10); hv.content_margin_left = 48; hv.content_margin_right = 18
+	for k in ["normal", "pressed"]: b.add_theme_stylebox_override(k, n)
+	for k in ["hover", "hover_pressed"]: b.add_theme_stylebox_override(k, hv)
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]: b.add_theme_color_override(k, fc)
+	if F_H != null: b.add_theme_font_override("font", F_H)
+	b.add_theme_font_size_override("font_size", 26); b.text = t
+	var ic = ico(icon, 24, fc); ic.position = Vector2(15, minh / 2.0 - 12.0); b.add_child(ic); p.add_child(b); return b
+func panel(p, titulo: String, icon := "", link := "", cb = null, pad := 16) -> VBoxContainer:   # painel com cabeçalho (ícone + título + link)
+	var pc = PanelContainer.new(); pc.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pc.size_flags_vertical = Control.SIZE_EXPAND_FILL; pc.add_theme_stylebox_override("panel", _sbf(SURF, 14, LINE, 1, pad)); p.add_child(pc)
+	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 12); pc.add_child(v)
+	if titulo != "":
+		var h = hrow(v); h.add_theme_constant_override("separation", 10)
+		if icon != "": h.add_child(ico(icon, 26, ACC))
+		hl(h, titulo, 30, TXT)
+		if link != "":
+			var lb = Button.new(); lb.text = link + "  >"; lb.flat = true; lb.focus_mode = Control.FOCUS_NONE; lb.add_theme_font_size_override("font_size", 21); lb.add_theme_color_override("font_color", ACC2); lb.add_theme_color_override("font_hover_color", Color.WHITE)
+			for k in ["normal", "hover", "pressed"]: lb.add_theme_stylebox_override(k, StyleBoxEmpty.new())
+			if cb != null: lb.pressed.connect(cb)
+			h.add_child(lb)
+	return v
+func _row(p, sep := 14) -> HBoxContainer:
+	var h = HBoxContainer.new(); h.add_theme_constant_override("separation", sep); h.size_flags_horizontal = Control.SIZE_EXPAND_FILL; p.add_child(h); return h
+func _col(p, ratio := 1.0, sep := 14) -> VBoxContainer:
+	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", sep); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.size_flags_vertical = Control.SIZE_EXPAND_FILL; v.size_flags_stretch_ratio = ratio; p.add_child(v); return v
+func _ir(p, tab_id: String) -> Callable: return func(): tab = tab_id; render()
+
+# ---------- dados do painel ----------
+func _agenda_all(n := 6) -> Array:
+	var itens = []
+	for g in O.GAMES:
+		if not O.ativo(g) or not O.aberto(g): continue
+		for sq in O.SQUADS:
+			if O.comp_for(g, sq) == null: continue
+			for a in O.agenda(g, sq, n): a["g"] = g; a["sq"] = sq; a["tag"] = O.tag_de(g, sq); itens.append(a)
+	itens.sort_custom(func(a, b): return a.em < b.em)
+	return itens
+func _prox_jogo():
+	for a in _agenda_all(3):
+		if a.tipo != "ini": return a
+	return null
+func _valor_elenco() -> int:
+	var t = 0
+	for g in O.GAMES:
+		for q in O.S.games[g].squads.values():
+			for p in q.slots:
+				if p != null: t += O.valor_venda(p)
+	return t
+func _moral_geral() -> float:
+	var t = 0.0; var n = 0
+	for g in O.GAMES:
+		if not O.aberto(g) or not O.S.games[g].squads.t1.on: continue
+		var ts: Array = O.titulares(g, "t1").filter(func(p): return p != null)
+		for p in ts: t += p.mo; n += 1
+	return t / n if n else 0.0
+func _rotulos_meses(n: int) -> Array:
+	var out = []; var sem: int = O.S.org.semana; var ano: int = O.S.org.ano
+	for k in 5:
+		var i: int = int(round((n - 1) * k / 4.0)); var w: int = ((sem - 1 - (n - 1 - i)) % 52 + 52) % 52 + 1
+		out.append(O.MES[O.data_de(w, ano).m].capitalize())
+	return out
+func _delta_txt(vals: Array) -> float:
+	if vals.size() < 2: return 0.0
+	var a: float = vals[maxi(0, vals.size() - 5)]; return vals[vals.size() - 1] - a
+
+# ---------- barra superior (PC) ----------
+func _topbar() -> void:
+	var S = O.S; clear(topbar_h); var oc: Color = org_cor(); var h = topbar_h
+	var m = Mono.new(); m.fnt = F_H; m.txt = ini(S.org.nome); m.col = oc; m.custom_minimum_size = Vector2(54, 54); h.add_child(m)
+	var v0 = vstack(h, 0, false); hl(v0, S.org.nome, 28, TXT); lbl(v0, "Organização de Esports", 17, DIM, false)
+	_vsep(h)
+	h.add_child(ico("coin", 34, OK if S.org.caixa >= 0 else BAD)); var v1 = vstack(h, 0, false); hl(v1, O.money(S.org.caixa), 28, TXT); lbl(v1, "Saldo Atual", 17, DIM, false)
+	_vsep(h)
+	h.add_child(ico("trophy", 34, GOLD)); var v2 = vstack(h, 0, false); hl(v2, O.money(_valor_elenco()), 28, TXT); lbl(v2, "Valor do Elenco", 17, DIM, false)
+	var sp = Control.new(); sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(sp)
+	var hc = HBoxContainer.new(); hc.add_theme_constant_override("separation", 8); h.add_child(hc); _ctrl_buttons(hc)
+	_vsep(h)
+	var d: Dictionary = O.data_de(S.org.semana, S.org.ano)
+	h.add_child(ico("calendar", 34, ACC2)); var v3 = vstack(h, 0, false); hl(v3, "%s de %d" % [MES_FULL[d.m], S.org.ano], 26, ACC2); lbl(v3, "Semana %d  |  dia %d" % [S.org.semana, d.d], 17, DIM, false)
+	_vsep(h)
+	var bell = Button.new(); bell.flat = true; bell.custom_minimum_size = Vector2(52, 52); bell.focus_mode = Control.FOCUS_NONE
+	for k in ["normal", "hover", "pressed"]: bell.add_theme_stylebox_override(k, StyleBoxEmpty.new())
+	var bi = ico("bell", 32, TXT); bi.position = Vector2(10, 10); bell.add_child(bi)
+	var nl: int = O.inbox_nao_lidas()
+	if nl > 0:
+		var bd = Label.new(); bd.text = str(nl); bd.add_theme_font_size_override("font_size", 16); bd.add_theme_color_override("font_color", Color.WHITE); bd.add_theme_stylebox_override("normal", _sbf(BAD, 12, null, 0, 3)); bd.position = Vector2(30, 0); bd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; bell.add_child(bd)
+	bell.pressed.connect(_ir(self, "inbox") if false else func(): tab = "inbox"; render()); h.add_child(bell)
+	var pf = Button.new(); pf.custom_minimum_size = Vector2(52, 52); pf.focus_mode = Control.FOCUS_NONE
+	for k in ["normal", "hover", "pressed"]: pf.add_theme_stylebox_override(k, _sbf(Color("1a1b36"), 26, ACC, 2, 0))
+	var pi = ico("users", 28, TXT); pi.position = Vector2(12, 12); pf.add_child(pi); pf.pressed.connect(_config); h.add_child(pf)
+func _vsep(p) -> void:
+	var c = ColorRect.new(); c.color = LINE; c.custom_minimum_size = Vector2(2, 44); c.size_flags_vertical = Control.SIZE_SHRINK_CENTER; p.add_child(c)
+func _ctrl_buttons(h: Container) -> void:
+	ibtn(h, "Parar" if play else "Avançar", "pause" if play else "play", _toggle_play, true, 52)
+	ibtn(h, "+1 sem", "fwd", func(): _manual(1), false, 52)
+	ibtn(h, "Até o jogo", "chev", _ate_jogo, false, 52)
+
+# ---------- barra lateral (PC) ----------
+func _sidebar() -> void:
+	var S = O.S; var oc: Color = org_cor()
+	gap(side, 18)
+	var m = Mono.new(); m.fnt = F_H; m.txt = ini(S.org.nome); m.col = oc; m.custom_minimum_size = Vector2(112, 112); m.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; side.add_child(m)
+	var nm = hl(side, S.org.nome.to_upper(), 34, TXT, true); nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gap(side, 14)
+	for t in WIDE_NAV:
+		var on: bool = t[0] == tab or (t[0] == "elenco" and false)
+		_side_btn(t[1], on, func(): tab = t[0]; render(), t[2])
+	_side_btn("Configurações", false, _config, "gear")
+	gap(side, 22)
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(Color("12132a"), 14, LINE, 1, 14)); side.add_child(pc)
+	var hh = HBoxContainer.new(); hh.add_theme_constant_override("separation", 12); pc.add_child(hh); hh.add_child(ico("globe", 40, DIM))
+	var vv = vstack(hh, 0); lbl(vv, "Reputação Mundial", 20, DIM, false)
+	var arr = _rank_pontos(game).p.keys(); var P: Dictionary = _rank_pontos(game).p; arr.sort_custom(func(a, b): return P[a] > P[b] or (P[a] == P[b] and a < b))
+	var pos: int = arr.find(S.org.nome)
+	hl(vv, ("#%d" % (pos + 1)) if pos >= 0 else "Rep %.1f" % S.org.rep, 38, TXT)
+func _config() -> void:
+	var v = modal("Configurações")
+	var tg = CheckButton.new(); tg.text = "Pular partidas (simular direto)"; tg.button_pressed = auto; tg.toggled.connect(func(on):
+		auto = on
+		if on: FileAccess.open("user://auto", FileAccess.WRITE).store_string("1")
+		else: DirAccess.remove_absolute(ProjectSettings.globalize_path("user://auto"))); v.add_child(tg)
+	lbl(v, "Velocidade do avanço", 24, DIM)
+	seg(v, [[0.45, "1x"], [0.22, "2x"], [0.07, "6x"]], vel, func(id): vel = float(id); if play: timer.start(vel); _config())
+	gap(v, 10)
+	btn(v, "Tem certeza? Toque de novo" if fm == "reset" else "Nova org (apaga o save)", func():
+		if fm == "reset": fm = ""; O.reset_estado(); O.comecar(); close_modal()
+		else: fm = "reset"; _config())
+
+# ---------- painéis ----------
+func _p_hero(p, prox) -> void:
+	var S = O.S; var hr = Hero.new(); hr.crowd = true; hr.round_r = 14.0; hr.acc = org_cor(); hr.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hr.size_flags_vertical = Control.SIZE_EXPAND_FILL; p.add_child(hr)
+	var mc = MarginContainer.new(); for k in ["left", "right"]: mc.add_theme_constant_override("margin_" + k, 26)
+	for k in ["top", "bottom"]: mc.add_theme_constant_override("margin_" + k, 18)
+	hr.add_child(mc); var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 26); mc.add_child(h)
+	var m = Mono.new(); m.fnt = F_H; m.txt = ini(S.org.nome); m.col = org_cor(); m.custom_minimum_size = Vector2(124, 124) if wide else Vector2(96, 96); h.add_child(m)
+	var v = vstack(h, 4); v.alignment = BoxContainer.ALIGNMENT_CENTER
+	var nm = hl(v, S.org.nome.to_upper(), 76 if wide else 46, Color.WHITE, true)
+	var tg = Label.new(); var D = _legado_dados(); var nv = LEG_NIVEIS[0]
+	for x in LEG_NIVEIS:
+		if D.pts >= x[0]: nv = x
+	tg.text = ("TEMPORADA %d  ·  %s" % [S.org.ano, nv[1]]).to_upper(); tg.add_theme_font_size_override("font_size", 22 if wide else 17); tg.add_theme_color_override("font_color", Color("b9b6e0"))
+	if F_H != null:
+		var fv = FontVariation.new(); fv.base_font = F_H; fv.spacing_glyph = 5; tg.add_theme_font_override("font", fv)
+	v.add_child(tg)
+	hr.custom_minimum_size.y = 170 if wide else 150
+func _p_next(p, prox) -> void:
+	var v = panel(p, "Próximo Compromisso", "calendar")
+	if prox == null: lbl(v, "Nada agendado: complete os titulares de um time.", 22, DIM); return
+	var h = hrow(v); var c1 = vstack(h, 2); hl(c1, str(prox.label), 32, TXT); lbl(c1, prox.tag, 20, DIM)
+	var c2 = vstack(h, 0, false); c2.alignment = BoxContainer.ALIGNMENT_END
+	var dl = hl(c2, str(prox.data.txt), 34, ACC2); dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var dl2 = lbl(c2, "em %d sem." % prox.em if prox.em > 0 else "esta semana", 20, DIM, false); dl2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var vs = hrow(v); vs.alignment = BoxContainer.ALIGNMENT_CENTER; vs.add_theme_constant_override("separation", 22)
+	var a = vstack(vs, 2, false); a.add_child(crest(O.S.org.nome, 64)); a.get_child(0).size_flags_horizontal = Control.SIZE_SHRINK_CENTER; var al = lbl(a, O.S.org.nome, 19, TXT, false); al.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hl(vs, "VS", 26, DIM).size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var b = vstack(vs, 2, false)
+	if prox.op != null:
+		b.add_child(crest(str(prox.op), 64)); b.get_child(0).size_flags_horizontal = Control.SIZE_SHRINK_CENTER; var bl = lbl(b, str(prox.op), 19, TXT, false); bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	else: lbl(b, "A definir", 20, DIM, false)
+func _chart(p, vals: Array, col: Color, hmin := 120) -> void:
+	var ch = Chart.new(); ch.fnt = F_B; ch.vals = vals; ch.col = col; ch.labels = _rotulos_meses(vals.size()) if vals.size() >= 2 else []
+	ch.custom_minimum_size.y = hmin; ch.size_flags_horizontal = Control.SIZE_EXPAND_FILL; ch.size_flags_vertical = Control.SIZE_EXPAND_FILL; p.add_child(ch)
+func _p_perf(p) -> void:
+	var S = O.S; var v = panel(p, "Desempenho da Organização", "chart")
+	var pf: Array = S.get("perf", []); var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 22); h.size_flags_vertical = Control.SIZE_EXPAND_FILL; v.add_child(h)
+	var l = vstack(h, 4, false); l.custom_minimum_size.x = 200
+	var fm_ = O.forca_media(); lbl(l, "Força Geral", 21, DIM, false)
+	var hf = hrow(l); hl(hf, "%.0f" % fm_, 58, TXT); var dlt: float = _delta_txt(pf)
+	if absf(dlt) >= 0.05: hf.add_child(ico("up" if dlt > 0 else "down", 22, OK if dlt > 0 else BAD)); hl(hf, "%+.1f" % dlt, 24, OK if dlt > 0 else BAD)
+	lbl(l, "Moral da Equipe", 21, DIM, false)
+	var mo: float = _moral_geral(); var hm = hrow(l); hm.add_child(ico("mood", 30, OK if mo >= 55 else GOLD if mo >= 35 else BAD)); hl(hm, O.moral_rot(mo) if mo > 0 else "—", 30, OK if mo >= 55 else GOLD if mo >= 35 else BAD)
+	if pf.size() >= 3: _chart(h, pf, ACC)
+	else: lbl(h, "O gráfico aparece depois de algumas semanas de jogo.", 21, DIM)
+func _p_fin(p) -> void:
+	var S = O.S; var v = panel(p, "Situação Financeira", "coin", "Ver relatório", _ir(self, "fin"))
+	hl(v, O.money(S.org.caixa), 54, OK if S.org.caixa >= 0 else BAD)
+	var hist: Array = S.get("fin", []); var hs = hrow(v); lbl(hs, "Saldo Atual", 21, DIM, false)
+	if hist.size() >= 2 and hist[0] != 0:
+		var pct: float = (hist[hist.size() - 1] - hist[0]) / absf(float(hist[0])) * 100.0
+		var pl = lbl(hs, "%+.1f%%" % pct, 21, OK if pct >= 0 else BAD, false); pl.size_flags_horizontal = Control.SIZE_FILL
+	if hist.size() >= 3: _chart(v, hist, OK, 110)
+	else: lbl(v, "O gráfico aparece depois de algumas semanas de jogo.", 21, DIM)
+func _p_teams(p) -> void:
+	var v = panel(p, "Nossas Equipes", "shield", "Ver todas as equipes", _ir(self, "elenco"))
+	var gr = GridContainer.new(); gr.columns = 8 if wide else 2; gr.add_theme_constant_override("h_separation", 12); gr.add_theme_constant_override("v_separation", 12); v.add_child(gr)
+	for g in O.GAMES:
+		if not O.ativo(g): continue
+		var ab: bool = O.aberto(g); var col: Color = GCOL.get(g, ACC)
+		var b = Button.new(); b.custom_minimum_size = Vector2(0, 150 if wide else 168); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var n = _sbf(Color("11122a"), 12, col if g == game and ab else LINE, 2 if g == game and ab else 1, 0); var hv = _sbf(Color("191a3a"), 12, col, 1, 0)
+		for k in ["normal", "pressed"]: b.add_theme_stylebox_override(k, n)
+		for k in ["hover", "hover_pressed"]: b.add_theme_stylebox_override(k, hv)
+		b.pressed.connect(func():
+			if ab: game = g; squad = "t1"; tab = "elenco"
+			else: tab = "neg"
+			render())
+		var vb = VBoxContainer.new(); vb.set_anchors_preset(Control.PRESET_FULL_RECT); vb.alignment = BoxContainer.ALIGNMENT_CENTER; vb.add_theme_constant_override("separation", 4); vb.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(vb)
+		var ic = PanelContainer.new(); ic.custom_minimum_size = Vector2(64, 64); ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ic.add_theme_stylebox_override("panel", _sbf(Color(col.r, col.g, col.b, 0.18 if ab else 0.07), 16, col if ab else LINE, 2, 4)); vb.add_child(ic)
+		var il = Label.new(); il.text = gname(g); il.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; il.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; il.add_theme_font_size_override("font_size", 26); il.add_theme_color_override("font_color", col if ab else DIM); il.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if F_H != null: il.add_theme_font_override("font", F_H)
+		ic.add_child(il)
+		var q1 = O.S.games[g].squads.t1
+		var sub: String = ("Time Principal" if q1.on else "Sem time") if ab else "Não aberto"
+		var t2 = lbl(vb, sub, 18, DIM, false); t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; t2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if ab and q1.on:
+			var fo: float = O.forca(g, "t1"); var mb = MarginContainer.new(); mb.add_theme_constant_override("margin_left", 16); mb.add_theme_constant_override("margin_right", 16); mb.mouse_filter = Control.MOUSE_FILTER_IGNORE; vb.add_child(mb)
+			var pb = thin(mb, fo, 100.0, col, 8); pb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gr.add_child(b)
+func _p_matches(p) -> void:
+	var v = panel(p, "Próximas Partidas", "trophy", "Ver agenda", _ir(self, "cal"))
+	var it: Array = _agenda_all(4).filter(func(a): return a.tipo != "ini")
+	if it.is_empty(): lbl(v, "Nada agendado: complete os titulares de um time.", 21, DIM)
+	for a in it.slice(0, 3 if wide else 4):
+		var rw = PanelContainer.new(); rw.add_theme_stylebox_override("panel", _sbf(Color("11122a"), 10, null, 0, 8)); v.add_child(rw)
+		var h = hrow(rw); h.add_theme_constant_override("separation", 12)
+		var d = vstack(h, 0, false); d.custom_minimum_size.x = 86; hl(d, str(a.data.txt), 26, TXT); lbl(d, "em %d sem." % a.em, 17, DIM, false)
+		h.add_child(crest(O.S.org.nome, 40)); hl(h, "VS", 18, DIM)
+		if a.op != null: h.add_child(crest(str(a.op), 40))
+		var nv = vstack(h, 0); var ol = lbl(nv, str(a.op) if a.op != null else str(a.label), 21, TXT, false); ol.clip_text = true; ol.custom_minimum_size.x = 40
+		var ll = lbl(nv, "%s · %s" % [gname(a.g), str(a.label)], 16, DIM, false); ll.clip_text = true; ll.custom_minimum_size.x = 40
+func _p_class(p) -> void:
+	var v = panel(p, "Classificações", "chart")
+	var gs = []
+	for g in O.GAMES:
+		if O.ativo(g) and O.aberto(g) and O.comp_for(g, "t1") != null: gs.append([g, gname(g)])
+	if gs.is_empty(): lbl(v, "Crie um time para ver a classificação.", 21, DIM); return
+	if cls_game == "" or not gs.any(func(x): return x[0] == cls_game): cls_game = gs[0][0]
+	var f = HFlowContainer.new(); f.add_theme_constant_override("h_separation", 6); f.add_theme_constant_override("v_separation", 6); v.add_child(f)
+	for it in gs:
+		var b = Button.new(); b.text = it[1]; b.custom_minimum_size.y = 42; var on: bool = it[0] == cls_game
+		var sn = _sbf(ACC if on else Color("14152b"), 9, null, 0, 8)
+		for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, sn)
+		b.add_theme_font_size_override("font_size", 21); b.pressed.connect(func(): cls_game = it[0]; render()); f.add_child(b)
+	var c = O.comp_for(cls_game, "t1")
+	if c.phase != "reg" and c.phase != "po":
+		lbl(v, "Fase: " + {"off": "entressafra", "wait": "aguardando titulares", "intl": "internacional"}.get(c.phase, c.phase), 21, DIM); return
+	var hd = hrow(v); lbl(hd, "#", 18, DIM, false).custom_minimum_size.x = 44; lbl(hd, "Time", 18, DIM); var hv = lbl(hd, "V-D", 18, DIM, false); hv.custom_minimum_size.x = 70; hv.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var cls: Array = O.classificacao(c); var shown = 0
+	for r in cls:
+		if shown >= 8 and not r.eu: continue
+		shown += 1
+		var rp = PanelContainer.new(); rp.add_theme_stylebox_override("panel", _sbf(Color(ACC.r, ACC.g, ACC.b, 0.35) if r.eu else Color(0, 0, 0, 0), 8, null, 0, 5)); v.add_child(rp)
+		var h = hrow(rp); h.add_theme_constant_override("separation", 10)
+		hl(h, str(r.pos), 24, TXT).custom_minimum_size.x = 34; h.add_child(crest(r.n, 30)); lbl(h, r.n, 21, TXT, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var vd = hl(h, "%d-%d" % [r.w, r.l], 24, TXT); vd.custom_minimum_size.x = 70; vd.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+func _p_news(p) -> void:
+	var v = panel(p, "Notícias", "news", "Ver todas", _ir(self, "noticias"))
+	var fd: Array = O.S.get("feed", [])
+	if fd.is_empty():
+		for l in O.S.log.slice(0, 5): lbl(v, str(l), 21, DIM)
+		return
+	var head = fd[0]
+	for x in fd.slice(0, 12):
+		if x.i >= 2: head = x; break
+	var hh = hrow(v); hh.add_theme_constant_override("separation", 14)
+	var th = Hero.new(); th.round_r = 10.0; th.crowd = true; th.acc = GCOL.get(head.g, ACC) if head.g != "" else ACC; th.custom_minimum_size = Vector2(170, 116); hh.add_child(th)
+	var ti = ico("trophy" if head.k == "titulo" else "star" if head.k == "talento" else "news", 54, Color(1, 1, 1, 0.9))
+	var tc = CenterContainer.new(); tc.add_child(ti); th.add_child(tc)
+	var tv = vstack(hh, 4); hl(tv, str(head.t), 25, TXT, true); lbl(tv, "S%d · %d" % [head.s, head.y], 18, DIM, false)
+	var k = 0
+	for x in fd:
+		if x == head: continue
+		k += 1
+		if k > 3: break
+		var r = hrow(v); r.add_theme_constant_override("separation", 12); r.add_child(ico("trophy" if x.k == "titulo" else "star" if x.k == "talento" else "news", 24, ACC2))
+		var rv = vstack(r, 0); lbl(rv, str(x.t), 20, TXT); lbl(rv, "S%d · %d" % [x.s, x.y], 16, DIM, false)
+func _p_contracts(p) -> void:
+	var v = panel(p, "Contratos Importantes", "brief", "Ver todos", _ir(self, "elenco"))
+	var lst = []
+	for g in O.GAMES:
+		if not O.aberto(g): continue
+		for sq in ["t1", "t2"]:
+			var sl = O.S.games[g].squads[sq].slots
+			for i in sl.size():
+				if sl[i] != null and not sl[i].get("estrela", false): lst.append({"g": g, "sq": sq, "i": i, "p": sl[i], "ct": int(sl[i].get("ct", O.CONTRATO))})
+	lst.sort_custom(func(a, b): return a.ct < b.ct or (a.ct == b.ct and a.p.o > b.p.o))
+	if lst.is_empty(): lbl(v, "Contrate jogadores para acompanhar contratos.", 21, DIM); return
+	for x in lst.slice(0, 3 if wide else 4):
+		var h = hrow(v); h.add_theme_constant_override("separation", 12); h.add_child(avatar(x.p.n, 46, x.g))
+		var vv = vstack(h, 0); lbl(vv, x.p.n, 24, TXT, false); lbl(vv, "%s · %s" % [gname(x.g), "Titular" if x.i < O.nT(x.g) else "Reserva"], 17, DIM, false)
+		var w: Dictionary = O.em_semanas(x.ct); var dd: Dictionary = O.data_de(w.semana, w.ano)
+		var dl = lbl(h, "%s" % dd.txt, 19, DIM, false); dl.size_flags_horizontal = Control.SIZE_FILL
+		var soon: bool = x.ct <= 26
+		var b = Button.new(); b.text = "Renovar" if soon else "Em %d sem." % x.ct; b.custom_minimum_size = Vector2(118, 44)
+		var cc: Color = OK if soon else GOLD
+		var sn = _sbf(Color(cc.r, cc.g, cc.b, 0.22), 10, cc, 1, 6)
+		for k in ["normal", "hover", "pressed", "hover_pressed"]: b.add_theme_stylebox_override(k, sn)
+		for k in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]: b.add_theme_color_override(k, cc)
+		b.add_theme_font_size_override("font_size", 21); b.pressed.connect(func(): ficha_slot(x.g, x.sq, x.i)); h.add_child(b)
+
+# ---------- Início ----------
+func vorg() -> void:
+	var S = O.S; var prox = _prox_jogo()
+	if wide:
+		var r1 = _row(content); _p_hero(_col(r1, 2.6, 0), prox); _p_next(_col(r1, 1.2, 0), prox)
+		var r2 = _row(content); _p_perf(_col(r2, 1.5, 0)); _p_fin(_col(r2, 1.0, 0))
+		var r3 = _row(content)
+		var lc = _col(r3, 2.0); _p_teams(lc)
+		var r4 = _row(lc); _p_matches(_col(r4, 1.0, 0)); _p_class(_col(r4, 1.0, 0))
+		var rc = _col(r3, 1.0); _p_news(rc); _p_contracts(rc)
+		vdiretoria()
+	else:
+		var cp = panel(content, "", "", "", null)
+		var hc = hrow(cp); _ctrl_buttons(hc)
+		for b in hc.get_children(): b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_p_hero(content, prox); _p_next(content, prox); _p_perf(content); _p_fin(content); _p_teams(content); _p_matches(content); _p_class(content); _p_news(content); _p_contracts(content); vdiretoria()
