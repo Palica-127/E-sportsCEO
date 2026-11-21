@@ -113,7 +113,7 @@
   const flagIso = c => c ? `<img class="flag" src="flags/${String(c).toLowerCase()}.svg" alt="${esc(c)}" title="${esc(c)}" loading="lazy" onerror="this.remove()">` : '';
     function vHallGen() {
     const H = (window.HIST || {})[UI.game];
-    const PREMIO = { cs2: 'Faca de Ouro', valorant: 'Spike de Ouro', ff: 'Booyah de Ouro', dota2: 'Aegis de Ouro', r6: 'Martelo de Ouro', fifa: 'Ícone de Ouro', wr: 'Nexus de Ouro' }, BON = H && (H.boNome || PREMIO[UI.game]) || 'Bola de Ouro';
+    const PREMIO = { lol: 'Golden Crown', cs2: 'Golden Rifle', valorant: 'Radiant Award', ff: 'Golden Booyah', dota2: 'Golden Aegis', r6: 'Golden Shield', fifa: "Ballon d'Or", wr: 'Golden Rift' }, BON = H && (H.boNome || PREMIO[UI.game]) || 'Bola de Ouro';
     if (!H) return `<section class="card empty"><h2>${O.GAMES[UI.game].nome}</h2><p>Histórico deste jogo ainda não foi levantado.</p></section>`;
     const TIPOS = H.tipos || {}, MAIN = H.main || '', sub = ['tor', 'tit', H.bo ? 'bo' : '', 'leg'].includes(UI.hall) ? UI.hall : 'tor', fl = UI.hf && TIPOS[UI.hf] ? UI.hf : '';
     const chips = `<div class="chips">${[['tor', '🏆 Torneios'], ['tit', '🏅 Títulos por time'], ...(H.bo ? [['bo', '🥇 ' + BON]] : []), ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
@@ -139,10 +139,10 @@
   function vHall() {
     if (UI.game !== 'lol') return vHallGen();
     const x = X(); if (!x) return '<section class="card empty"><p>Sem dados.</p></section>';
-    const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['bo', '🥇 Bola de Ouro'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    const sub = UI.hall || 'wc', chips = `<div class="chips">${[['wc', '🏆 Mundial'], ['msi', '🥇 MSI'], ['bo', '🥇 Golden Crown'], ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
     if (sub === 'bo') {
       const R = (O.GAMES.lol || {}).roles || [];
-      return chips + '<section class="card"><h2>Bola de Ouro · Top 10 do ano</h2>' + Object.keys(x.pre).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${bandeira(x.pre[y][0][0]) || ''}🥇 <a href="#" data-act="ficha" data-id="p:${esc(x.pre[y][0][0])}">${esc(x.pre[y][0][0])}</a></b><small>${esc(x.pre[y][0][1])}</small><div class="lu">${x.pre[y].slice(1).map((r, i) => `<span>${i + 2}º ${bandeira(r[0]) || ''}<a href="#" data-act="ficha" data-id="p:${esc(r[0])}">${esc(r[0])}</a> <small>${R[r[2]] || ''}</small></span>`).join('')}</div></div></div>`).join('') + '</section>';
+      return chips + '<section class="card"><h2>Golden Crown · Top 10 do ano</h2>' + Object.keys(x.pre).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${bandeira(x.pre[y][0][0]) || ''}🥇 <a href="#" data-act="ficha" data-id="p:${esc(x.pre[y][0][0])}">${esc(x.pre[y][0][0])}</a></b><small>${esc(x.pre[y][0][1])}</small><div class="lu">${x.pre[y].slice(1).map((r, i) => `<span>${i + 2}º ${bandeira(r[0]) || ''}<a href="#" data-act="ficha" data-id="p:${esc(r[0])}">${esc(r[0])}</a> <small>${R[r[2]] || ''}</small></span>`).join('')}</div></div></div>`).join('') + '</section>';
     }
     if (sub === 'leg') {
       const arr = Object.entries(x.hon).map(([n, o]) => ({ n, o, pts: (o.wc || []).length * 3 + (o.msi || []).length * 2 + (o.lg || 0) * .5 + (o.mv || []).length })).sort((a, b) => b.pts - a.pts);
