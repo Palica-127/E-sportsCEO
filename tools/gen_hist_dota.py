@@ -21,7 +21,7 @@ add('The International 2019',2019,'TI','OG','',r=['ana','Topson','Ceb','JerAx','
 add('The International 2021',2021,'TI','Team Spirit','PSG.LGD',r=['Yatoro','TORONTOTOKYO','Collapse','Mira','Miposhka'])
 add('The International 2022',2022,'TI','Tundra Esports','Team Secret',r=['skiter','Nine','33','Saksa','Sneyking'])
 add('The International 2023',2023,'TI','Team Spirit','Gaimin Gladiators','3-0',r=['Yatoro','Larl','Collapse','Mira','Miposhka'])
-add('The International 2024',2024,'TI','Team Liquid','Xtreme Gaming',r=['miCKe','Nisha','33','Boxi','Insania'])
+add('The International 2024',2024,'TI','Team Liquid','Gaimin Gladiators','3-0',r=['miCKe','Nisha','33','Boxi','Insania'])
 add('The International 2025 Hamburgo',2025,'TI','Team Falcons','Xtreme Gaming','3-2',r=['skiter','Malr1ne','ATF','Cr1t-','Sneyking'])
 add('The International 2026 Xangai',2026,'TI','Team Spirit','PARIVISION','3-2',r=['Yatoro','Larl','Collapse','not_me','rue'])
 # Riyadh Masters / Esports World Cup
