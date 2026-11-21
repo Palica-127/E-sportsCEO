@@ -1,0 +1,2 @@
+Coloque aqui as fotos: nick em minúsculas, sem espaços nem símbolos (ZywOo -> zywoo.jpg; Levi de Weerd -> levideweerd.jpg).
+Depois rode: python3 tools/gen_fotos.py

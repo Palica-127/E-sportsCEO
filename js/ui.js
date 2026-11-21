@@ -46,7 +46,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       <div class="chips"><button class="chip ${!SU.role ? 'on' : ''}" data-act="su-role" data-id="">Todas</button>${roles.map(r => `<button class="chip ${SU.role === r ? 'on' : ''}" data-act="su-role" data-id="${r}">${r}</button>`).join('')}</div>
       <input id="su-q" placeholder="Buscar jogador" value="${esc(SU.q)}"><button class="btn ghost" style="margin-top:8px" data-act="su-sem">Começar sem estrela</button></section>`
       + `<section class="card"><h2>${lista.length} jogadores</h2>` + lista.slice(0, SU.n).map(p => { const ch = O.chanceEstrela(p.o), f = O.fee(p.o);
-        return `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · aceita: ${pc(ch)}</small></div>${hex(p.o)}<button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
+        return `<div class="slot">${avatar(p.n)}<span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · aceita: ${pc(ch)}</small></div>${hex(p.o)}<button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
       + (lista.length > SU.n ? '<button class="btn alt" data-act="su-mais">Mostrar mais</button>' : '') + '</section>';
   }
   const hue = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
@@ -71,7 +71,10 @@ const ANOS = a => a == null ? '—' : a + ' anos';
   /* ---------- LoL: bandeiras, fichas, campeões e lendas (dados do BrasLOL, sem fotos) ---------- */
   const X = () => window.LOLX || null;
   function bandeira(n) { const x = X(); if (!x || UI.game !== 'lol' && n !== true) return ''; const c = x.nat[n]; return c && x.iso[c] ? `<img class="flag" src="flags/${x.iso[c]}.svg" alt="${esc(x.natN[c] || c)}" title="${esc(x.natN[c] || c)}" loading="lazy" onerror="this.remove()">` : ''; }
-  function avatar(n) { const ini = String(n).replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '?'; let h = 0; for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `<span class="av" style="--h:${h}">${ini}</span>`; }
+  const fotoSlug = n => String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  function avatar(n) { const ini = String(n).replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '?'; let h = 0; for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) % 360;
+    const f = (window.FOTOS || []).find(x => x.slice(0, x.lastIndexOf('.')) === fotoSlug(n)); // fotos/<nick>.jpg que o próprio usuário colocou
+    return `<span class="av" style="--h:${h}">${f ? `<img src="fotos/${f}" alt="">` : ini}</span>`; }
   function achaTime(nome) { const L = (O.dataOf('lol') || {}).leagues || {}; for (const k in L) for (const tier of ['t1', 't2']) for (const t of (L[k][tier] || [])) if (t.n === nome) return { t, liga: L[k].nome, tier: tier.toUpperCase() }; return null; }
   function titulos(nome) {
     const x = X(); if (!x) return { wc: [], msi: [] };
@@ -211,7 +214,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       <div class="kv"><span>Folha semanal</span><b>${O.money(O.folha(UI.game, UI.squad))}</b></div></section><section class="card"><h2>Titulares</h2>`;
     h += q.slots.map((p, i) => {
       const nT = roles.length, titulo = i < nT ? roles[i] : 'RES', cls = i < nT ? 'ri' + i : 'ri9';
-      return `<div class="slot">${p ? `<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div>${hex(p.o)}${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
+      return `<div class="slot">${p ? `${avatar(p.n)}<span class="role ${cls}">${titulo}</span><div class="who"><b>${p.estrela ? '⭐ ' : ''}${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)}${p.pot ? ' · pot. ' + p.pot : ''}</small><small class="${p.ct <= 8 ? 'neg' : ''}">⏳ ${p.ct === undefined ? O.CONTRATO : p.ct} sem. de contrato</small><div class="acts"><button class="mini" data-act="renovar" data-slot="${i}">Renovar ${O.money(O.custoRenovar(p))}</button>${['t1', 't2', 'acad'].filter(x => x !== UI.squad && S.games[UI.game].squads[x].on).map(x => `<button class="mini" data-act="mover" data-slot="${i}" data-id="${x}">→ ${x === 'acad' ? 'Academy' : x.toUpperCase()}</button>`).join('')}</div></div>${hex(p.o)}${p.estrela ? '' : `<button class="mini" data-act="dispensar" data-slot="${i}" aria-label="Dispensar ${esc(p.n)}">✕</button>`}`
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     const bs = (S.base || {})[UI.game] || [];
@@ -234,7 +237,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
       <div class="row2"><select id="mliga"><option value="">Todas as ligas</option>${ligas.map(l => `<option ${m.liga === l ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <input id="mq" placeholder="Buscar nome" value="${esc(m.q)}"></div></section>
       <section class="card"><h2>${tot} jogadores</h2>` + lista.slice(0, m.n).map(p => `<div class="slot"><span class="role ri${roles.indexOf(p.r)}">${p.r}</span>
-        <div class="who"><b>${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · ${O.money(O.salary(p.o))}/sem</small></div>${hex(p.o)}
+        ${avatar(p.n)}<div class="who"><b>${esc(p.n)} ${bandeira(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${ANOS(p.a)} · ${O.money(O.salary(p.o))}/sem</small></div>${hex(p.o)}
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
   }
