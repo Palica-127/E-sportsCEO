@@ -84,7 +84,7 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; if (Object.values(s.infra).some(v => typeof v === 'number')) { const old = s.infra; s.infra = {}; for (const g in base.games) s.infra[g] = Object.assign({}, old); }; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
@@ -157,18 +157,20 @@
   function livres(game) { if (!D(game)) return []; const used = contratados(game); return pool(game).filter(p => !used.has(p.id)); }
 
   /* ---------- Org: estrutura, times, elenco ---------- */
-  const infraNivel = id => S.infra[id] || 0;
-  function infraBonus() { return INFRA.reduce((a, it) => a + infraNivel(it.id) * it.bonus, 0); }
-  function infraInvestido() { return INFRA.reduce((a, it) => { let t = 0; for (let l = 0; l < infraNivel(it.id); l++) t += it.base * Math.pow(INFRA_MULT, l); return a + t; }, 0); }
-  const infraCusto = it => Math.round(it.base * Math.pow(INFRA_MULT, infraNivel(it.id)) / 1000) * 1000;
+  // estrutura é POR JOGO: S.infra[jogo][id] = nível (cada jogo tem sua própria gaming house, equipe de apoio etc.)
+  const infraNivel = (id, game) => ((S.infra[game] || {})[id]) || 0;
+  function infraBonus(game) { return INFRA.reduce((a, it) => a + infraNivel(it.id, game) * it.bonus, 0); }
+  function infraInvestido() { let t = 0; for (const g in GAMES) INFRA.forEach(it => { for (let l = 0; l < infraNivel(it.id, g); l++) t += it.base * Math.pow(INFRA_MULT, l); }); return t; }
+  const infraCusto = (it, game) => Math.round(it.base * Math.pow(INFRA_MULT, infraNivel(it.id, game)) / 1000) * 1000;
   const upkeepSemanal = () => Math.round(infraInvestido() * UPKEEP);
 
-  function comprarInfra(id) {
+  function comprarInfra(id, game) {
     const it = INFRA.find(x => x.id === id); if (!it) return { ok: false, msg: 'Item inválido.' };
-    if (infraNivel(id) >= it.max) return { ok: false, msg: 'Nível máximo.' };
-    const c = infraCusto(it); if (S.org.caixa < c) return { ok: false, msg: 'Caixa insuficiente.' };
-    S.org.caixa -= c; S.infra[id] = infraNivel(id) + 1; log(`${it.nome} nível ${S.infra[id]}`); save();
-    return { ok: true, msg: `${it.nome} agora no nível ${S.infra[id]}.` };
+    if (!GAMES[game]) return { ok: false, msg: 'Jogo inválido.' };
+    if (infraNivel(id, game) >= it.max) return { ok: false, msg: 'Nível máximo.' };
+    const c = infraCusto(it, game); if (S.org.caixa < c) return { ok: false, msg: 'Caixa insuficiente.' };
+    const m = S.infra[game] = S.infra[game] || {}; S.org.caixa -= c; m[id] = infraNivel(id, game) + 1; log(`${GAMES[game].curto}: ${it.nome} nível ${m[id]}`); save();
+    return { ok: true, msg: `${it.nome} (${GAMES[game].curto}) agora no nível ${m[id]}.` };
   }
   function ativarSquad(game, sq) {
     const q = S.games[game].squads[sq], d = SQUADS[sq];
@@ -266,8 +268,8 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
   }
   const SIL = ['ka','ro','zi','le','mo','tu','vex','dra','ni','sho','bal','tor','xe','pa','ru','fu','gi','lo','ze','ky'];
   function gerarBase() { // ao fim de cada split do T1: a base revela um jovem por jogo (até 3 guardados)
-    const nv = infraNivel('base'); if (!nv) return;
     for (const g in GAMES) {
+      const nv = infraNivel('base', g); if (!nv) continue;
       if (!GAMES[g].ativo || !S.games[g].squads.t1.on) continue;
       const lst = S.base[g] = S.base[g] || []; if (lst.length >= 3) continue;
       const roles = GAMES[g].roles, r = roles[Math.floor(rnd() * roles.length)], o = Math.round(54 + nv * 2.5 + rnd() * 5);
@@ -302,21 +304,24 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
   const prontos = (game, sq) => { const q = S.games[game].squads[sq]; return q.on && titulares(game, sq).every(Boolean); };
   function forca(game, sq) { // média dos titulares (vaga vazia vale 55) + bônus da estrutura
     const st = titulares(game, sq);
-    return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus() + bonusTemp();
+    return st.reduce((a, p) => a + (p ? p.o : 55), 0) / st.length + infraBonus(game) + bonusTemp(game);
   }
-  const bonusTemp = () => Math.min(BUFF_MAX, (S.foco === 'treino' ? 1 : 0) + (S.buff ? S.buff.f : 0) + S.itens.reduce((a, x) => a + (x.f || 0), 0));
+  const bonusTemp = game => Math.min(BUFF_MAX, (S.foco === 'treino' ? 1 : 0) + (S.buff ? S.buff.f : 0) + S.itens.reduce((a, x) => a + (x.g == null || x.g === game ? x.f || 0 : 0), 0));
   const rendaMerch = () => S.itens.reduce((a, x) => a + (x.pay || 0), 0);
   function lojaItens() { // 5 itens sorteados do catálogo, renovados a cada 4 semanas
     if (!S.loja.length) { const ids = LOJA.map(x => x.id); S.loja = []; while (S.loja.length < LOJA_N) S.loja.push(ids.splice(Math.floor(rnd() * ids.length), 1)[0]); }
     return S.loja.map(id => LOJA.find(x => x.id === id));
   }
-  function comprarLoja(id) {
+  const itemAtivo = (it, game) => it.tipo !== 'seg' && S.itens.some(x => x.id === it.id && (it.tipo !== 'buff' || x.g === game));
+  function comprarLoja(id, game) { // reforços (buff) valem só para o jogo escolhido; seguidores e merch são da org inteira
     const it = lojaItens().find(x => x && x.id === id); if (!it) return { ok: false, msg: 'Item fora de estoque.' };
+    if (it.tipo === 'buff' && !GAMES[game]) return { ok: false, msg: 'Escolha o jogo do reforço.' };
     if (S.org.caixa < it.c) return { ok: false, msg: 'Caixa insuficiente.' };
-    if (it.tipo !== 'seg' && S.itens.some(x => x.id === id)) return { ok: false, msg: 'Você já tem esse item ativo.' };
+    if (itemAtivo(it, game)) return { ok: false, msg: 'Você já tem esse item ativo.' };
     S.org.caixa -= it.c;
-    if (it.tipo === 'seg') seguidores(it.v); else S.itens.push({ id: it.id, nome: it.nome, f: it.f || 0, pay: it.pay || 0, sem: it.sem });
-    S.loja = S.loja.filter(x => x !== id); log(`Loja: ${it.nome}`); save();
+    if (it.tipo === 'seg') seguidores(it.v); else S.itens.push({ id: it.id, nome: it.nome, f: it.f || 0, pay: it.pay || 0, sem: it.sem, g: it.tipo === 'buff' ? game : null });
+    if (it.tipo !== 'buff') S.loja = S.loja.filter(x => x !== id);
+    log(`Loja: ${it.nome}${it.tipo === 'buff' ? ' (' + GAMES[game].curto + ')' : ''}`); save();
     return { ok: true, msg: `${it.nome} comprado.` };
   }
   const mediaTime = pl => pl && pl.length ? pl.reduce((a, p) => a + p[1], 0) / pl.length : 70;
@@ -577,7 +582,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     S.ligas = S.ligas || {}; delete S.ligas[g]; save();
   }
 
-  root.Org = { LOJA, lojaItens, comprarLoja, rendaMerch, GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
+  root.Org = { LOJA, lojaItens, comprarLoja, itemAtivo, rendaMerch, GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
     infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, passo, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);

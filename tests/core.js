@@ -72,8 +72,8 @@ const antes = p0.ct; O.renovar('lol', 't1', 0); ok(p0.ct === antes + 104, 'renov
 ok(O.mover('lol', 't1', 't2', 0).ok && !S.games.lol.squads.t1.slots[0] && S.games.lol.squads.t2.slots[0] === p0, 'mover T1 -> T2');
 ok(!O.mover('lol', 't1', 't2', 0).ok, 'mover vaga vazia falha');
 S.games.lol.squads.t2.slots[0].ct = 2; O.avancar(3); ok(!S.games.lol.squads.t2.slots[0], 'contrato vencido libera a vaga');
-for (let i = 0; i < 5; i++) O.comprarInfra('base');
-ok(O.infraNivel('base') === 5, 'base nível 5');
+for (let i = 0; i < 5; i++) O.comprarInfra('base', 'lol');
+ok(O.infraNivel('base', 'lol') === 5 && O.infraNivel('base', 'cs2') === 0, 'base nível 5 só no LoL');
 const l5 = O.livres('lol').sort((a, b) => a.o - b.o); for (const r of O.GAMES.lol.roles) if (!S.games.lol.squads.t1.slots[O.GAMES.lol.roles.indexOf(r)]) O.contratar('lol', 't1', l5.find(x => x.r === r));
 O.avancar(26 * 2 + 4); ok(S.base.lol && S.base.lol.length >= 1, 'base revelou jovens (' + (S.base.lol || []).length + ')');
 const jov = S.base.lol[0]; ok(O.promoverBase('lol', 't2', jov.id).ok && !S.base.lol.some(x => x.id === jov.id), 'promover da base');
@@ -91,7 +91,7 @@ for (let i = 0; i < 120 && !resolveu; i++) { O.avancar(1); if (S.evento) { viu =
 ok(viu, 'eventos aparecem'); ok(Number.isFinite(S.org.caixa) && Number.isFinite(S.social.seg), 'valores finitos');
 // economia: time sem titulares completos não rende patrocínio; manutenção não multiplica por jogo
 O.set(O.novoJogo()); S = O.get(); ok(O.projecao('cs2').receita === 0, 'sem titulares, sem receita-base');
-S.infra.casa = 3; const up = O.upkeepSemanal(); ok(O.projecaoOrg().despesa === up, 'manutenção cobrada uma vez só (' + up + ')');
+S.infra.lol = { casa: 3 }; const up = O.upkeepSemanal(); ok(O.projecaoOrg().despesa === up, 'manutenção cobrada uma vez só (' + up + ')');
 O.set(O.novoJogo()); S = O.get(); S.seed = 5; const cx0 = S.org.caixa; O.avancar(26); ok(S.org.caixa - cx0 < 1.5e6, 'sem elenco o caixa não explode (' + Math.round((S.org.caixa - cx0) / 1000) + 'k)');
 // ---- começo de jogo: logo, jogo inicial, estrela
 O.comecar(); S = O.get(); ok(S.setup === 'config', 'novo jogo começa no assistente');
@@ -118,9 +118,11 @@ const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: 
 // loja: compra, buff limitado e expiração
 O.set(O.novoJogo()); S = O.get(); S.org.caixa = 1e6; S.loja = ["lanche","boot","ads","camisa","skin"]; const li = O.lojaItens();
 ok(li.length === 5 && new Set(li.map(x => x.id)).size === 5, 'loja com 5 itens distintos');
-const b0 = O.bonusTemp(), it0 = li.find(x => x.tipo === 'buff'); const rl = O.comprarLoja(it0.id);
-ok(rl.ok && O.bonusTemp() > b0 && S.org.caixa === 1e6 - it0.c, 'comprar reforço soma bônus e desconta caixa');
-ok(!O.comprarLoja(it0.id).ok, 'não recompra item ativo');
-S.itens.push({ id: 'x', f: 9, sem: 5 }); ok(O.bonusTemp() <= 4, 'bônus temporário limitado a +4');
+const b0 = O.bonusTemp('lol'), it0 = li.find(x => x.tipo === 'buff'); const rl = O.comprarLoja(it0.id, 'lol');
+ok(rl.ok && O.bonusTemp('lol') > b0 && O.bonusTemp('cs2') === 0 && S.org.caixa === 1e6 - it0.c, 'comprar reforço soma bônus e desconta caixa');
+ok(!O.comprarLoja(it0.id, 'lol').ok && O.comprarLoja(it0.id, 'cs2').ok, 'não recompra no mesmo jogo, mas compra em outro');
+S.itens.push({ id: 'x', f: 9, sem: 5, g: 'lol' }); ok(O.bonusTemp('lol') <= 4, 'bônus temporário limitado a +4');
 O.avancar(it0.sem + 5); ok(!S.itens.some(x => x.id === it0.id), 'item expira');
+// migração: save antigo com estrutura global vira por jogo
+{ const old = O.novoJogo(); old.v = 1; old.infra = { casa: 2, base: 1 }; old.itens = [{ id: 'lanche', f: 0.8, sem: 2 }]; global.localStorage.setItem('org-v1', JSON.stringify(old)); ok(O.load() && O.infraNivel('casa', 'lol') === 2 && O.infraNivel('casa', 'cs2') === 2 && O.bonusTemp('r6') === 0.8, 'save antigo migra estrutura e itens'); }
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

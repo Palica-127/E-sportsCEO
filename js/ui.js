@@ -218,7 +218,7 @@ const ANOS = a => a == null ? '—' : a + ' anos';
         : `<span class="role ${cls} off">${titulo}</span><div class="who"><small>Vaga aberta</small></div>`}</div>${i === nT - 1 ? '</section><section class="card"><h2>Reservas</h2>' : ''}`;
     }).join('') + '</section>';
     const bs = (S.base || {})[UI.game] || [];
-    h += `<section class="card"><h2>🌱 Base</h2>` + (O.infraNivel('base') ? '' : '<p class="hint">Compre a Categoria de base na aba Estrutura para revelar jovens.</p>')
+    h += `<section class="card"><h2>🌱 Base</h2>` + (O.infraNivel('base', UI.game) ? '' : '<p class="hint">Compre a Categoria de base na aba Estrutura para revelar jovens.</p>')
       + bs.map(p => `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${ANOS(p.a)} · potencial ${p.pot}</small></div>${hex(p.o)}<button class="mini buy" data-act="base" data-id="${p.id}">Promover</button></div>`).join('') + '</section>';
     return h;
   }
@@ -300,16 +300,17 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     return h;
   }
   function vEstrutura() {
-    const S = O.get();
-    const ativos = S.itens.map(x => `<div class="kv"><span>${esc(x.nome)}</span><b>${x.f ? '+' + x.f + ' força · ' : ''}${x.pay ? '<span class="pos">' + O.money(x.pay) + '/sem</span> · ' : ''}${x.sem} sem</b></div>`).join('');
+    const S = O.get(), eg = UI.estGame || UI.game, gn = O.GAMES[eg];
+    const chipsJ = `<section class="card"><h2>🎮 Estrutura de qual jogo?</h2><div class="chips">` + Object.keys(O.GAMES).filter(k => O.GAMES[k].ativo).map(k => `<button class="chip ${k === eg ? 'on' : ''}" data-act="estgame" data-id="${k}">${O.GAMES[k].icone} ${O.GAMES[k].curto}</button>`).join('') + `</div><p class="hint">Gaming house, equipe de apoio e reforços valem só para o jogo escolhido (${esc(gn.curto)}). Seguidores e merch valem para a org toda.</p></section>`;
+    const ativos = S.itens.map(x => `<div class="kv"><span>${esc(x.nome)}${x.g ? ' · ' + esc(O.GAMES[x.g].curto) : ''}</span><b>${x.f ? '+' + x.f + ' força · ' : ''}${x.pay ? '<span class="pos">' + O.money(x.pay) + '/sem</span> · ' : ''}${x.sem} sem</b></div>`).join('');
     const loja = `<section class="card"><h2>🛍️ Loja da semana</h2><p class="hint">O estoque muda a cada 4 semanas (próxima troca em ${4 - S.lojaSem}). Reforços somam no máximo +4 de força.</p>` +
-      O.lojaItens().map(it => { const tem = it.tipo !== 'seg' && S.itens.some(x => x.id === it.id);
-        return `<div class="slot infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small></div><button class="mini buy" data-act="loja" data-id="${it.id}" ${tem || S.org.caixa < it.c ? 'disabled' : ''}>${tem ? 'ATIVO' : O.money(it.c)}</button></div>`; }).join('') + '</section>' +
+      O.lojaItens().map(it => { const tem = O.itemAtivo(it, eg);
+        return `<div class="slot infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small></div><button class="mini buy" data-act="loja" data-id="${it.id}" data-g="${eg}" ${tem || S.org.caixa < it.c ? 'disabled' : ''}>${tem ? 'ATIVO' : O.money(it.c)}</button></div>`; }).join('') + '</section>' +
       (ativos ? `<section class="card"><h2>Ativos</h2>${ativos}</section>` : '');
-    return loja + `<h2 class="sec">Instalações permanentes</h2>` + `<section class="card"><div class="kv"><span>Bônus de força</span><b>+${O.infraBonus().toFixed(1)}</b></div><div class="kv"><span>Manutenção semanal</span><b>${O.money(O.upkeepSemanal())}</b></div></section>` +
-      O.INFRA.map(it => { const n = O.infraNivel(it.id), max = n >= it.max, c = O.infraCusto(it);
+    return chipsJ + loja + `<h2 class="sec">Instalações permanentes · ${esc(gn.curto)}</h2>` + `<section class="card"><div class="kv"><span>Bônus de força</span><b>+${O.infraBonus(eg).toFixed(1)}</b></div><div class="kv"><span>Manutenção semanal</span><b>${O.money(O.upkeepSemanal())}</b></div></section>` +
+      O.INFRA.map(it => { const n = O.infraNivel(it.id, eg), max = n >= it.max, c = O.infraCusto(it, eg);
         return `<section class="card infra"><div class="ic">${it.icone}</div><div class="who"><b>${it.nome}</b><small>${it.desc}</small><div class="bar"><i style="width:${n / it.max * 100}%"></i></div><small>Nível ${n}/${it.max}${it.bonus ? ' · +' + it.bonus + ' de força por nível' : ''}</small></div>
-          <button class="mini buy" data-act="infra" data-id="${it.id}" ${max || S.org.caixa < c ? 'disabled' : ''}>${max ? 'MAX' : O.money(c)}</button></section>`; }).join('');
+          <button class="mini buy" data-act="infra" data-id="${it.id}" data-g="${eg}" ${max || S.org.caixa < c ? 'disabled' : ''}>${max ? 'MAX' : O.money(c)}</button></section>`; }).join('');
   }
   const FASE = { off: c => `Entretemporada: ${c.wk} sem. para o próximo split`, wait: () => 'Aguardando inscrição: complete os titulares', reg: c => `Próxima: rodada ${c.round + 1} de ${c.sched.length}`, po: () => 'Playoffs', intl: c => `${O.intlDef(c.game)[c.intl.tipo].nome}: ${c.intl.alive.length} times vivos` };
   function vComp() {
@@ -389,8 +390,9 @@ const ANOS = a => a == null ? '—' : a + ' anos';
     else if (a === 'foco') res(O.setFoco(id));
     else if (a === 'patro') res(O.aceitarPatro(id));
     else if (a === 'evento') res(O.escolherEvento(+id));
-    else if (a === 'infra') res(O.comprarInfra(id));
-    else if (a === 'loja') res(O.comprarLoja(id));
+    else if (a === 'estgame') { UI.estGame = id; render(); }
+    else if (a === 'infra') res(O.comprarInfra(id, b.dataset.g || UI.game));
+    else if (a === 'loja') res(O.comprarLoja(id, b.dataset.g || UI.game));
     else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
     else if (a === 'mrole') { UI.mk.role = id; UI.mk.n = 30; render(); }
     else if (a === 'mpay') { UI.mk.pay = !UI.mk.pay; UI.mk.n = 30; render(); }
