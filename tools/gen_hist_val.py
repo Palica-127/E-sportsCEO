@@ -8,7 +8,7 @@ def add(n,a,tp,c,v,p='',mvp=None,mt='',pais='',r=None):
     T.append(d)
 # Champions (MVP 2022 omitido: fontes divergem; 2021-2023 MVPs eram escolhidos pela imprensa, 2024+ oficial)
 add('Champions Berlin 2021',2021,'Champions','Acend','Gambit Esports','3-2','zeek','Acend','',['starxo','cNed','zeek','BONECOLD','Kiles'])
-add('Champions Istanbul 2022',2022,'Champions','LOUD','OpTic Gaming','3-1',r=['Sacy','saadhak','Less','pANcada','aspas'])
+add('Champions Istanbul 2022',2022,'Champions','LOUD','OpTic Gaming','3-1','pANcada','LOUD','',r=['Sacy','saadhak','Less','pANcada','aspas'])
 add('Champions Los Angeles 2023',2023,'Champions','Evil Geniuses','Paper Rex','3-1','Demon1','Evil Geniuses','',['Demon1','jawgemo','Boostio','C0M','Ethan'])
 add('Champions Seoul 2024',2024,'Champions','EDward Gaming','Team Heretics','3-2','ZmjjKK','EDward Gaming','China',['ZmjjKK','CHICHOO','Smoggy','S1Mon','nobody'])
 add('Champions Paris 2025',2025,'Champions','NRG','Fnatic','3-2','brawk','NRG','EUA',['brawk','Ethan','skuba','mada','s0m'])

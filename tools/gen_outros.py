@@ -42,7 +42,7 @@ L = {
         ('EU','Europa','Europa','G2 Esports,Team BDS,FaZe Clan,Falcons,Virtus.pro,Heroic,Natus Vincere,Gentle Mates','Team Secret,Rebels Gaming,Movistar KOI,Vitality,MNM Gaming,Evil Geniuses,Fnatic'),
         ('AP','Ásia-Pacífico','Ásia-Pacífico','Team Falcons APAC,Rex Regum Qeon,Talon Esports,Nongshim,Alpha Esports,ZETA DIVISION,Burmese Ghouls,Alter Ego','Detonation,DeToNator,Wildcard,Bleed Esports,Geek Fam,Team Flash,Sengoku')],
  'fifa': [('BR','Brasil','Brasil','Flamengo,Corinthians,FURIA,paiN Gaming,LOUD,Fluxo,Vasco,Palmeiras','Santos,São Paulo,Grêmio,Cruzeiro,Athletico,Sharks Esports,Keyd Stars'),
-          ('EU','Europa','Europa','Team Falcons,Team Vitality,G2 Esports,Fnatic,Karmine Corp,Heroic,Gentle Mates,Alpine','Eintracht,Wolfsburg,Sevilla,Real Betis,Ajax,Rennes,Benfica'),
+          ('EU','Europa','Europa','Team Falcons,Team BDS,G2 Esports,Fnatic,Karmine Corp,Heroic,Gentle Mates,Alpine','Eintracht,Wolfsburg,Sevilla,Real Betis,Ajax,Rennes,Benfica'),
           ('GL','Global','Global','FC Barcelona,Manchester City,PSG,Inter,LAFC,Al-Hilal,Flamengo Global,Boca Juniors','Corinthians Global,River Plate,Galatasaray,Celtic,Cruz Azul,Seattle Sounders,Urawa')],
  'wr': [('BR','Brasil','Brasil','LOUD,paiN Gaming,FURIA,RED Canids,INTZ,KaBuM!,Los Grandes,Netshoes Miners','Flamengo,Fluxo,Vivo Keyd Stars,Black Dragons,Corinthians,Sharks Esports,Team Liquid'),
         ('AS','Ásia','Ásia','Team Flash,SBTC Esports,Burmese Ghouls,Saigon Phantom,Talon Esports,Rex Regum Qeon,Alter Ego,Gen.G','Vikings,Hanwha Life,Dplus,ONIC Esports,EVOS Esports,Bigetron,Geek Fam'),
@@ -85,7 +85,11 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
 # EA FC: pros reais do circuito FC Pro 2026 (EA/FUTWIZ/Red Bull). Nota por ranking mundial quando citado; sem time real (as orgs da liga são fictícias para este jogo).
 FC_RANK = {'Levi de Weerd': 6, 'GuiBarros': 7, 'Tekkz': 12, 'Umut': 21, 'LJR Peixoto': 23, 'HHezerS': 24, 'Yaskow': 49, 'Lukas': 62, 'AnasBadr': 70, 'tuga810': 81}
 FC_PROS = ['Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiBarros','Tekkz','Jafonso','Umut','Emre Yilmaz','Obrun','Yuval','Brice','LJR Peixoto','HHezerS','AboFawzi','The 1OS','Karimisbak','MarwanMC9','Bonanno','Yaskow','Lukas','AlihanLion','Darkley11','Nassada','Stingray','Caccia','Exeed','GugaFerrez','AnasBadr','tuga810']
-_fc = iter(FC_PROS)
+# clubes reais (Liquipedia FC Pro 26 / Sportskeeda EWC 2026 / EA FC Pro); quem não tem fonte mantém o clube fictício
+FC_CLUB = {'Vejrgang':'Team Falcons','ManuBachoore':'Team Liquid','PHzin':'Tuzzy Esports','Levi de Weerd':'Team Liquid','GuiBarros':'RBLZ Gaming',
+ 'Tekkz':'RBLZ Gaming','Jafonso':'Man City Esports','Umut':'RBLZ Gaming','Emre Yilmaz':'Team Liquid','Obrun':'Exeed','Yuval':'Gaimin Gladiators',
+ 'Brice':'Team Vitality','LJR Peixoto':'Twisted Minds','AboFawzi':'Twisted Minds','Nassada':'SC Freiburg'}
+_fc = iter(FC_PROS); _fcn = {}
 # Nacionalidades (ISO2) só onde a fonte ou o nome do jogador deixam claro; o resto fica em branco.
 NAC = {}
 def _n(iso, *nicks):
@@ -113,7 +117,11 @@ for gi, (g, regs) in enumerate(L.items()):
             if nm in REAL.get(g, {}): return real_time(g, nm, base)
             if g == 'fifa':
                 n = next(_fc, None)
-                if n: return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), None] + ([NAC[n]] if n in NAC else [])]}
+                if n:
+                    if n in FC_CLUB:
+                        c = FC_CLUB[n]; _fcn[c] = _fcn.get(c, 0) + 1
+                        nm = c if _fcn[c] == 1 else c + ' ' + 'I' * _fcn[c]
+                    return {'n': nm, 'p': [[n, round(92 - (FC_RANK[n] - 1) * 0.25) if n in FC_RANK else max(60, min(90, round(base + 2))), None] + ([NAC[n]] if n in NAC else [])]}
             return {'n': nm, 'p': [[nick(r, used), max(55, min(90, round(base + r.uniform(-4, 4)))), r.randint(17, 30)] for _ in ROLES[g]]}
         a = t1.split(','); b = t2.split(',')
         assert len(set(a + b)) == 15, (g, key)
