@@ -17,9 +17,9 @@
   const SIMBOLOS = ['🐺', '🦅', '🐉', '🦁', '🐍', '🦈', '🐻', '🦊', '🔥', '⚡', '👑', '💀', '🚀', '🌊', '⭐', '🛡️', '⚔️', '🎯', '🧠', '🌋'];
   const CORES = ['#7c8cff', '#ef6b57', '#4cc38a', '#f0a53c', '#b077f0', '#5aa0ff', '#ff6fa8', '#e9edf5', '#22d3ee', '#a3e635'];
   const FORMAS = [['escudo', 'Escudo'], ['circulo', 'Círculo'], ['hex', 'Hexágono'], ['quad', 'Quadrado']];
-  const logo = (l, sz) => l.img ? `<span class="logo f-${l.f} img" style="--c:${l.c};--sz:${sz || 40}px;background-image:url(${l.img})" role="img" aria-label="Logo"></span>` : `<span class="logo f-${l.f}" style="--c:${l.c};--sz:${sz || 40}px">${l.s}</span>`;
+  const logo = (l, sz) => l.img ? `<span class="logo f-${l.f} img${l.cut ? ' cut' : ''}" style="--c:${l.c};--sz:${sz || 40}px;background-image:url(${l.img})" role="img" aria-label="Logo"></span>` : `<span class="logo f-${l.f}" style="--c:${l.c};--sz:${sz || 40}px">${l.s}</span>`;
   function logoEditor(l) {
-    return `<div class="lg-prev">${logo(l, 72)}</div><div class="chips"><label class="chip up">📷 ${l.img ? 'Trocar imagem' : 'Enviar imagem'}<input type="file" id="logo-file" accept="image/*" hidden></label>${l.img ? '<button class="chip" data-act="lg-rm">Remover imagem</button>' : ''}</div><div class="chips">${SIMBOLOS.map(x => `<button class="chip sym ${l.s === x ? 'on' : ''}" data-act="lg" data-k="s" data-id="${x}">${x}</button>`).join('')}</div>`
+    return `<div class="lg-prev">${logo(l, 72)}</div><div class="chips"><label class="chip up">📷 ${l.img ? 'Trocar imagem' : 'Enviar imagem'}<input type="file" id="logo-file" accept="image/*" hidden></label>${l.img ? '<button class="chip" data-act="lg-rm">Remover imagem</button>' : ''}</div>${l.src ? `<div class="chips"><button class="chip ${l.cut ? 'on' : ''}" data-act="lg-cut">✂️ ${l.cut ? 'Fundo removido + contorno branco' : 'Fundo original'}</button></div>${l.cut ? `<label class="fld">Sensibilidade da remoção de fundo<input type="range" id="logo-tol" min="10" max="110" value="${l.tol || 45}"></label>` : ''}` : ''}<div class="chips">${SIMBOLOS.map(x => `<button class="chip sym ${l.s === x ? 'on' : ''}" data-act="lg" data-k="s" data-id="${x}">${x}</button>`).join('')}</div>`
       + `<div class="chips">${CORES.map(c => `<button class="chip cor ${l.c === c ? 'on' : ''}" style="background:${c}" data-act="lg" data-k="c" data-id="${c}" aria-label="cor ${c}"></button>`).join('')}</div>`
       + `<div class="chips">${FORMAS.map(([f, n]) => `<button class="chip ${l.f === f ? 'on' : ''}" data-act="lg" data-k="f" data-id="${f}">${n}</button>`).join('')}</div>`;
   }
@@ -236,7 +236,8 @@
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
-    if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; O.save(); render(); }
+    if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; delete l.raw; delete l.src; delete l.proc; l.cut = false; O.save(); render(); }
+    else if (a === 'lg-cut') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l.cut = !l.cut; l.img = l.cut ? l.proc : l.raw; O.save(); render(); }
     else if (a === 'lg') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l[b.dataset.k] = id; O.save(); render(); }
     else if (a === 'su-next') { SU.nome = ($('su-nome') || {}).value || SU.nome; SU.step = 2; render(); }
     else if (a === 'su-back') { SU.step = 1; render(); }
@@ -271,19 +272,43 @@
     else if (a === 'time') { UI.aberto = UI.aberto === id ? null : id; render(); }
     else if (a === 'reset') { if (UI.resetArm) { O.reset(); SU.step = 1; SU.nome = ''; UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
   });
-  function lerLogo(file) { // reduz para 128x128 (corte quadrado centralizado) e guarda como data URL no save
+  /* Remove o fundo (preenche a partir das bordas com a cor mais parecida com a do canto) e desenha contorno branco em volta */
+  function recortar(srcUrl, tol) {
+    return new Promise(ok => { const im = new Image(); im.onload = () => {
+      const n = 256, M = 14, c = document.createElement('canvas'); c.width = c.height = n; const x = c.getContext('2d', { willReadFrequently: true });
+      const k = Math.min((n - 2 * M) / im.width, (n - 2 * M) / im.height); x.drawImage(im, (n - im.width * k) / 2, (n - im.height * k) / 2, im.width * k, im.height * k);
+      const d = x.getImageData(0, 0, n, n), px = d.data, bg = new Uint8Array(n * n), dist = (i, r, g, b) => Math.hypot(px[i] - r, px[i + 1] - g, px[i + 2] - b);
+      // cor do fundo = mediana da borda do desenho (ignora margens transparentes)
+      const bor = []; for (let t = 0; t < n; t++) for (const [xx, yy] of [[t, M], [t, n - M - 1], [M, t], [n - M - 1, t]]) { const i = (yy * n + xx) * 4; if (px[i + 3] > 200) bor.push([px[i], px[i + 1], px[i + 2]]); }
+      const med = ch => { const v = bor.map(p => p[ch]).sort((a, b) => a - b); return v.length ? v[v.length >> 1] : 255; }, R0 = med(0), G0 = med(1), B0 = med(2);
+      const st = []; const isBg = i => px[i + 3] < 40 || dist(i, R0, G0, B0) < tol;
+      for (let t = 0; t < n; t++) for (const p of [t, (n - 1) * n + t, t * n, t * n + n - 1]) if (!bg[p] && isBg(p * 4)) { bg[p] = 1; st.push(p); }
+      while (st.length) { const p = st.pop(), px0 = p % n, py0 = (p / n) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = px0 + dx, yy = py0 + dy; if (xx < 0 || yy < 0 || xx >= n || yy >= n) continue; const q = yy * n + xx; if (!bg[q] && isBg(q * 4)) { bg[q] = 1; st.push(q); } } }
+      // tira o "halo": pixels de borda parecidos com o fundo também saem (1 passada)
+      const bg2 = bg.slice(); for (let yy = 1; yy < n - 1; yy++) for (let xx = 1; xx < n - 1; xx++) { const p = yy * n + xx; if (!bg[p] && (bg[p - 1] || bg[p + 1] || bg[p - n] || bg[p + n]) && dist(p * 4, R0, G0, B0) < tol * 1.9) bg2[p] = 1; }
+      for (let p = 0; p < n * n; p++) if (bg2[p]) px[p * 4 + 3] = 0;
+      x.putImageData(d, 0, 0);
+      const sil = document.createElement('canvas'); sil.width = sil.height = n; const sx = sil.getContext('2d'); sx.drawImage(c, 0, 0); sx.globalCompositeOperation = 'source-in'; sx.fillStyle = '#fff'; sx.fillRect(0, 0, n, n);
+      const o = document.createElement('canvas'); o.width = o.height = n; const ox = o.getContext('2d'), r = 7;
+      for (let a = 0; a < 32; a++) ox.drawImage(sil, Math.cos(a * Math.PI / 16) * r, Math.sin(a * Math.PI / 16) * r);
+      ox.drawImage(c, 0, 0); let u = o.toDataURL('image/webp', 0.9); if (!u.startsWith('data:image/webp')) u = o.toDataURL('image/png'); ok(u); };
+      im.onerror = () => ok(null); im.src = srcUrl; });
+  }
+  function lerLogo(file) { // guarda a original reduzida e já gera a versão sem fundo + contorno branco
     if (!file || !/^image\//.test(file.type)) { toast('Escolha um arquivo de imagem.'); return; }
     if (file.size > 8e6) { toast('Imagem grande demais (máx. 8 MB).'); return; }
     const fr = new FileReader();
-    fr.onload = () => { const im = new Image(); im.onload = () => {
-      const c = document.createElement('canvas'), n = 128; c.width = c.height = n; const x = c.getContext('2d'), m = Math.min(im.width, im.height);
-      x.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, n, n);
-      const l = O.get().setup === 'config' ? SU.logo : O.get().org.logo; l.img = c.toDataURL('image/webp', 0.85); if (!l.img.startsWith('data:image/webp')) l.img = c.toDataURL('image/png');
-      O.save(); render(); toast('Logo atualizado.'); };
+    fr.onload = () => { const im = new Image(); im.onload = async () => {
+      const mk = (n, crop) => { const c = document.createElement('canvas'); c.width = c.height = n; const x = c.getContext('2d'), m = Math.min(im.width, im.height);
+        if (crop) x.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, n, n); else { const k = Math.min(n / im.width, n / im.height); x.drawImage(im, (n - im.width * k) / 2, (n - im.height * k) / 2, im.width * k, im.height * k); }
+        let u = c.toDataURL('image/webp', 0.85); return u.startsWith('data:image/webp') ? u : c.toDataURL('image/png'); };
+      const l = O.get().setup === 'config' ? SU.logo : O.get().org.logo; l.raw = mk(128, true); l.src = mk(256, false); l.tol = l.tol || 45;
+      l.proc = await recortar(l.src, l.tol); l.cut = !!l.proc; l.img = l.cut ? l.proc : l.raw; O.save(); render(); toast(l.cut ? 'Fundo removido e contorno branco aplicado.' : 'Logo atualizado.'); };
       im.onerror = () => toast('Não consegui abrir essa imagem.'); im.src = fr.result; };
     fr.readAsDataURL(file);
   }
   document.addEventListener('change', e => {
+    if (e.target.id === 'logo-tol') { const l = O.get().setup === 'config' ? SU.logo : O.get().org.logo; l.tol = +e.target.value; recortar(l.src, l.tol).then(u => { if (u) { l.proc = u; if (l.cut) l.img = u; O.save(); render(); } }); return; }
     if (e.target.id === 'logo-file') { lerLogo(e.target.files[0]); e.target.value = ''; return; }
     if (e.target.id === 'regiao') { O.trocarRegiao(e.target.value, UI.game); UI.ligaVer = null; toast('Região trocada: competições deste jogo reiniciadas.'); render(); }
     else if (e.target.id === 'mliga') { UI.mk.liga = e.target.value; UI.mk.n = 30; render(); }
@@ -298,5 +323,6 @@
   if (!O.load()) O.comecar();
   UI.game = O.get().inicio || 'lol';
   render();
+  UI.__logo = () => (O.get().setup === 'config' ? SU.logo : O.get().org.logo);
   window.OrgUI = UI;
 })();

@@ -15,7 +15,10 @@ async def main():
             ok('Crie sua organização'.lower() in (await pg.locator('#main').inner_text()).lower(), f'{w}: começa no assistente')
             await pg.fill('#su-nome', 'Pantera Teste'); await pg.click('[data-act=lg][data-k=s][data-id="🦅"]'); await pg.click('[data-act=lg][data-k=f][data-id=hex]')
             await pg.set_input_files('#logo-file', '/tmp/logo_test.png'); await pg.wait_for_timeout(400)
-            ok(await pg.locator('.lg-prev .logo.img').count() == 1, f'{w}: logo com imagem enviada')
+            ok(await pg.locator('.lg-prev .logo.img.cut').count() == 1, f'{w}: logo com imagem enviada e fundo removido')
+            px = await pg.evaluate('''() => new Promise(r => { const l = OrgUI.__logo(); const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+              const a = (X, Y) => x.getImageData(X, Y, 1, 1).data; r({ canto: a(3, 3)[3], centro: a(128, 128)[3], borda: Array.from(a(128, 25)) }); }; im.src = l.img; })''')
+            ok(px['canto'] == 0 and px['centro'] == 255, f'{w}: fundo transparente e desenho preservado ({px})')
             await pg.screenshot(path=f'{OUT}/setup1_{w}.png')
             await pg.click('[data-act=su-next]'); ok('onde começar'.lower() in (await pg.locator('#main').inner_text()).lower(), f'{w}: escolha do jogo inicial')
             await pg.click('[data-act=su-game][data-id=cs2]'); await pg.click('[data-act=su-game][data-id=lol]'); await pg.click('[data-act=su-go]')

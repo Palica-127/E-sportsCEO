@@ -117,3 +117,5 @@ body.setup nav,body.setup #games{display:none}.wiz{max-width:720px}
 @media (min-width:1500px){main{grid-template-columns:repeat(auto-fill,minmax(440px,1fr))}}
 .logo.img{background-size:cover;background-position:center;font-size:0}.chip.up{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .crest.real{background:none;border:0;box-shadow:none;border-radius:0;overflow:visible}.crest.real img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.logo.img.cut{background-color:transparent;clip-path:none;border-radius:0;background-size:contain;background-repeat:no-repeat;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
+input[type=range]{padding:0;min-height:28px;accent-color:var(--gold)}
