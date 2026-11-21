@@ -1,0 +1,288 @@
+
+# ---------- Competições ----------
+func prob_vit(fa, fb) -> float: return 1.0 / (1.0 + exp(-(fa - fb) / 4.0))
+func serie(n, fa, fb) -> Array:
+	var alvo = int(ceil(n / 2.0)); var a = 0; var b = 0; var p = prob_vit(fa, fb)
+	while a < alvo and b < alvo:
+		if rnd() < p: a += 1
+		else: b += 1
+	return [a, b]
+func round_robin(n) -> Array:
+	var t = []
+	for i in n: t.append(i)
+	if n % 2: t.append(-1)
+	var m = t.size(); var rounds = []
+	for r in m - 1:
+		var par = []
+		for i in m / 2:
+			var a = t[i]; var b = t[m - 1 - i]
+			if a >= 0 and b >= 0: par.append([a, b])
+		rounds.append(par); t.insert(1, t.pop_back())
+	return rounds
+func liga_sync(g = "lol") -> Dictionary:
+	mundo_sync(); var k = regiao_de(g)
+	if S.ligas.has(g) and S.ligas[g].reg == k:
+		if S.ligas[g].mv != S.mundo.n: mundo_refrescar_liga(S.ligas[g], g)
+		return S.ligas[g]
+	var L = region(g)
+	var cp = func(t): return {"n": t.n, "b": media_time(t.get("p")), "p": t.get("p")}
+	var d1 = []; var d2 = []; var d3 = []
+	for t in L.t1: d1.append(cp.call(t)); d3.append({"n": t.n + " Academy", "b": max(60.0, media_time(t.get("p")) - 8), "p": null})
+	for t in L.t2: d2.append(cp.call(t))
+	S.ligas[g] = {"reg": k, "mv": S.mundo.n, "d1": d1, "d2": d2, "d3": d3}
+	return S.ligas[g]
+func div_de(g, sq) -> Array:
+	var Lg = liga_sync(g); return Lg.d1 if sq == "t1" else Lg.d2 if sq == "t2" else Lg.d3
+func times_de(g, sq) -> Array:
+	var out = []
+	for t in div_de(g, sq): out.append({"n": t.n, "b": t.b, "f": t.b, "eu": false})
+	out.append({"n": null, "b": 0, "f": 0, "eu": true}); return out
+func nova_comp(g, sq) -> Dictionary:
+	return {"reg": regiao_de(g), "game": g, "sq": sq, "teams": times_de(g, sq), "phase": "off", "wk": PRE, "split": 0, "round": 0, "sched": [], "w": [], "l": [], "po": null, "intl": null, "last": [], "hist": [], "aviso": false}
+func comp_for(g, sq):
+	if D(g) == null: return null
+	var q = S.games[g].squads.get(sq)
+	if q == null or not q.on: return null
+	var k: String = g + "-" + sq; var c = S.comp.get(k)
+	if c != null and c.reg == regiao_de(g): return c
+	S.comp[k] = nova_comp(g, sq); return S.comp[k]
+func nome_t(t) -> String: return S.org.nome if t.eu else t.n
+func nome(c, i) -> String: return nome_t(c.teams[int(i)])
+func f_t(c, t) -> float: return forca(c.game, c.sq) if t.eu else float(t.f)
+func classificacao(c) -> Array:
+	var rows = []
+	for i in c.teams.size():
+		var t = c.teams[i]; rows.append({"i": i, "n": nome_t(t), "w": c.w[i], "l": c.l[i], "f": f_t(c, t), "eu": t.eu})
+	rows.sort_custom(func(a, b):
+		if a.w != b.w: return a.w > b.w
+		if a.l != b.l: return a.l < b.l
+		if a.f != b.f: return a.f > b.f
+		return a.i < b.i)
+	for k in rows.size(): rows[k]["pos"] = k + 1
+	return rows
+func iniciar_split(c) -> void:
+	c.split += 1; c.teams = times_de(c.game, c.sq)
+	for t in c.teams:
+		if not t.eu: t.f = t.b + (rnd() * 3 - 1.5)
+	c.sched = round_robin(c.teams.size()); c.round = 0; c.phase = "reg"; c.po = null
+	c.w = []; c.l = []
+	for t in c.teams: c.w.append(0); c.l.append(0)
+	c.aviso = false
+	log_("%s %s (%s): split %d começou" % [GAMES[c.game].curto, SQUADS[c.sq].nome, c.reg, c.split])
+func tag_de(g, sq) -> String: return "%s · %s" % [GAMES[g].curto, SQUADS[sq].nome.split(" (")[0]]
+func elenco_de(g, sq) -> Array:
+	var out = []; var st = titulares(g, sq)
+	for i in st.size():
+		if st[i] != null: out.append({"n": st[i].n, "r": GAMES[g].roles[i], "o": st[i].o})
+	return out
+func time_real(g, n):
+	var d = D(g)
+	if d == null: return null
+	for k in d.leagues:
+		for dv in ["t1", "t2"]:
+			for t in d.leagues[k].get(dv, []):
+				if t.n == n and t.get("p") != null: return t
+	return null
+func elenco_op(g, n) -> Array:
+	var t = time_real(g, n); var roles = GAMES[g].roles; var out = []
+	for i in roles.size():
+		if t != null and i < t.p.size() and t.p[i] != null: out.append({"n": t.p[i][0], "r": roles[i], "o": t.p[i][1]})
+		else: out.append({"n": "%s do %s" % [roles[i], n], "r": roles[i], "o": 70})
+	return out
+func jogo(c, T, a, b, n, fase, ctx, bonus) -> int:
+	var sr = serie(n, f_t(c, T[a]), f_t(c, T[b])); var wa: int = sr[0]; var wb: int = sr[1]
+	var venc = a if wa > wb else b
+	var eu = -1
+	for i in T.size():
+		if T[i].eu: eu = i; break
+	ult_serie = [wa, wb]
+	if a == eu or b == eu:
+		var op = b if a == eu else a; var meus = wa if a == eu else wb; var deles = wb if a == eu else wa
+		c.last.push_front({"s": S.org.semana, "y": S.org.ano, "op": nome_t(T[op]), "v": venc == eu, "pl": "%d-%d" % [meus, deles], "f": fase})
+		if c.last.size() > 8: c.last.resize(8)
+		seguidores(1.012 if venc == eu else 0.997)
+		if bonus and venc == eu: S.org.caixa += jr(SQUADS[c.sq].premio * 0.01)
+		ctx.jogou = true
+		var fm = f_t(c, T[eu]); var fo = f_t(c, T[op])
+		ULT.append({"key": c.game + "-" + c.sq, "game": c.game, "sq": c.sq, "tag": tag_de(c.game, c.sq), "fase": fase, "bo": n, "euNome": S.org.nome, "op": nome_t(T[op]), "fMeu": fm, "fOp": fo, "p": prob_vit(fm, fo), "meus": meus, "deles": deles, "v": venc == eu, "s": S.org.semana, "y": S.org.ano, "meusJ": elenco_de(c.game, c.sq), "opJ": elenco_op(c.game, nome_t(T[op]))})
+	return venc
+func iniciar_playoffs(c) -> void:
+	var rs = classificacao(c).map(func(r): return r.i); var seeds = rs.slice(0, 6)
+	c.po = {"stage": 0, "seeds": seeds, "rs": rs, "res": [], "lugar": {}}
+	c.po["pares"] = [[seeds[2], seeds[5]], [seeds[3], seeds[4]]]; c.phase = "po"
+func jogar_playoffs(c, ctx) -> void:
+	var po = c.po; var eu = -1
+	for i in c.teams.size():
+		if c.teams[i].eu: eu = i
+	var nome_fase = "Final" if po.stage == 2 else ("Semifinal" if po.stage == 1 else "Quartas")
+	var bo = 5 if po.stage == 2 else 3; var venc = []
+	for par in po.pares:
+		var a: int = par[0]; var b: int = par[1]
+		var w = jogo(c, c.teams, a, b, bo, "Playoffs · " + nome_fase, ctx, true); var l = b if w == a else a
+		venc.append(w); po.res.append({"st": po.stage, "a": a, "b": b, "w": w})
+		po.lugar[str(l)] = "vice" if po.stage == 2 else ("semi" if po.stage == 1 else "quartas")
+	if po.stage == 0:
+		var ord = venc.duplicate(); ord.sort_custom(func(x, y): return po.seeds.find(y) < po.seeds.find(x))
+		po.pares = [[po.seeds[0], ord[0]], [po.seeds[1], ord[1]]]; po.stage = 1
+	elif po.stage == 1:
+		po.pares = [[venc[0], venc[1]]]; po.stage = 2
+	else: finalizar(c, venc[0], eu)
+func finalizar(c, campeao, eu) -> void:
+	var po = c.po; po.lugar[str(campeao)] = "campeao"; var vice = -1
+	for k in po.lugar:
+		if po.lugar[k] == "vice": vice = int(k); break
+	var meu = po.lugar.get(str(eu))
+	if meu == "campeao": seguidores(1.25)
+	if meu != null:
+		var bolsa = jr(SQUADS[c.sq].premio * PREMIO_PCT[meu])
+		S.org.caixa += bolsa
+		S.org.rep = cl(S.org.rep + ganho_rep({"campeao": 0.3, "vice": 0.15, "semi": 0.08, "quartas": 0.04}[meu] * (1.0 if c.sq == "t1" else 0.3)), 0.5, 10)
+		log_("%s %s: %s (+%s)" % [GAMES[c.game].curto, SQUADS[c.sq].nome, {"campeao": "CAMPEÃO", "vice": "vice-campeão", "semi": "semifinalista", "quartas": "eliminado nas quartas"}[meu], money(bolsa)])
+	else:
+		S.org.rep = cl(S.org.rep - 0.03 * (1.0 if c.sq == "t1" else 0.3), 0.5, 10); log_("%s %s: fora dos playoffs" % [GAMES[c.game].curto, SQUADS[c.sq].nome])
+	c.hist.push_front({"y": S.org.ano, "s": c.split, "camp": nome(c, campeao), "vice": nome(c, vice), "eu": meu})
+	if c.hist.size() > 12: c.hist.resize(12)
+	reg_final(c, campeao, vice, po, meu)
+	var pr = func(i): return po.rs.find(i)
+	var com = func(k):
+		var r = []
+		for x in po.lugar:
+			if po.lugar[x] == k: r.append(int(x))
+		r.sort_custom(func(x, y): return pr.call(x) < pr.call(y)); return r
+	var ordem = [campeao, vice]; ordem.append_array(com.call("semi")); ordem.append_array(com.call("quartas"))
+	for i in po.rs:
+		if not po.lugar.has(str(i)) and i != campeao: ordem.append(i)
+	c.po = null; c.phase = "off"
+	if c.sq == "t1": gerar_base(c.game); evoluir(c.game)
+	c.wk = max(2, CICLO - c.sched.size() - 3)
+	if c.sq == "t1":
+		var ks = intl_def(c.game).keys(); iniciar_intl(c, ks[0] if c.split % 2 == 1 else ks[1], ordem)
+func sim_rapida(times) -> Array:
+	var n: int = times.size(); var w = []; w.resize(n); w.fill(0)
+	for rd in round_robin(n):
+		for par in rd:
+			var sr = serie(1, times[par[0]].f, times[par[1]].f); w[par[0] if sr[0] > sr[1] else par[1]] += 1
+	var rs = []
+	for i in n: rs.append(i)
+	rs.sort_custom(func(a, b):
+		if w[b] != w[a]: return w[b] < w[a]
+		if times[b].f != times[a].f: return times[b].f < times[a].f
+		return a < b)
+	var s = rs.slice(0, 6)
+	var v = func(a, b, bo):
+		var sr = serie(bo, times[a].f, times[b].f); return a if sr[0] > sr[1] else b
+	var q1: int = v.call(s[2], s[5], 3); var q2: int = v.call(s[3], s[4], 3)
+	var ord = [q1, q2]; ord.sort_custom(func(x, y): return s.find(y) < s.find(x))
+	var f1: int = v.call(s[0], ord[0], 3); var f2: int = v.call(s[1], ord[1], 3)
+	var pl = serie(5, times[f1].f, times[f2].f); var camp = f1 if pl[0] > pl[1] else f2; var vice = f2 if camp == f1 else f1
+	var semis = [s[0], ord[0], s[1], ord[1]].filter(func(x): return x != f1 and x != f2)
+	semis.sort_custom(func(x, y): return rs.find(x) < rs.find(y))
+	var quartas = []
+	for k in 2:
+		var base = [s[2], s[3]][k]; var alt = [s[5], s[4]][k]; var qq: int = [q1, q2][k]
+		quartas.append(alt if base == qq else base)
+	quartas.sort_custom(func(x, y): return rs.find(x) < rs.find(y))
+	var dentro = {camp: true, vice: true}
+	for x in semis: dentro[x] = true
+	for x in quartas: dentro[x] = true
+	var res = [camp, vice]; res.append_array(semis); res.append_array(quartas)
+	for i in rs:
+		if not dentro.has(i): res.append(i)
+	sim_pl = "%d-%d" % [max(pl[0], pl[1]), min(pl[0], pl[1])]
+	return res
+var sim_pl = ""   # placar da final da última sim_rapida
+func sortear(arr) -> Array:
+	var a = arr.duplicate()
+	var i = a.size() - 1
+	while i > 0:
+		var j = floori(rnd() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; i -= 1
+	return a
+func iniciar_intl(c, tipo, ordem) -> void:
+	var I = intl_def(c.game)[tipo]; var q = []
+	for reg in I.vagas:
+		if reg == c.reg:
+			for k in min(int(I.vagas[reg]), ordem.size()):
+				var t = c.teams[ordem[k]]
+				q.append({"n": null, "f": 0, "eu": true, "reg": reg} if t.eu else {"n": t.n, "f": t.f, "eu": false, "reg": reg})
+		else:
+			var times = []
+			for t in D(c.game).leagues[reg].t1: times.append({"n": t.n, "f": media_time(t.get("p")) + rnd() * 3 - 1.5})
+			var ord = sim_rapida(times); var pl = sim_pl; reg_simul(c.game, reg, c.split, times, ord, pl)
+			for k in min(int(I.vagas[reg]), ord.size()): q.append({"n": times[ord[k]].n, "f": times[ord[k]].f, "eu": false, "reg": reg})
+	var T = sortear(q); var alive = []
+	for i in T.size(): alive.append(i)
+	var intl = {"tipo": tipo, "teams": T, "alive": alive, "res": [], "lugar": {}}
+	var tem_eu = false
+	for t in T:
+		if t.eu: tem_eu = true
+	c.intl = intl
+	if tem_eu: c.phase = "intl"; log_("%s: classificado para o %s!" % [GAMES[c.game].curto, I.nome]); return
+	while intl.alive.size() > 1: etapa_intl(c, intl, {"jogou": false})
+	finalizar_intl(c, intl)
+func etapa_intl(c, intl, ctx) -> void:
+	var n: int = intl.alive.size(); var I = intl_def(c.game)[intl.tipo]
+	var fase = "Final" if n == 2 else "Semifinal" if n == 4 else "Quartas" if n == 8 else "Oitavas"; var bo = 5 if n <= 4 else 3; var venc = []
+	for k in range(0, n, 2):
+		var a: int = intl.alive[k]; var b: int = intl.alive[k + 1]; var w = jogo(c, intl.teams, a, b, bo, I.nome + " · " + fase, ctx, false)
+		venc.append(w); intl.res.append({"st": fase, "a": a, "b": b, "w": w}); intl.lugar[str(b if w == a else a)] = "vice" if n == 2 else "semi" if n == 4 else "quartas" if n == 8 else "oitavas"
+	intl.alive = venc
+func finalizar_intl(c, intl) -> void:
+	var I = intl_def(c.game)[intl.tipo]; var camp: int = intl.alive[0]; var eu = -1
+	for i in intl.teams.size():
+		if intl.teams[i].eu: eu = i
+	intl.lugar[str(camp)] = "campeao"; var meu = intl.lugar.get(str(eu))
+	if meu == "campeao": seguidores(1.5)
+	if meu != null:
+		var bolsa = jr(I.bolsa * PCT_INTL[meu]); S.org.caixa += bolsa; S.org.rep = cl(S.org.rep + ganho_rep(I.rep * PCT_INTL[meu] * 2), 0.5, 10)
+		log_("%s %s: %s (+%s)" % [GAMES[c.game].curto, I.nome, {"campeao": "CAMPEÃO", "vice": "vice-campeão", "semi": "semifinalista", "quartas": "eliminado nas quartas", "oitavas": "eliminado nas oitavas"}[meu], money(bolsa)])
+	else: log_("%s %s %d: campeão %s" % [GAMES[c.game].curto, I.nome, S.org.ano, nome_t(intl.teams[camp])])
+	S.intlHist.push_front({"g": c.game, "nome": I.nome, "y": S.org.ano, "tipo": intl.tipo, "camp": nome_t(intl.teams[camp]), "reg": intl.teams[camp].get("reg"), "eu": meu})
+	if S.intlHist.size() > 30: S.intlHist.resize(30)
+	reg_intl(c, intl, camp, meu)
+	c.intl = null; c.phase = "off"; c.wk = max(2, CICLO - c.sched.size() - 3 - I.semanas)
+	if intl.tipo == intl_def(c.game).keys()[1]: promo_rebaixa(c)
+func promo_rebaixa(c) -> void:
+	var Lg = liga_sync(c.game)
+	if Lg.d2.is_empty(): return
+	var rs = classificacao(c).map(func(r): return r.i) if c.teams.size() else []
+	var pior = null; rs.reverse()
+	for i in rs:
+		if not c.teams[i].eu: pior = c.teams[i]; break
+	var sobe = null; var c2 = S.comp.get(c.game + "-t2")
+	if c2 != null and c2.hist.size() and c2.hist[0].y == S.org.ano:
+		for t in Lg.d2:
+			if t.n == c2.hist[0].camp: sobe = c2.hist[0].camp
+	if sobe == null:
+		var times = []
+		for t in Lg.d2: times.append({"n": t.n, "f": t.b + rnd() * 3 - 1.5})
+		sobe = times[sim_rapida(times)[0]].n
+	var out = null; var up = null
+	if pior != null:
+		for t in Lg.d1:
+			if t.n == pior.n: out = t
+	for t in Lg.d2:
+		if t.n == sobe: up = t
+	if out == null or up == null: return
+	Lg.d1 = Lg.d1.filter(func(t): return t != out); Lg.d1.append(up); Lg.d2 = Lg.d2.filter(func(t): return t != up); Lg.d2.append(out)
+	log_("Fim do ano: %s sobe para o T1 e %s cai para o T2" % [up.n, out.n])
+func semana_comp(c) -> bool:
+	var ctx = {"jogou": false}
+	if c.phase == "off":
+		c.wk -= 1
+		if c.wk > 0: return false
+		c.phase = "wait"
+	if c.phase == "wait":
+		if prontos(c.game, c.sq): iniciar_split(c)
+		elif not c.aviso: c.aviso = true; log_("%s: split à espera, complete os titulares para se inscrever" % SQUADS[c.sq].nome)
+		return false
+	if c.phase == "reg":
+		for par in c.sched[c.round]:
+			var a: int = par[0]; var b: int = par[1]
+			var w = jogo(c, c.teams, a, b, 1, "Rodada %d" % (c.round + 1), ctx, true); c.w[w] += 1; c.l[b if w == a else a] += 1
+		c.round += 1
+		if c.round >= c.sched.size(): iniciar_playoffs(c)
+	elif c.phase == "po": jogar_playoffs(c, ctx)
+	elif c.phase == "intl":
+		etapa_intl(c, c.intl, ctx)
+		if c.intl.alive.size() == 1: finalizar_intl(c, c.intl)
+	return ctx.jogou
