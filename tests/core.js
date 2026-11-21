@@ -1,5 +1,5 @@
 // Testes da lógica (sem navegador): node tests/core.js
-global.window = global; require('../js/data/lol.js'); require('../js/data/outros.js'); require('../js/core.js');
+global.window = global; require('../js/data/lol.js'); require('../js/data/outros.js'); require('../js/data/nomes.js'); require('../js/core.js');
 let falhas = 0; const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) falhas++; };
 const O = Org;
 // jogos novos no esqueleto
