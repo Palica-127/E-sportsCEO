@@ -18,12 +18,12 @@ add('Six Invitational 2021',2021,'SI','Ninjas in Pyjamas','Team Liquid','3-2','P
 add('Six Invitational 2022',2022,'SI','TSM','Team Empire','3-1','Merc','TSM')
 add('Six Invitational 2023',2023,'SI','G2 Esports','w7m esports','3-1','Benjamaster','G2 Esports','DK',['Doki','Blurr','Virtue','Alem4o','Benjamaster'])
 add('Six Invitational 2024',2024,'SI','w7m esports','FaZe Clan','3-2','Kheyze','w7m esports','BR',['HerdsZ','FelipoX','Kheyze','Jv92','nade'])
-add('Six Invitational 2025',2025,'SI','FaZe Clan','Team BDS','3-1','Handyy','FaZe Clan','BR')
-add('Six Invitational 2026',2026,'SI','FaZe Clan','Team Secret','3-1','Handyy','FaZe Clan','BR')
+add('Six Invitational 2025',2025,'SI','FaZe Clan','Team BDS','3-1','Handyy','FaZe Clan','BR',['Cyber','soulz1','KDS','Handyy','VITAKING'])
+add('Six Invitational 2026',2026,'SI','FaZe Clan','Team Secret','3-1','Handyy','FaZe Clan','BR',['Cyber','soulz1','KDS','Handyy','VITAKING'])
 # Esports World Cup
 add('Esports World Cup 2024',2024,'EWC','Team BDS','w7m esports')
 add('Esports World Cup 2025',2025,'EWC','Team Secret','G2 Esports','3-0','Adrian','Team Secret','PL')
-add('Esports World Cup 2026',2026,'EWC','FaZe Clan','FURIA','3-1','Cyber','FaZe Clan')
+add('Esports World Cup 2026',2026,'EWC','FaZe Clan','FURIA','3-1','Cyber','FaZe Clan','BR',['Cyber','soulz1','KDS','Handyy','VITAKING'])
 # Six Majors (o de nov/2020 foi cancelado)
 add('Six Major Paris 2018',2018,'Major','G2 Esports','Evil Geniuses','3-0')
 add('Six Major Raleigh 2019',2019,'Major','Team Empire','G2 Esports','3-1')
@@ -38,6 +38,7 @@ add('BLAST R6 Major Manchester 2024',2024,'Major','beastcoast','Team BDS','3-2')
 add('BLAST R6 Major Montreal 2024',2024,'Major','w7m esports','Team BDS','3-1','Dodez','w7m esports','',['d4sh','Dodez','Dotz','L0BIN','volpz'])
 add('BLAST R6 Major Munich 2025',2025,'Major','M80','Team Falcons')
 add('BLAST R6 Major Salt Lake City 2026',2026,'Major','DarkZero')
+add('BLAST R6 Major Osaka 2026',2026,'Major','FaZe Clan','DarkZero','3-0','','','',['Cyber','soulz1','KDS','Handyy','VITAKING'])
 add('RE:L0:AD Rio de Janeiro 2025',2025,'Outros','FURIA')
 # ---- Martelo de Ouro (R6): Top 10 do SiegeGG (Year 5-7 e 10; "Year N" vai de um Six Invitational ao outro, rotulado pelo ano em que termina). 2024: sem ranking publicado -> pontos por títulos (provisório). ----
 SGG={2021:[('Paluh','BR'),('Muzi','BR'),('NESKWGA',''),('pino',''),('Beaulo','US'),('CTZN','GB'),('BriD','FR'),('Hyper',''),('Rampy',''),('Fultz','')],
@@ -56,12 +57,12 @@ for t in T:
     if t.get('mvp') and t['mvp'][0] in t.get('r',[]):
         e=sc[y][t['mvp'][0]]; e[0]+=WM[t['tp']]; e[1]+=1
         if t['mvp'][2]: iso[t['mvp'][0]]=t['mvp'][2]
-iso.update({'Kheyze':'BR','HerdsZ':'BR'})
+iso.update({'Kheyze':'BR','HerdsZ':'BR','Cyber':'BR','soulz1':'BR','KDS':'BR','Handyy':'BR','VITAKING':'BR'})
 bo={}
 for y,d in sc.items():
     rows=sorted(d.items(),key=lambda kv:(-kv[1][0],-kv[1][1],-kv[1][2],kv[0].lower()))[:10]
     bo[str(y)]=[[n,iso.get(n,''),PTS[i],round(v[0],1)] for i,(n,v) in enumerate(rows)]
 for y,l in SGG.items(): bo[str(y)]=[[n,c,PTS[i],None] for i,(n,c) in enumerate(l)]
-H={'r6':{'nome':'Rainbow Six Siege','main':'SI','tipos':{'SI':'Six Invitational','Major':'Six Majors','EWC':'Esports World Cup','Outros':'Outros'},'torneios':T,'bo':bo,'boNome':'Martelo de Ouro','boNota':'Top 10 do SiegeGG (2021, 2022, 2023 e 2026; cada "Year" vai de um Six Invitational ao seguinte). 2024 não teve ranking publicado: lá o Top 10 sai dos títulos com line-up conferida (SI 10 pts, Major 5, MVP +2/+1,5), com empates desfeitos por ordem alfabética, e o número ao lado é a pontuação. 2018–2020 e 2025 ficam sem Top 10 por falta de fonte. Provisório.'}}
+H={'r6':{'nome':'Rainbow Six Siege','main':'SI','tipos':{'SI':'Six Invitational','Major':'Six Majors','EWC':'Esports World Cup','Outros':'Outros'},'torneios':T,'bo':bo,'boNome':'Martelo de Ouro','boNota':'Top 10 do SiegeGG (2021, 2022, 2023 e 2026; cada "Year" vai de um Six Invitational ao seguinte). 2024 não teve ranking publicado: lá o Top 10 sai dos títulos com line-up conferida (SI 10 pts, Major 5, MVP +2/+1,5), com empates desfeitos por ordem alfabética, e o número ao lado é a pontuação. 2025 também sai dos títulos (SI 2025 da FaZe, só 5 jogadores); 2018–2020 ficam sem Top 10 por falta de fonte. Provisório.'}}
 open('js/data/hist_r6.js','w').write('/* Histórico real de Rainbow Six Siege, pesquisado na web (gerado por tools/gen_hist_r6.py). */\nwindow.HIST = Object.assign(window.HIST || {}, '+json.dumps(H,ensure_ascii=False,separators=(',',':'))+');\n')
 print(len(T),{y:len(v) for y,v in bo.items()})

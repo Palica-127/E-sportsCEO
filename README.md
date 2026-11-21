@@ -47,7 +47,7 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - CS2 completo (`tools/gen_hist_cs2.py` → `js/data/hist.js`): 89 torneios (Majors, IEM, ESL Pro League S1–S23, BLAST), MVPs, line-ups dos Majors (só as conferidas), Bola de Ouro = Top 10 anual da HLTV (2013–2025) e Lendas calculadas. Filtro por tipo de torneio.
 - Valorant (`tools/gen_hist_val.py` → `js/data/hist_val.js`): Champions 2021–2026, Masters (12), Esports World Cup 2025–26 e campeões das ligas VCT; MVPs só onde as fontes concordam (MVP de Masters não é oficial); Bola de Ouro provisória com os pesos do BrasLOL (só campeões pontuam).
 - Dota 2 (`tools/gen_hist_dota.py` → `js/data/hist_dota.js`): The International 2011–2026 com rosters, Riyadh Masters/EWC 2022–2026, ~60 Majors/Tier 1 (sem rosters); sem MVP oficial de TI; Bola de Ouro provisória só com TI e EWC.
-- Rainbow Six Siege (`tools/gen_hist_r6.py` → `js/data/hist_r6.js`): Six Invitational 2017–2026, EWC 2024–2026 e Majors 2018–2026 com MVPs conferidos; line-ups só das conferidas (a da época do título); Prêmio anual chamado "Martelo de Ouro" (Top 10 do SiegeGG em 2021/22/23/26; 2024 por títulos, provisório).
+- Rainbow Six Siege (`tools/gen_hist_r6.py` → `js/data/hist_r6.js`): Six Invitational 2017–2026, EWC 2024–2026 e Majors 2018–2026 (inclui Osaka 2026) com MVPs conferidos; line-ups só das conferidas (a da época do título); Prêmio anual chamado "Martelo de Ouro" (Top 10 do SiegeGG em 2021/22/23/26; 2024 por títulos, provisório).
 - Free Fire (`tools/gen_hist_ff.py` → `js/data/hist_ff.js`): Mundiais 2019–2025, EWC 2024–26, LBFF 3–8/2023 e FFWS Brasil 2024; rosters só dos campeões com line-up verificada; Bola de Ouro provisória 2019–2025 (pesos do BrasLOL; 2026 fica para depois do Mundial).
 
 
