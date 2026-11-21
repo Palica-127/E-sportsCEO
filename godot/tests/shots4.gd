@@ -14,8 +14,8 @@ func run(O) -> void:
 		for r in O.GAMES[g].roles:
 			for p in lv:
 				if p.r == r: O.contratar(g, "t1", p); break
-	for i in 6: O.passo(false)
-	for t in ["org", "elenco", "mercado", "cal", "ligas", "neg", "hall", "mundo"]:
+	for i in 14: O.passo(false)
+	for t in ["org", "elenco", "mercado", "cal", "ligas", "fin", "neg", "hall", "mundo"]:
 		m.tab = t; m.render(); await shot("30_" + t)
 	m._menu_mais(); await shot("31_mais")
 	print("shots4 ok"); quit()

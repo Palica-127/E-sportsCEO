@@ -917,7 +917,7 @@ func finalizar(c, campeao, eu) -> void:
 	for k in po.lugar:
 		if po.lugar[k] == "vice": vice = int(k); break
 	var meu = po.lugar.get(str(eu))
-	if meu == "campeao": seguidores(1.25)
+	if meu == "campeao": seguidores(1.25); patro_titulo(c)
 	if meu != null:
 		var bolsa = jr(SQUADS[c.sq].premio * PREMIO_PCT[meu])
 		S.org.caixa += bolsa
@@ -1510,7 +1510,7 @@ func avancar(semanas: int) -> bool:
 					for x in S.log.slice(0, min(S.logN - l0, S.log.size())):
 						var rx = RegEx.new(); rx.compile("^S\\d+/\\d+: "); notas.append(rx.sub(x, ""))
 					d["notas"] = notas
-		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1
+		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick()
 		S.org.semana += 1
 		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
 		mundo_tick()
@@ -1851,3 +1851,36 @@ func dir_virada(ano_ant: int) -> void:   # chamado quando o ano vira; avalia o a
 	dir_gerar()
 func dir_rotulo(conf: float) -> String:
 	return "Confiança total" if conf >= 85.0 else "Satisfeita" if conf >= 60.0 else "Cautelosa" if conf >= 35.0 else "Descontente" if conf > 15.0 else "Em crise"
+
+# ---------- Finanças e patrocínios (novo no Godot) ----------
+func patro_bonus(x) -> int: return int(x.pay) * 3          # prêmio por título do time principal
+func patro_multa(x) -> int: return int(x.pay) * 4          # custo de rescindir
+func rescindir_patro(id) -> Dictionary:
+	for i in S.patro.size():
+		if S.patro[i].id == id:
+			var m = patro_multa(S.patro[i])
+			if S.org.caixa < m: return {"ok": false, "msg": "Caixa insuficiente para a multa de %s." % money(m)}
+			S.org.caixa -= m; log_("Rescindiu o patrocínio com %s (multa %s)" % [S.patro[i].n, money(m)]); S.patro.remove_at(i); save(); return {"ok": true, "msg": "Contrato rescindido."}
+	return {"ok": false, "msg": "Contrato não encontrado."}
+func patro_titulo(c) -> void:   # chamado quando o time principal é campeão
+	if dir_off or c.sq != "t1": return
+	var t = 0
+	for x in S.patro: t += patro_bonus(x)
+	if t > 0: S.org.caixa += t; log_("Bônus de patrocinadores pelo título: +%s" % money(t))
+func fin_tick() -> void:
+	var h: Array = S.get("fin", [])
+	h.append(int(S.org.caixa)); if h.size() > 52: h = h.slice(h.size() - 52)
+	S["fin"] = h
+func fin_resumo() -> Dictionary:
+	var comp = 0; var folha_t = 0; var base_t = 0; var por_jogo = []
+	for g in GAMES:
+		if not ativo(g): continue
+		var p = projecao(g); comp += p.receita
+		var fj = 0
+		for sq in SQUADS:
+			if S.games[g].squads[sq].on: fj += folha(g, sq)
+		folha_t += fj; base_t += custo_base(g)
+		if p.receita > 0 or p.despesa > 0: por_jogo.append([g, p.saldo])
+	var rec = [["Patrocínios", renda_patro()], ["Seguidores e redes", renda_social()], ["Loja e itens", renda_merch()], ["Competições e streaming", comp]]
+	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Foco de mídia", custo_foco()]]
+	return {"rec": rec, "des": des, "por_jogo": por_jogo}

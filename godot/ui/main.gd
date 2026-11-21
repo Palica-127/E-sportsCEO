@@ -3,7 +3,7 @@ extends Control
 
 const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const NAV_MAIN := [["org", "Painel"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"]]
-const NAV_MORE := [["ligas", "Ligas e tabelas"], ["neg", "Negócios e finanças"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
+const NAV_MORE := [["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
 const BG := Color("0a0d16"); const SURF := Color("131929"); const SURF2 := Color("1b2338"); const LINE := Color("27314a")
 const CARD := SURF; const ACC := Color("4f8cff"); const ACC2 := Color("22d3ee"); const TXT := Color("eef1ff"); const DIM := Color("8a94b8")
 const OK := Color("3ddc97"); const BAD := Color("ff5d6c"); const GOLD := Color("ffc857")
@@ -126,7 +126,7 @@ func kpi(p, items: Array) -> void:   # linha de indicadores [rótulo, valor, cor
 		lbl(v, it[0], 18, DIM, false); lbl(v, it[1], 28, it[2] if it.size() > 2 else TXT, false)
 func bar(p, titulo, val, mx, col = null, txt := "") -> void:   # barra de progresso rotulada
 	var h = hrow(p)
-	if titulo != "": var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 150; l.size_flags_horizontal = Control.SIZE_FILL
+	if titulo != "": var l = lbl(h, titulo, 22, DIM, false); l.custom_minimum_size.x = 215; l.size_flags_horizontal = Control.SIZE_FILL
 	var pb = ProgressBar.new(); pb.min_value = 0; pb.max_value = mx; pb.value = val; pb.show_percentage = false; pb.custom_minimum_size.y = 16; pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pb.add_theme_stylebox_override("background", _sbf(SURF2, 8, null, 0, 0)); pb.add_theme_stylebox_override("fill", _sbf(col if col != null else ACC, 8, null, 0, 0)); h.add_child(pb)
 	var t = lbl(h, txt if txt != "" else str(int(val)), 22, TXT, false); t.custom_minimum_size.x = 70; t.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; t.size_flags_horizontal = Control.SIZE_FILL
@@ -186,6 +186,7 @@ func render() -> void:
 		"mercado": vmercado()
 		"cal": vcal()
 		"ligas": vligas()
+		"fin": vfin()
 		"neg": vneg()
 		"hall": vhall()
 		"mundo": vmundo()
@@ -517,9 +518,11 @@ func vneg() -> void:
 	chips(cf, [["nenhum", "Nenhum"], ["treino", "Treino (+custo de moral)"], ["midia", "Mídia (R$ 3 mil/sem)"]], S.foco, func(id): res(O.set_foco(id)))
 	var cp = card("Patrocínios (%d/3) · renda %s/sem" % [S.patro.size(), O.money(O.renda_patro())])
 	for x in S.patro:
-		var hh = hrow(cp); pill(hh, "ATIVO", OK, true); lbl(hh, "%s · %s/sem · %d sem." % [x.n, O.money(x.pay), x.sem], 22)
+		var hh = hrow(cp); pill(hh, "ATIVO", OK, true)
+		var vv0 = VBoxContainer.new(); vv0.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hh.add_child(vv0); lbl(vv0, x.n, 26); lbl(vv0, "%s/sem · %d sem. · título: +%s" % [O.money(x.pay), x.sem, O.money(O.patro_bonus(x))], 19, DIM)
+		btn(hh, "Rescindir", func(): res(O.rescindir_patro(x.id)))
 	for o in O.ofertas():
-		var h = hrow(cp); var vv = VBoxContainer.new(); vv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(vv); lbl(vv, o.n, 26); lbl(vv, "%s/sem · %d sem." % [O.money(o.pay), o.sem], 20, DIM); btn(h, "Fechar", func(): res(O.aceitar_patro(o.id)))
+		var h = hrow(cp); var vv = VBoxContainer.new(); vv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(vv); lbl(vv, o.n, 26); lbl(vv, "%s/sem · %d sem. · título: +%s" % [O.money(o.pay), o.sem, O.money(O.patro_bonus(o))], 19, DIM); btn(h, "Fechar", func(): res(O.aceitar_patro(o.id)))
 	var ci = card("Estrutura · " + gname(g))
 	for it in O.INFRA:
 		var nv: int = O.infra_nivel(it.id, g); var h = hrow(ci); var vv = VBoxContainer.new(); vv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vv.add_theme_constant_override("separation", 4); h.add_child(vv)
@@ -930,3 +933,34 @@ func vdiretoria() -> void:
 	var hs: Array = D.get("hist", [])
 	if hs.size():
 		var x = hs[0]; lbl(c, "Último balanço (%d): %d/%d cumpridos, confiança %d%%" % [x.ano, x.oks, x.total, x.conf], 19, DIM)
+
+# ---------- Finanças ----------
+func vfin() -> void:
+	var S = O.S; var R: Dictionary = O.fin_resumo(); var pr: Dictionary = O.projecao_org()
+	kpi(content, [["CAIXA", O.money(S.org.caixa), OK if S.org.caixa >= 0 else BAD], ["SALDO / SEM", O.money(pr.saldo), OK if pr.saldo >= 0 else BAD], ["PROJEÇÃO 12 SEM", O.money(S.org.caixa + pr.saldo * 12), TXT]])
+	var ch = card("Caixa nas últimas semanas", null, ACC2)
+	var hist: Array = S.get("fin", [])
+	if hist.size() < 2: lbl(ch, "O gráfico aparece depois de algumas semanas de jogo.", 22, DIM)
+	else:
+		var mx = 1; var mn = hist[0]
+		for v in hist: mx = max(mx, v); mn = min(mn, v)
+		var span = max(1, mx - min(mn, 0))
+		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 2); row.custom_minimum_size.y = 170; ch.add_child(row)
+		for v in hist.slice(max(0, hist.size() - 30)):
+			var col = VBoxContainer.new(); col.size_flags_horizontal = Control.SIZE_EXPAND_FILL; col.alignment = BoxContainer.ALIGNMENT_END; row.add_child(col)
+			var b = ColorRect.new(); b.color = ACC if v >= 0 else BAD; b.custom_minimum_size.y = max(3.0, 160.0 * abs(v) / span); col.add_child(b)
+		lbl(ch, "Pico %s · mínimo %s" % [O.money(mx), O.money(mn)], 19, DIM)
+	var cr = card("Receitas por semana", null, OK)
+	var tr = 0
+	for x in R.rec: tr += x[1]
+	for x in R.rec:
+		bar(cr, x[0], x[1], max(1, tr), OK, O.money(x[1]))
+	var cd = card("Despesas por semana", null, BAD)
+	var td = 0
+	for x in R.des: td += x[1]
+	for x in R.des:
+		bar(cd, x[0], x[1], max(1, td), BAD, O.money(x[1]))
+	if R.por_jogo.size():
+		var cj = card("Resultado por jogo", null, GOLD)
+		for x in R.por_jogo:
+			var h = hrow(cj); pill(h, gname(x[0]), GCOL.get(x[0], ACC), true); var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(sl); lbl(h, O.money(x[1]), 24, OK if x[1] >= 0 else BAD, false)

@@ -19,3 +19,34 @@ func vdiretoria() -> void:
 	var hs: Array = D.get("hist", [])
 	if hs.size():
 		var x = hs[0]; lbl(c, "Último balanço (%d): %d/%d cumpridos, confiança %d%%" % [x.ano, x.oks, x.total, x.conf], 19, DIM)
+
+# ---------- Finanças ----------
+func vfin() -> void:
+	var S = O.S; var R: Dictionary = O.fin_resumo(); var pr: Dictionary = O.projecao_org()
+	kpi(content, [["CAIXA", O.money(S.org.caixa), OK if S.org.caixa >= 0 else BAD], ["SALDO / SEM", O.money(pr.saldo), OK if pr.saldo >= 0 else BAD], ["PROJEÇÃO 12 SEM", O.money(S.org.caixa + pr.saldo * 12), TXT]])
+	var ch = card("Caixa nas últimas semanas", null, ACC2)
+	var hist: Array = S.get("fin", [])
+	if hist.size() < 2: lbl(ch, "O gráfico aparece depois de algumas semanas de jogo.", 22, DIM)
+	else:
+		var mx = 1; var mn = hist[0]
+		for v in hist: mx = max(mx, v); mn = min(mn, v)
+		var span = max(1, mx - min(mn, 0))
+		var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 2); row.custom_minimum_size.y = 170; ch.add_child(row)
+		for v in hist.slice(max(0, hist.size() - 30)):
+			var col = VBoxContainer.new(); col.size_flags_horizontal = Control.SIZE_EXPAND_FILL; col.alignment = BoxContainer.ALIGNMENT_END; row.add_child(col)
+			var b = ColorRect.new(); b.color = ACC if v >= 0 else BAD; b.custom_minimum_size.y = max(3.0, 160.0 * abs(v) / span); col.add_child(b)
+		lbl(ch, "Pico %s · mínimo %s" % [O.money(mx), O.money(mn)], 19, DIM)
+	var cr = card("Receitas por semana", null, OK)
+	var tr = 0
+	for x in R.rec: tr += x[1]
+	for x in R.rec:
+		bar(cr, x[0], x[1], max(1, tr), OK, O.money(x[1]))
+	var cd = card("Despesas por semana", null, BAD)
+	var td = 0
+	for x in R.des: td += x[1]
+	for x in R.des:
+		bar(cd, x[0], x[1], max(1, td), BAD, O.money(x[1]))
+	if R.por_jogo.size():
+		var cj = card("Resultado por jogo", null, GOLD)
+		for x in R.por_jogo:
+			var h = hrow(cj); pill(h, gname(x[0]), GCOL.get(x[0], ACC), true); var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(sl); lbl(h, O.money(x[1]), 24, OK if x[1] >= 0 else BAD, false)

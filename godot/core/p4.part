@@ -132,7 +132,7 @@ func finalizar(c, campeao, eu) -> void:
 	for k in po.lugar:
 		if po.lugar[k] == "vice": vice = int(k); break
 	var meu = po.lugar.get(str(eu))
-	if meu == "campeao": seguidores(1.25)
+	if meu == "campeao": seguidores(1.25); patro_titulo(c)
 	if meu != null:
 		var bolsa = jr(SQUADS[c.sq].premio * PREMIO_PCT[meu])
 		S.org.caixa += bolsa
