@@ -113,7 +113,7 @@
     S.org.caixa -= d.custo; S.games[g].aberto = true; S.games[g].squads.t1.on = true; log(`Abriu o time de ${GAMES[g].curto}`); save();
     return { ok: true, msg: `Time de ${GAMES[g].nome} aberto!` };
   }
-  function log(msg) { S.log.unshift(`S${S.org.semana}/${S.org.ano}: ${msg}`); S.log.length = Math.min(S.log.length, 40); }
+  function log(msg) { S.logN = (S.logN || 0) + 1; S.log.unshift(`S${S.org.semana}/${S.org.ano}: ${msg}`); S.log.length = Math.min(S.log.length, 40); }
   function rnd() { // mulberry32 com estado salvo no jogo (resultados reproduzíveis)
     let t = (S.seed = (S.seed + 0x6D2B79F5) | 0);
     let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
@@ -518,6 +518,18 @@
     }
     save(); return jogou;
   }
+  /* Avanço contínuo: o UI chama passo() em loop e para quando vier um motivo (evento, contrato, fim de split, etc.) ou o jogador parar */
+  const IMPORTANTE = /Contrato|saiu|terminou|revelou|classificado|CAMPE|vice-|semifinalista|eliminado|fora dos playoffs|Fim do ano|Novo evento|Abriu|aceitou|split \d+ começou|split à espera|pode ser aberto|promoveu/i;
+  function passo() {
+    const n0 = S.logN || 0, tinhaEv = !!S.evento, jogou = avancar(1);
+    for (const g of S.ordem) if (!aberto(g) && S.tempo === desbloqueio(g).sem) log(`${GAMES[g].nome} já pode ser aberto (aba do jogo)`);
+    const novas = S.log.slice(0, Math.min((S.logN || 0) - n0, S.log.length));
+    let motivo = null;
+    if (S.evento && !tinhaEv) motivo = 'Novo evento: decida na aba Negócios.';
+    else if (S.org.caixa < 0) motivo = 'Caixa negativo!';
+    else { const l = novas.find(x => IMPORTANTE.test(x)); if (l) motivo = l.replace(/^S\d+\/\d+: /, ''); }
+    return { jogou, motivo, semana: S.org.semana, ano: S.org.ano };
+  }
   function avancarAteJogo() { // avança semana a semana até o time jogar (no máximo 60 semanas)
     let n = 0;
     while (n < 60) { n++; if (avancar(1)) break; }
@@ -530,6 +542,6 @@
   }
 
   root.Org = { GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
-    infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
+    infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, passo, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
     compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -32,3 +32,6 @@ Jogo de gerenciamento de uma organização de esports, em site estático (sem bu
 4. ✓ Contratos (2 anos, aviso 8 semanas antes, renovação por 50% da taxa), Categoria de base (revela jovens com potencial a cada split, evoluem) e mover jogadores entre T1, T2 e Academy.
 5. ✓ Patrocínios (até 3, propostas a cada 6 semanas), redes sociais (seguidores e anúncios), foco da semana (treino/mídia) e eventos aleatórios — aba Negócios.
 6. ✓ Nome do jogo: eSports CEO (o repositório você renomeia no GitHub).
+
+## Avanço contínuo
+O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem parar, até você clicar em ⏸ ou acontecer algo importante (evento, contrato, final de torneio, caixa negativo). Velocidades 1x/2x/6x.

@@ -108,6 +108,11 @@ ok(!O.dispensar('cs2', 't1', S.games.cs2.squads.t1.slots.findIndex(p => p && p.e
 ok(!O.abrirJogo('lol').ok && !O.ativarSquad('lol', 't2').ok, 'jogo trancado não abre antes da hora');
 S.org.caixa = 5e6; O.avancar(26); ok(O.abrirJogo('lol').ok && S.games.lol.squads.t1.on, 'primeiro jogo extra abre após 26 semanas (custa licença)');
 ok(O.desbloqueio('lol').sem === 26 && O.desbloqueio('wr').sem > 26, 'desbloqueios escalonados');
+// ---- avanço contínuo
+O.set(O.novoJogo()); S = O.get(); S.seed = 8; S.org.caixa = 9e6; const b9 = O.livres('lol').sort((a, b) => a.o - b.o); for (const r of O.GAMES.lol.roles) O.contratar('lol', 't1', b9.find(x => x.r === r));
+let paradas = 0, semanasAuto = 0; for (let i = 0; i < 400 && paradas < 5; i++) { const r = O.passo(); semanasAuto++; if (r.motivo) paradas++; }
+ok(paradas === 5 && semanasAuto > 5 && semanasAuto < 400, 'avanço contínuo para em eventos importantes (' + paradas + ' paradas em ' + semanasAuto + ' semanas)');
+O.set(O.novoJogo()); S = O.get(); let evSemana = 0; for (let i = 0; i < 3; i++) O.passo(); ok(S.org.semana === 4, 'passo avança 1 semana por vez');
 // save e carga
 const mem = {}; global.localStorage = { setItem: (k, x) => mem[k] = x, getItem: k => mem[k] || null }; O.set(O.novoJogo()); O.get().org.nome = 'Teste'; O.save(); O.set(O.novoJogo()); ok(O.load() && O.get().org.nome === 'Teste', 'save e load');
 console.log('FALHAS:', falhas); process.exit(falhas ? 1 : 0);

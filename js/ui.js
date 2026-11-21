@@ -58,7 +58,7 @@
   /* ---------- Cabeçalho ---------- */
   function header() {
     const S = O.get(), pre = S.setup === 'config', G = O.GAMES[UI.game], reg = !pre && O.dataOf(UI.game) ? O.dataOf(UI.game).leagues[O.regiaoDe(UI.game)].nome : '';
-    $('top').innerHTML = `${logo(pre ? SU.logo : S.org.logo, 40)}<div class="top-l"><small>${pre ? 'Nova organização' : esc(G.curto + ' · ' + reg)}</small><b>${esc(pre ? (SU.nome || 'Sua org') : S.org.nome)}</b></div><div class="season"><small>Semana ${S.org.semana} · ${S.org.ano}</small><b>${O.money(S.org.caixa)}</b></div>`;
+    $('top').innerHTML = `${logo(pre ? SU.logo : S.org.logo, 40)}<div class="top-l"><small>${pre ? 'Nova organização' : esc(G.curto + ' · ' + reg)}</small><b>${esc(pre ? (SU.nome || 'Sua org') : S.org.nome)}</b></div><div class="season"><small>Semana ${S.org.semana} · ${S.org.ano}</small><b>${O.money(S.org.caixa)}</b></div>${pre || S.setup ? '' : `<button class="hplay ${PL.on ? 'on' : ''}" data-act="play" aria-label="${PL.on ? 'Parar' : 'Avançar'}">${PL.on ? '⏸' : '▶'}</button>`}`;
     document.body.classList.toggle('setup', !!S.setup);
     $('games').innerHTML = Object.values(O.GAMES).map(g =>
       `<button class="chip ${g.id === UI.game ? 'on' : ''}" data-act="game" data-id="${g.id}">${g.icone} ${g.curto}${O.aberto(g.id) ? '' : ' 🔒'}</button>`).join('');
@@ -80,8 +80,7 @@
       <div class="kv"><span>Despesa prevista</span><b class="neg">${O.money(po.despesa)}</b></div>
       <div class="kv"><span>Saldo</span><b class="${po.saldo >= 0 ? 'pos' : 'neg'}">${O.money(po.saldo)}</b></div>
       <div class="kv"><span>Só ${O.GAMES[UI.game].curto}: receita / folha</span><b>${O.money(p.receita)} / ${O.money(p.despesa)}</b></div>
-      <div class="row2"><button class="btn" data-act="avancar" data-n="1">Avançar 1 semana</button><button class="btn alt" data-act="avancar" data-n="4">Avançar 4</button></div>
-      <button class="btn" style="margin-top:8px" data-act="proximo">Ir até a próxima partida</button>
+      ${playCtl()}
     </section>
     <section class="card"><h2>Histórico</h2><ul class="log">${O.get().log.slice(0, 8).map(l => `<li>${esc(l)}</li>`).join('') || '<li>Nada ainda.</li>'}</ul></section>
     <section class="card"><button class="btn ghost" data-act="reset">${UI.resetArm ? 'Tem certeza? Toque de novo' : 'Zerar jogo'}</button></section>`;
@@ -160,7 +159,7 @@
       const op = c.teams.find(t => !t.eu && O.nomeT(t) === nx.op), pw = op ? O.probVit(meu, op.f) : null;
       h += `<section class="card"><h2>Próxima partida</h2><div class="m">${nx.tipo === 'jogo' ? '' : '<span class="zb g">' + esc(nx.tipo === 'int' ? 'Internacional' : 'Mata-mata') + '</span>'}<div class="mt"><div class="tn">${logo(S.org.logo, 34)}<span>${esc(S.org.nome)}</span></div><div class="sc"><em>VS</em></div><div class="tn b">${op ? crest(op.n, 'md') : ''}<span>${esc(nx.op && op ? nx.op : nx.label)}</span></div></div>`
         + (pw !== null ? `<div class="od"><i style="flex:${Math.round(pw * 100)}"></i><i class="o2" style="flex:${Math.round((1 - pw) * 100)}"></i></div><div class="ol"><span>Chance de vitória <b>${Math.round(pw * 100)}%</b></span><span>Força ${meu.toFixed(1)} x ${op.f.toFixed(1)}</span></div>` : `<div class="ol"><span>${esc(nx.label)}</span><span>${nx.op ? esc(nx.op) : ''}</span></div>`)
-        + `</div><div class="kv"><span>Data</span><b>${nx.data.txt} · ${nx.ano}</b></div><div class="kv"><span>Faltam</span><b>${nx.em} semana(s)</b></div><div class="row2"><button class="btn alt" data-act="avancar" data-n="1">Avançar 1 sem.</button><button class="btn" data-act="proximo">Até a partida</button></div></section>`;
+        + `</div><div class="kv"><span>Data</span><b>${nx.data.txt} · ${nx.ano}</b></div><div class="kv"><span>Faltam</span><b>${nx.em} semana(s)</b></div>${playCtl()}</section>`;
     }
     // mês atual
     const td = O.dataDe(S.org.semana, S.org.ano, 1), mes = td.m, n = O.MDN[mes], base = O.MDN.slice(0, mes).reduce((a, b) => a + b, 0), f = new Date(Date.UTC(S.org.ano, mes, 1)).getUTCDay();
@@ -172,6 +171,19 @@
     if (c.last.length) h += `<section class="card"><h2>Resultados</h2>` + c.last.slice(0, 5).map(m => { const [a, b2] = m.pl.split('-'); return `<div class="m"><div class="mt"><div class="tn ${m.v ? 'win' : 'lose'}">${logo(S.org.logo, 28)}<span>${esc(S.org.nome)}</span></div><div class="sc">${a}<i>-</i>${b2}</div><div class="tn b ${m.v ? 'lose' : 'win'}">${crest(m.op, 'sm')}<span>${esc(m.op)}</span></div></div><div class="ol"><span>${esc(m.f)}</span><span>${m.s}/${m.y}</span></div></div>`; }).join('') + '</section>';
     return h;
   }
+  /* ---------- Avanço contínuo (para ao clicar em Parar ou quando surgir um evento importante) ---------- */
+  const PL = { on: false, h: null, vel: 1 }, VEL = [900, 450, 150], VELN = ['1x', '2x', '6x'];
+  function playCtl() {
+    return `<button class="btn play ${PL.on ? 'on' : ''}" data-act="play">${PL.on ? '⏸ Parar' : '▶ Avançar'}</button>
+      <div class="chips" style="margin-top:8px;justify-content:center">${VELN.map((n, i) => `<button class="chip ${PL.vel === i ? 'on' : ''}" data-act="vel" data-id="${i}">${n}</button>`).join('')}<button class="chip" data-act="avancar" data-n="1" ${PL.on ? 'disabled' : ''}>+1 semana</button></div>
+      <p class="hint" style="text-align:center">Avança sozinho até você parar ou surgir um evento (contrato, fim de split, decisão...).</p>`;
+  }
+  function playStop(msg) { PL.on = false; clearTimeout(PL.h); if (msg) toast(msg); render(); }
+  function playTick() {
+    if (!PL.on) return; const r = O.passo(); render();
+    if (r.motivo || O.get().setup) playStop(r.motivo || ''); else PL.h = setTimeout(playTick, VEL[PL.vel]);
+  }
+  function playToggle() { if (PL.on) { playStop(); return; } if (O.get().setup) return; PL.on = true; render(); PL.h = setTimeout(playTick, 120); }
   function vEvento() {
     const S = O.get(); if (!S.evento) return '';
     const e = O.EVENTOS.find(x => x.id === S.evento.id);
@@ -236,7 +248,9 @@
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = b.dataset.id, S = O.get();
-    if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; delete l.raw; delete l.src; delete l.proc; l.cut = false; O.save(); render(); }
+    if (a === 'play') playToggle();
+    else if (a === 'vel') { PL.vel = +id; render(); }
+    else if (a === 'lg-rm') { const l = S.setup === 'config' ? SU.logo : S.org.logo; delete l.img; delete l.raw; delete l.src; delete l.proc; l.cut = false; O.save(); render(); }
     else if (a === 'lg-cut') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l.cut = !l.cut; l.img = l.cut ? l.proc : l.raw; O.save(); render(); }
     else if (a === 'lg') { const l = S.setup === 'config' ? SU.logo : S.org.logo; l[b.dataset.k] = id; O.save(); render(); }
     else if (a === 'su-next') { SU.nome = ($('su-nome') || {}).value || SU.nome; SU.step = 2; render(); }
@@ -263,14 +277,13 @@
     else if (a === 'evento') res(O.escolherEvento(+id));
     else if (a === 'infra') res(O.comprarInfra(id));
     else if (a === 'avancar') { O.avancar(+b.dataset.n); toast(+b.dataset.n + ' semana(s) passaram.'); render(); }
-    else if (a === 'proximo') { const n = O.avancarAteJogo(); toast(`${n} semana(s) até a próxima partida.`); render(); }
     else if (a === 'mrole') { UI.mk.role = id; UI.mk.n = 30; render(); }
     else if (a === 'mpay') { UI.mk.pay = !UI.mk.pay; UI.mk.n = 30; render(); }
     else if (a === 'masc') { UI.mk.asc = !UI.mk.asc; UI.mk.n = 30; render(); }
     else if (a === 'mais') { UI.mk.n += 30; render(); }
     else if (a === 'liga') { UI.ligaVer = id; UI.aberto = null; render(); }
     else if (a === 'time') { UI.aberto = UI.aberto === id ? null : id; render(); }
-    else if (a === 'reset') { if (UI.resetArm) { O.reset(); SU.step = 1; SU.nome = ''; UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
+    else if (a === 'reset') { if (UI.resetArm) { playStop(); O.reset(); SU.step = 1; SU.nome = ''; UI.resetArm = false; toast('Jogo zerado.'); } else { UI.resetArm = true; setTimeout(() => { UI.resetArm = false; if (UI.tab === 'org') render(); }, 3000); } render(); }
   });
   /* Remove o fundo (preenche a partir das bordas com a cor mais parecida com a do canto) e desenha contorno branco em volta */
   function recortar(srcUrl, tol) {
