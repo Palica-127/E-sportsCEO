@@ -6,7 +6,7 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const UI = { tab: 'org', game: 'lol', squad: 't1', mk: { role: '', liga: '', q: '', n: 30, pay: false, asc: false }, ligaVer: null, aberto: null, resetArm: false };
 
-  const TABS = [['org', '🏢', 'Org'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Ligas']];
+  const TABS = [['org', '🏢', 'Início'], ['calendario', '📅', 'Calendário'], ['elenco', '👥', 'Elenco'], ['mercado', '🛒', 'Mercado'], ['estrutura', '🏠', 'Estrutura'], ['negocios', '📣', 'Negócios'], ['ligas', '🏆', 'Torneios']];
 
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('on');
@@ -47,11 +47,15 @@
         return `<div class="slot"><span class="role ri${Math.max(0, roles.indexOf(p.r))}">${p.r}</span><div class="who"><b>${esc(p.n)}</b><small>${esc(p.t)} · ${p.l} · ${p.a} anos · aceita: ${pc(ch)}</small></div><span class="ovr">${p.o}</span><button class="mini buy" data-act="su-convite" data-id="${p.id}">${O.money(O.salarioDe({ o: p.o, estrela: true }))}/sem</button></div>`; }).join('')
       + (lista.length > SU.n ? '<button class="btn alt" data-act="su-mais">Mostrar mais</button>' : '') + '</section>';
   }
+  const hue = t => { let h = 0; for (const c of String(t)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+  const ini = t => { const w = (String(t).match(/[A-Za-zÀ-ÿ0-9]+/g) || ['?']); return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 3)).toUpperCase(); };
+  const crest = (n, sz) => `<span class="crest ${sz || 'sm'}" style="--h:${hue(n)}">${esc(ini(n))}</span>`;
+  const crestT = (c, i, sz) => c.teams[i].eu ? logo(O.get().org.logo, { sm: 26, md: 44, lg: 60 }[sz || 'sm']) : crest(O.nome(c, i), sz);
   const DG = () => O.dataOf(UI.game);
   /* ---------- Cabeçalho ---------- */
   function header() {
-    const S = O.get();
-    const pre = S.setup === 'config'; $('top').innerHTML = `${logo(pre ? SU.logo : S.org.logo, 38)}<div class="top-l"><b>${esc(pre ? (SU.nome || 'Sua org') : S.org.nome)}</b><span>Semana ${S.org.semana} · ${S.org.ano}</span></div><div class="cash">${O.money(S.org.caixa)}</div>`;
+    const S = O.get(), pre = S.setup === 'config', G = O.GAMES[UI.game], reg = !pre && O.dataOf(UI.game) ? O.dataOf(UI.game).leagues[O.regiaoDe(UI.game)].nome : '';
+    $('top').innerHTML = `${logo(pre ? SU.logo : S.org.logo, 40)}<div class="top-l"><small>${pre ? 'Nova organização' : esc(G.curto + ' · ' + reg)}</small><b>${esc(pre ? (SU.nome || 'Sua org') : S.org.nome)}</b></div><div class="season"><small>Semana ${S.org.semana} · ${S.org.ano}</small><b>${O.money(S.org.caixa)}</b></div>`;
     document.body.classList.toggle('setup', !!S.setup);
     $('games').innerHTML = Object.values(O.GAMES).map(g =>
       `<button class="chip ${g.id === UI.game ? 'on' : ''}" data-act="game" data-id="${g.id}">${g.icone} ${g.curto}${O.aberto(g.id) ? '' : ' 🔒'}</button>`).join('');
@@ -133,6 +137,38 @@
         <button class="mini buy" data-act="contratar" data-id="${p.id}" ${S.org.caixa >= O.fee(p.o) ? '' : 'disabled'}>${O.money(O.fee(p.o))}</button></div>`).join('')
       + (tot > m.n ? `<button class="btn alt" data-act="mais">Mostrar mais</button>` : '') + '</section>';
   }
+  function trilha(c, sq) {
+    const intlNome = sq === 't1' ? (c.phase === 'intl' ? O.intlDef(c.game)[c.intl.tipo].nome : (Object.values(O.intlDef(c.game))[(c.split % 2 === 1 ? 0 : 1)] || {}).nome) : null;
+    const et = ['Pré-split', 'Fase regular', 'Playoffs', intlNome || 'Fim do split', 'Entressafra'];
+    let now = c.phase === 'reg' ? 1 : c.phase === 'po' ? 2 : c.phase === 'intl' ? 3 : (c.split > 0 && c.phase === 'off' ? 4 : 0);
+    return `<ul class="trk">${et.map((t, i) => `<li class="${i < now ? 'done' : i === now ? 'now' : ''}"><i></i>${esc(t)}</li>`).join('')}</ul>`;
+  }
+  function vCalendario() {
+    const g = gameGuard(); if (g) return g;
+    const S = O.get(), q = S.games[UI.game].squads[UI.squad];
+    let h = squadTabs();
+    if (!q.on) return h + `<section class="card empty"><h2>${O.SQUADS[UI.squad].nome}</h2><p>Crie este time na aba Elenco para entrar no calendário.</p></section>`;
+    const c = O.compFor(UI.game, UI.squad); if (!c) return h;
+    const ag = O.agenda(UI.game, UI.squad, 10), eu = c.teams.findIndex(t => t.eu), meu = O.forca(UI.game, UI.squad);
+    const lg = O.dataOf(UI.game).leagues[c.reg];
+    h += `<section class="card"><div class="banner"><div><small>${esc(O.GAMES[UI.game].nome)} · ${esc(lg.nome)}</small><br><b>${c.split ? 'Split ' + c.split : 'Pré-temporada'}</b></div><div><small>${O.SQUADS[UI.squad].nome.replace(/ \(.*\)/, '')}</small><br><b>${S.org.ano}</b></div></div>${trilha(c, UI.squad)}<p class="hint">${FASE[c.phase](c)}</p></section>`;
+    const nx = ag.find(x => x.tipo === 'jogo' || x.tipo === 'po' || x.tipo === 'int');
+    if (nx) {
+      const op = c.teams.find(t => !t.eu && O.nomeT(t) === nx.op), pw = op ? O.probVit(meu, op.f) : null;
+      h += `<section class="card"><h2>Próxima partida</h2><div class="m">${nx.tipo === 'jogo' ? '' : '<span class="zb g">' + esc(nx.tipo === 'int' ? 'Internacional' : 'Mata-mata') + '</span>'}<div class="mt"><div class="tn">${logo(S.org.logo, 34)}<span>${esc(S.org.nome)}</span></div><div class="sc"><em>VS</em></div><div class="tn b">${op ? crest(op.n, 'md') : ''}<span>${esc(nx.op && op ? nx.op : nx.label)}</span></div></div>`
+        + (pw !== null ? `<div class="od"><i style="flex:${Math.round(pw * 100)}"></i><i class="o2" style="flex:${Math.round((1 - pw) * 100)}"></i></div><div class="ol"><span>Chance de vitória <b>${Math.round(pw * 100)}%</b></span><span>Força ${meu.toFixed(1)} x ${op.f.toFixed(1)}</span></div>` : `<div class="ol"><span>${esc(nx.label)}</span><span>${nx.op ? esc(nx.op) : ''}</span></div>`)
+        + `</div><div class="kv"><span>Data</span><b>${nx.data.txt} · ${nx.ano}</b></div><div class="kv"><span>Faltam</span><b>${nx.em} semana(s)</b></div><div class="row2"><button class="btn alt" data-act="avancar" data-n="1">Avançar 1 sem.</button><button class="btn" data-act="proximo">Até a partida</button></div></section>`;
+    }
+    // mês atual
+    const td = O.dataDe(S.org.semana, S.org.ano, 1), mes = td.m, n = O.MDN[mes], base = O.MDN.slice(0, mes).reduce((a, b) => a + b, 0), f = new Date(Date.UTC(S.org.ano, mes, 1)).getUTCDay();
+    const evs = {}; ag.forEach(x => { if (x.ano === S.org.ano && x.data.m === mes) evs[x.data.d] = x.tipo === 'int' ? 'int' : 'ev'; });
+    const cells = []; for (let i = 0; i < f; i++) cells.push('<i></i>');
+    for (let d = 1; d <= n; d++) { const past = base + d < td.doy; cells.push(`<span class="${base + d === td.doy ? 'td' : ''}${evs[d] ? ' ev ' + (evs[d] === 'int' ? 'int' : '') : ''}${past ? ' past' : ''}">${d}</span>`); }
+    h += `<section class="card"><h2>Calendário</h2><p class="dbm">${['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][mes]} ${S.org.ano}</p><div class="dbcg">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<b>${x}</b>`).join('')}${cells.join('')}</div><p class="dblg"><span><i></i>Jogo</span><span><i class="t"></i>Internacional</span></p></section>`;
+    h += `<section class="card"><h2>Agenda</h2><ul class="ag">` + (ag.map(x => `<li><span class="dt">${x.data.txt}</span><span class="lb">${esc(x.label)}${x.op ? `<small>${x.tipo === 'jogo' ? 'vs ' : ''}${esc(x.op)}</small>` : ''}</span><span class="em">em ${x.em} sem.</span></li>`).join('') || '<li><span class="lb">Nada agendado.</span></li>') + '</ul></section>';
+    if (c.last.length) h += `<section class="card"><h2>Resultados</h2>` + c.last.slice(0, 5).map(m => { const [a, b2] = m.pl.split('-'); return `<div class="m"><div class="mt"><div class="tn ${m.v ? 'win' : 'lose'}">${logo(S.org.logo, 28)}<span>${esc(S.org.nome)}</span></div><div class="sc">${a}<i>-</i>${b2}</div><div class="tn b ${m.v ? 'lose' : 'win'}">${crest(m.op, 'sm')}<span>${esc(m.op)}</span></div></div><div class="ol"><span>${esc(m.f)}</span><span>${m.s}/${m.y}</span></div></div>`; }).join('') + '</section>';
+    return h;
+  }
   function vEvento() {
     const S = O.get(); if (!S.evento) return '';
     const e = O.EVENTOS.find(x => x.id === S.evento.id);
@@ -161,9 +197,9 @@
     const rows = O.classificacao(c), nome = i => esc(O.nome(c, i)), est = ['Quartas', 'Semifinal', 'Final'];
     let h = `<section class="card"><h2>${c.split ? 'Split ' + c.split : 'Pré-temporada'} · ${DG().leagues[c.reg].nome} ${O.SQUADS[UI.squad].nome}</h2><p class="hint">${FASE[c.phase](c)}</p>`;
     if (c.phase === 'wait') h += `<p class="warn">Faltam titulares: contrate no Mercado.</p>`;
-    h += rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''} ${r.pos === 6 ? 'cut' : ''}"><span>${r.pos}</span><b>${esc(r.n)}</b><em>${r.w}V ${r.l}D</em></div>`).join('') + '<p class="hint">Os 6 primeiros vão aos playoffs.</p></section>';
+    h += rows.map(r => `<div class="tb ${r.eu ? 'eu' : ''} ${r.pos === 6 ? 'cut' : ''}"><span>${r.pos}</span>${crestT(c, r.i)}<b>${esc(r.n)}</b><em>${r.w}V ${r.l}D</em></div>`).join('') + '<p class="hint">Os 6 primeiros vão aos playoffs.</p></section>';
     if (c.phase === 'po' && c.po) {
-      h += `<section class="card"><h2>Playoffs</h2>` + c.po.res.map(r => `<div class="tb"><span>${est[r.st]}</span><b>${nome(r.a)} x ${nome(r.b)}</b><em>${nome(r.w)}</em></div>`).join('')
+      h += `<section class="card"><h2>Playoffs</h2>` + c.po.res.map(r => `<div class="tb"><span>${est[r.st]}</span>${crestT(c, r.w)}<b>${nome(r.a)} x ${nome(r.b)}</b><em>${nome(r.w)}</em></div>`).join('')
         + c.po.pares.map(([a, b]) => `<div class="tb pend"><span>${est[c.po.stage]}</span><b>${nome(a)} x ${nome(b)}</b><em>a jogar</em></div>`).join('') + '</section>';
     }
     if (c.phase === 'intl' && c.intl) {
@@ -171,7 +207,7 @@
       h += `<section class="card"><h2>🌍 ${O.intlDef(c.game)[I.tipo].nome}</h2><p class="hint">${I.teams.length} times · bolsa ${O.money(O.intlDef(c.game)[I.tipo].bolsa)}</p>` + I.res.slice(-8).map(r => `<div class="tb"><span>${r.st}</span><b>${nm(r.a)} x ${nm(r.b)}</b><em>${nm(r.w)}</em></div>`).join('')
         + (I.alive.length > 1 ? I.alive.map((a, k) => k % 2 ? '' : `<div class="tb pend"><span>a jogar</span><b>${nm(a)} x ${nm(I.alive[k + 1])}</b><em>${I.teams[a].eu || I.teams[I.alive[k + 1]].eu ? 'você' : ''}</em></div>`).join('') : '') + '</section>';
     }
-    if (c.last.length) h += `<section class="card"><h2>Seus últimos jogos</h2>` + c.last.slice(0, 6).map(m => `<div class="tb"><span>${m.v ? '✅' : '❌'}</span><b>vs ${esc(m.op)}</b><em>${m.pl} · ${esc(m.f)}</em></div>`).join('') + '</section>';
+    if (c.last.length) h += `<section class="card"><h2>Seus últimos jogos</h2>` + c.last.slice(0, 6).map(m => `<div class="tb"><span>${m.v ? '✅' : '❌'}</span>${crest(m.op)}<b>vs ${esc(m.op)}</b><em>${m.pl} · ${esc(m.f)}</em></div>`).join('') + '</section>';
     const ih = (S.intlHist || []).filter(x => (x.g || 'lol') === UI.game); if (ih.length && UI.squad === 't1') h += `<section class="card"><h2>Títulos internacionais</h2>` + ih.slice(0, 6).map(x => `<div class="tb"><span>${x.y}</span><b>🌍 ${esc(x.nome || (x.tipo === 'MSI' ? 'MSI' : 'Mundial'))}: ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : esc(x.reg || '')}</em></div>`).join('') + '</section>';
     if (c.hist.length) h += `<section class="card"><h2>Campeões</h2>` + c.hist.slice(0, 5).map(x => `<div class="tb"><span>${x.y}</span><b>🏆 ${esc(x.camp)}</b><em>${x.eu === 'campeao' ? 'você!' : x.eu ? 'você: ' + x.eu : ''}</em></div>`).join('') + '</section>';
     return h;
@@ -187,11 +223,11 @@
     const key = lg + tier + t.n, open = UI.aberto === key;
     const f = t.p ? (t.p.reduce((a, p) => a + p[1], 0) / t.p.length).toFixed(1) : '—';
     const roles = DG().roles;
-    return `<div class="team"><button data-act="time" data-id="${esc(key)}"><b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${esc(p[0])} <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}</div>` : ''}</div>`;
+    return `<div class="team"><button data-act="time" data-id="${esc(key)}">${crest(t.n)}<b>${esc(t.n)}</b><em>${f}</em></button>${open ? `<div class="ros">${(t.p || []).map((p, i) => `<span><i class="role ri${i}">${roles[i]}</i>${esc(p[0])} <em>${p[1]}</em></span>`).join('') || '<small>Elenco ainda não cadastrado.</small>'}</div>` : ''}</div>`;
   }
 
   /* ---------- Render e eventos ---------- */
-  const VIEWS = { negocios: vNegocios, org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas };
+  const VIEWS = { calendario: vCalendario, negocios: vNegocios, org: vOrg, elenco: vElenco, mercado: vMercado, estrutura: vEstrutura, ligas: vLigas };
   function render() { header(); const sc = $('main').scrollTop; $('main').innerHTML = O.get().setup ? vSetup() : VIEWS[UI.tab](); $('main').scrollTop = sc; }
 
   document.addEventListener('click', e => {
