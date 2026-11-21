@@ -12,6 +12,7 @@ const GCOL := {"lol": Color("c89b3c"), "cs2": Color("f5a623"), "dota2": Color("e
 var O: Node
 var tab = "org"; var game = "lol"; var squad = "t1"
 var side: VBoxContainer; var side_p: PanelContainer; var nav_p: PanelContainer; var mgc: MarginContainer; var wide = false
+var cur_parent = null
 var hero: Hero; var mono: Mono; var topbar_p: PanelContainer; var topbar_h: HBoxContainer; var gp_p: PanelContainer
 var content: VBoxContainer; var top: Label; var topsub: Label; var topchips: Container; var gbar: HBoxContainer; var nav: HBoxContainer; var scroll: ScrollContainer
 var modal_layer: Control
@@ -114,7 +115,7 @@ func btn(p, t, cb: Callable, dis := false, accent := false) -> Button:
 		b.add_theme_stylebox_override("normal", _sbf(ACC, 12, null, 0, 12)); b.add_theme_stylebox_override("hover", _sbf(Color("6ba0ff"), 12, null, 0, 12)); b.add_theme_stylebox_override("pressed", _sbf(Color("3a6fd8"), 12, null, 0, 12)); b.add_theme_color_override("font_color", Color.WHITE)
 	p.add_child(b); return b
 func card(title := "", parent = null, accent = null) -> VBoxContainer:
-	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(SURF, 16, LINE, 1, 16)); (parent if parent != null else content).add_child(pc)
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(SURF, 16, LINE, 1, 16)); (parent if parent != null else (cur_parent if cur_parent != null else content)).add_child(pc)
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 10); pc.add_child(v)
 	if title != "":
 		var h = hrow(v); var bar = ColorRect.new(); bar.color = accent if accent != null else ACC; bar.custom_minimum_size = Vector2(4, 24); bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER; h.add_child(bar)
@@ -227,7 +228,7 @@ func render() -> void:
 	content.modulate.a = 0.0; create_tween().tween_property(content, "modulate:a", 1.0, 0.16)
 func _ajusta_largura() -> void:
 	var win: Window = get_window(); var ws: Vector2i = win.size
-	var want := Vector2i(2200, 1238) if (ws.y > 0 and float(ws.x) / float(ws.y) >= 1.25) else Vector2i(720, 1280)
+	var want = Vector2i(2200, 1238) if (ws.y > 0 and float(ws.x) / float(ws.y) >= 1.25) else Vector2i(720, 1280)
 	if win.content_scale_size != want: win.content_scale_size = want
 	var w: float = float(want.x) if want.x > want.y else get_viewport_rect().size.x
 	var nw: bool = want.x > want.y

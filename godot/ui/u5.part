@@ -66,7 +66,7 @@ func ini(t) -> String:
 	var w = RegEx.create_from_string("[A-Za-zÀ-ÿ0-9]+").search_all(str(t)); if w.is_empty(): return "?"
 	return (w[0].get_string().left(1) + w[1].get_string().left(1) if w.size() > 1 else w[0].get_string().left(3)).to_upper()
 func crest(n, sz := 48, cb = null) -> Control:  # escudo clicável (abre a ficha do time); sem logo: círculo com iniciais
-	var b = Button.new(); b.custom_minimum_size = Vector2(sz, sz); b.flat = true; b.focus_mode = Control.FOCUS_NONE
+	var b = Button.new(); b.custom_minimum_size = Vector2(sz, sz); b.flat = true; b.size_flags_vertical = Control.SIZE_SHRINK_CENTER; b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; b.focus_mode = Control.FOCUS_NONE
 	var tx = logo_tex(n)
 	if tx != null:
 		var t = TextureRect.new(); t.texture = tx; t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; t.set_anchors_preset(Control.PRESET_FULL_RECT); t.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(t)

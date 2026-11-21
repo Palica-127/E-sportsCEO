@@ -12,6 +12,7 @@ const GCOL := {"lol": Color("c89b3c"), "cs2": Color("f5a623"), "dota2": Color("e
 var O: Node
 var tab = "org"; var game = "lol"; var squad = "t1"
 var side: VBoxContainer; var side_p: PanelContainer; var nav_p: PanelContainer; var mgc: MarginContainer; var wide = false
+var cur_parent = null
 var hero: Hero; var mono: Mono; var topbar_p: PanelContainer; var topbar_h: HBoxContainer; var gp_p: PanelContainer
 var content: VBoxContainer; var top: Label; var topsub: Label; var topchips: Container; var gbar: HBoxContainer; var nav: HBoxContainer; var scroll: ScrollContainer
 var modal_layer: Control
@@ -114,7 +115,7 @@ func btn(p, t, cb: Callable, dis := false, accent := false) -> Button:
 		b.add_theme_stylebox_override("normal", _sbf(ACC, 12, null, 0, 12)); b.add_theme_stylebox_override("hover", _sbf(Color("6ba0ff"), 12, null, 0, 12)); b.add_theme_stylebox_override("pressed", _sbf(Color("3a6fd8"), 12, null, 0, 12)); b.add_theme_color_override("font_color", Color.WHITE)
 	p.add_child(b); return b
 func card(title := "", parent = null, accent = null) -> VBoxContainer:
-	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(SURF, 16, LINE, 1, 16)); (parent if parent != null else content).add_child(pc)
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(SURF, 16, LINE, 1, 16)); (parent if parent != null else (cur_parent if cur_parent != null else content)).add_child(pc)
 	var v = VBoxContainer.new(); v.add_theme_constant_override("separation", 10); pc.add_child(v)
 	if title != "":
 		var h = hrow(v); var bar = ColorRect.new(); bar.color = accent if accent != null else ACC; bar.custom_minimum_size = Vector2(4, 24); bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER; h.add_child(bar)
@@ -227,7 +228,7 @@ func render() -> void:
 	content.modulate.a = 0.0; create_tween().tween_property(content, "modulate:a", 1.0, 0.16)
 func _ajusta_largura() -> void:
 	var win: Window = get_window(); var ws: Vector2i = win.size
-	var want := Vector2i(2200, 1238) if (ws.y > 0 and float(ws.x) / float(ws.y) >= 1.25) else Vector2i(720, 1280)
+	var want = Vector2i(2200, 1238) if (ws.y > 0 and float(ws.x) / float(ws.y) >= 1.25) else Vector2i(720, 1280)
 	if win.content_scale_size != want: win.content_scale_size = want
 	var w: float = float(want.x) if want.x > want.y else get_viewport_rect().size.x
 	var nw: bool = want.x > want.y
@@ -356,43 +357,7 @@ func close_modal_continue() -> void:
 	close_modal()
 	if play: timer.start(vel)
 
-# ---------- Elenco ----------
-func velenco() -> void:
-	var g = game; var S = O.S
-	var c0 = card()
-	var its = []
-	for sq in O.SQUADS: its.append([sq, O.SQUADS[sq].nome.split(" (")[0] + ("" if S.games[g].squads[sq].on else " +")])
-	chips(c0, its, squad, func(id): squad = id; render())
-	var q = S.games[g].squads[squad]
-	if not q.on:
-		var c = card(O.SQUADS[squad].nome)
-		lbl(c, "Criar este time custa %s de licença." % O.money(O.SQUADS[squad].licenca))
-		btn(c, "Criar time", func(): res(O.ativar_squad(g, squad)), false, true)
-		return
-	var c = card("%s · força %.1f" % [O.SQUADS[squad].nome, O.forca(g, squad)])
-	lbl(c, "Folha %s/sem · moral média %s" % [O.money(O.folha(g, squad)), O.moral_rot(_moral_media(g, squad))], 22, DIM)
-	lbl(c, "Foco de treino do time:", 22, DIM)
-	var fs = []
-	for f in O.FOCOS: fs.append([f, O.FOCOS[f].nome])
-	chips(c, fs, "", func(id): res(O.foco_equipe(g, squad, id)))
-	var roles = O.GAMES[g].roles; var n = roles.size()
-	for i in q.slots.size():
-		var p = q.slots[i]; var tit = "Titular" if i < n else "Reserva"; var rl: String = roles[i] if i < n else "RES"
-		var row = hrow(c)
-		if p == null:
-			lbl(row, "%s — vaga vazia (%s)" % [rl, tit], 24, DIM); continue
-		var tr: Dictionary = O.tendencia(p, g, squad, i < n)
-		row.queue_free()
-		var rb = rowbtn(c, func(): ficha_slot(g, squad, i)); var rr: HBoxContainer = rb[1]
-		var av = avatar(p.n, 56, g); rr.add_child(av)
-		var cv = VBoxContainer.new(); cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; cv.add_theme_constant_override("separation", 0); rr.add_child(cv)
-		var l1 = Label.new(); l1.text = p.n; l1.add_theme_font_size_override("font_size", 28); cv.add_child(l1)
-		var l2 = Label.new(); l2.text = "%s · %sa · %s · pot %d · contrato %d" % [rl, str(p.get("a", "?")), tr.s, p.pot, int(p.get("ct", O.CONTRATO))]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
-		var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 32); ov.add_theme_color_override("font_color", nota_col(p.o)); ov.custom_minimum_size.x = 56; ov.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; rr.add_child(ov)
-		ignore_mouse(rb[0])
-	vvestiario(g, squad)
-	vstaff()
-	_base_card(g)
+# ---------- Elenco (tela nova: ub.part) ----------
 func _moral_media(g, sq) -> float:
 	var t: Array = O.titulares(g, sq).filter(func(p): return p != null)
 	if t.is_empty(): return 70.0
@@ -444,28 +409,7 @@ func ficha_base(g, p) -> void:
 	btn(v, "Vender (%s)" % O.money(O.valor_venda(p)), func(): var r: Dictionary = O.vender_base(g, p.id); toast(r.msg); close_modal())
 	btn(v, "Dispensar", func(): var r: Dictionary = O.dispensar_base(g, p.id); toast(r.msg); close_modal())
 
-# ---------- Mercado ----------
-func vmercado() -> void:
-	var g = game; var roles: Array = O.GAMES[g].roles
-	vtransf()
-	var c = card("Mercado · contratar para " + O.SQUADS[squad].nome)
-	if not O.S.games[g].squads[squad].on: lbl(c, "Crie esse time na aba Elenco.", 24, DIM); return
-	var its = [["", "Todos"]]; for r in roles: its.append([r, r])
-	chips(c, its, merc.role, func(id): merc.role = id; merc.n = 25; render())
-	var tg = CheckButton.new(); tg.text = "Só quem posso pagar"; tg.button_pressed = merc.pay; tg.toggled.connect(func(on): merc.pay = on; render()); c.add_child(tg)
-	var lst: Array = O.livres(g).filter(func(p): return (merc.role == "" or p.r == merc.role) and (not merc.pay or O.S.org.caixa >= O.fee(p.o)))
-	lst.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
-	var c2 = card("%d jogadores" % lst.size())
-	for p in lst.slice(0, merc.n):
-		var rb = rowbtn(c2, func(): ficha_mercado(g, p)); var rr: HBoxContainer = rb[1]
-		rr.add_child(crest(p.t, 48))
-		var cv = VBoxContainer.new(); cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; cv.add_theme_constant_override("separation", 0); rr.add_child(cv)
-		var l1 = Label.new(); l1.text = p.n; l1.add_theme_font_size_override("font_size", 27); l1.clip_text = true; cv.add_child(l1)
-		var l2 = Label.new(); l2.text = "%s · %sa · %s" % [p.r, str(p.get("a", "?")), p.t]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
-		var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 30); ov.add_theme_color_override("font_color", nota_col(p.o)); ov.custom_minimum_size.x = 50; ov.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; rr.add_child(ov)
-		var pg = Label.new(); pg.text = O.money(O.fee(p.o)); pg.add_theme_font_size_override("font_size", 21); pg.add_theme_color_override("font_color", OK if O.S.org.caixa >= O.fee(p.o) else BAD); pg.custom_minimum_size.x = 100; pg.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; rr.add_child(pg)
-		ignore_mouse(rb[0])
-	if lst.size() > merc.n: btn(c2, "Mostrar mais", func(): merc.n += 25; render())
+# ---------- Mercado (tela nova: ub.part) ----------
 func ficha_mercado(g, p) -> void:
 	var v = modal(p.n)
 	var pv: Dictionary = O.pot_visivel(O.iniciar_jogador(p.duplicate()), g)
@@ -473,37 +417,6 @@ func ficha_mercado(g, p) -> void:
 	lbl(v, "Potencial %s%s (%d–%d)" % [stars(pv.estrelas), "?" if pv.incerto else "", pv.lo, pv.hi], 24, DIM)
 	lbl(v, "Contratação %s · salário %s/sem" % [O.money(O.fee(p.o)), O.money(O.salary(p.o))], 24)
 	btn(v, "Contratar para " + O.SQUADS[squad].nome, func(): var r: Dictionary = O.contratar(g, squad, p); toast(r.msg); close_modal(), false, true)
-
-# ---------- Agenda (calendário geral: todos os jogos juntos) ----------
-func vcal() -> void:
-	var itens = []; var res_l = []
-	for g in O.GAMES:
-		if not O.ativo(g) or not O.aberto(g): continue
-		for sq in O.SQUADS:
-			var c = O.comp_for(g, sq)
-			if c == null: continue
-			for a in O.agenda(g, sq, 6): a["tag"] = O.tag_de(g, sq); itens.append(a)
-			for l in c.last: var x: Dictionary = l.duplicate(); x["tag"] = O.tag_de(g, sq); res_l.append(x)
-	itens.sort_custom(func(a, b): return a.em < b.em)
-	var c1 = card("Próximas partidas", null, GOLD)
-	if itens.is_empty(): lbl(c1, "Nada agendado: complete os titulares de um time.", 24, DIM)
-	for a in itens.slice(0, 12):
-		var rw = PanelContainer.new(); rw.add_theme_stylebox_override("panel", _sbf(SURF2, 12, LINE, 1, 10)); c1.add_child(rw)
-		var hh = hrow(rw)
-		var dv = VBoxContainer.new(); dv.custom_minimum_size.x = 92; hh.add_child(dv)
-		var dtxt = str(a.data.txt).split(" ")
-		lbl(dv, dtxt[0] if dtxt.size() > 0 else "", 34, GOLD, false); lbl(dv, dtxt[1] if dtxt.size() > 1 else "", 19, DIM, false)
-		var mv = VBoxContainer.new(); mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mv.add_theme_constant_override("separation", 2); hh.add_child(mv)
-		lbl(mv, "%s%s" % [a.label, ("  ×  " + str(a.op)) if a.op != null else ""], 25)
-		lbl(mv, "%s · em %d sem." % [a.tag, a.em], 19, DIM)
-	var c2 = card("Resultados", null, ACC2)
-	if res_l.is_empty(): lbl(c2, "Ainda sem jogos.", 24, DIM)
-	res_l.sort_custom(func(a, b): return a.y * 100 + a.s > b.y * 100 + b.s)
-	for r in res_l.slice(0, 20):
-		var hh = hrow(c2); var pl_ = pill(hh, "V" if r.v else "D", OK if r.v else BAD, true); pl_.custom_minimum_size.x = 44; pl_.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var mv = VBoxContainer.new(); mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mv.add_theme_constant_override("separation", 0); hh.add_child(mv)
-		lbl(mv, "vs %s" % r.op, 25); lbl(mv, "%s · S%d/%d · %s" % [r.tag, r.s, r.y, r.f], 19, DIM)
-		lbl(hh, str(r.pl), 22, OK if r.v else BAD, false)
 
 # ---------- Ligas ----------
 func vligas() -> void:
@@ -677,7 +590,7 @@ func ini(t) -> String:
 	var w = RegEx.create_from_string("[A-Za-zÀ-ÿ0-9]+").search_all(str(t)); if w.is_empty(): return "?"
 	return (w[0].get_string().left(1) + w[1].get_string().left(1) if w.size() > 1 else w[0].get_string().left(3)).to_upper()
 func crest(n, sz := 48, cb = null) -> Control:  # escudo clicável (abre a ficha do time); sem logo: círculo com iniciais
-	var b = Button.new(); b.custom_minimum_size = Vector2(sz, sz); b.flat = true; b.focus_mode = Control.FOCUS_NONE
+	var b = Button.new(); b.custom_minimum_size = Vector2(sz, sz); b.flat = true; b.size_flags_vertical = Control.SIZE_SHRINK_CENTER; b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; b.focus_mode = Control.FOCUS_NONE
 	var tx = logo_tex(n)
 	if tx != null:
 		var t = TextureRect.new(); t.texture = tx; t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; t.set_anchors_preset(Control.PRESET_FULL_RECT); t.mouse_filter = Control.MOUSE_FILTER_IGNORE; b.add_child(t)
@@ -1758,3 +1671,149 @@ func vorg() -> void:
 		var hc = hrow(cp); _ctrl_buttons(hc)
 		for b in hc.get_children(): b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_p_hero(content, prox); _p_next(content, prox); _p_perf(content); _p_fin(content); _p_teams(content); _p_matches(content); _p_class(content); _p_news(content); _p_contracts(content); vdiretoria()
+
+# ======================================================================
+#  ELENCO, AGENDA e MERCADO — telas recompostas (visual v2)
+# ======================================================================
+func _tend_icon(tr: Dictionary) -> Control:
+	var k: String = "up" if tr.s == "↑" else "down" if tr.s == "↓" else "flat"
+	return ico(k, 24, OK if k == "up" else BAD if k == "down" else DIM)
+func _player_card(p_, g, sq, i: int, rl: String, rcol: Color, titular: bool) -> void:
+	var p = p_
+	var tr: Dictionary = O.tendencia(p, g, sq, titular); var pv: Dictionary = O.pot_visivel(p, g)
+	var rb = cardbtn(cur_parent if cur_parent != null else content, func(): ficha_slot(g, sq, i), rcol, 104 if titular else 88); var rr: HBoxContainer = rb[1]
+	rr.add_child(role_tag(rl, rcol, 60)); rr.add_child(avatar(p.n, 58 if titular else 48, g))
+	var cv = vstack(rr, 1); var h1 = hrow(cv); h1.add_theme_constant_override("separation", 8)
+	var nl = hl(h1, p.n, 32 if titular else 28, TXT); nl.size_flags_horizontal = Control.SIZE_FILL
+	if p.get("estrela", false): h1.add_child(ico("star", 20, GOLD))
+	var sub = lbl(cv, "%sa · pot %s%s · contrato %d sem." % [str(p.get("a", "?")), stars(pv.estrelas), "?" if pv.incerto else "", int(p.get("ct", O.CONTRATO))], 19, DIM, false); sub.clip_text = true
+	var h2 = hrow(cv); h2.add_theme_constant_override("separation", 8)
+	h2.add_child(ico("mood", 18, OK if p.mo >= 55 else GOLD if p.mo >= 35 else BAD)); thin(h2, p.mo, 100.0, OK if p.mo >= 55 else GOLD if p.mo >= 35 else BAD, 7, 90)
+	lbl(h2, "XP", 16, DIM, false); thin(h2, p.xp, O.xp_necessario(p.o), ACC, 7, 90)
+	rr.add_child(_tend_icon(tr)); var ob = ovr_badge(p.o, 66 if titular else 56); ob.size_flags_vertical = Control.SIZE_SHRINK_CENTER; rr.add_child(ob)
+	ignore_mouse(rb[0])
+func _empty_slot(rl: String, rcol: Color, g) -> void:
+	var pc = PanelContainer.new(); pc.add_theme_stylebox_override("panel", _sbf(Color("0b0c1a"), 14, Color(rcol.r, rcol.g, rcol.b, 0.45), 2, 12)); (cur_parent if cur_parent != null else content).add_child(pc)
+	var h = hrow(pc); h.add_theme_constant_override("separation", 12); h.add_child(role_tag(rl, rcol, 60))
+	lbl(h, "Vaga aberta", 24, DIM).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var b = ibtn(h, "Contratar", "plus", func(): merc.role = rl; merc.n = 25; tab = "mercado"; render(), false, 46); b.add_theme_font_size_override("font_size", 22)
+func _resumo_elenco(p, g, sq) -> void:
+	var v = panel(p, "Resumo do elenco", "users")
+	var h = hrow(v); h.add_theme_constant_override("separation", 18)
+	var fo: float = O.forca(g, sq); var rg = Ring.new(); rg.custom_minimum_size = Vector2(132, 132); rg.val = fo; rg.mx = 100.0; rg.col = nota_col(fo); rg.txt = "%.0f" % fo; rg.sub = "FORÇA"; rg.fnt = F_H; h.add_child(rg)
+	var st = vstack(h, 6)
+	var ts: Array = O.titulares(g, sq).filter(func(x): return x != null); var idade = 0.0; var val = 0
+	for x in ts: idade += float(x.get("a", 22)) if x.get("a") != null else 22.0
+	for x in O.S.games[g].squads[sq].slots:
+		if x != null: val += O.valor_venda(x)
+	var mm: float = _moral_media(g, sq)
+	for kv in [["Folha semanal", O.money(O.folha(g, sq))], ["Valor do elenco", O.money(val)], ["Idade média", ("%.1f" % (idade / ts.size())) if ts.size() else "—"]]:
+		var rw = hrow(st); lbl(rw, kv[0], 20, DIM, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL; hl(rw, kv[1], 26, TXT)
+	var rm = hrow(st); lbl(rm, "Moral", 20, DIM, false).size_flags_horizontal = Control.SIZE_FILL; thin(rm, mm, 100.0, OK if mm >= 55 else GOLD, 10); hl(rm, O.moral_rot(mm), 22, OK if mm >= 55 else GOLD)
+	lbl(v, "Foco de treino do time", 19, DIM, false)
+	var fs = []
+	for f in O.FOCOS: fs.append([f, O.FOCOS[f].nome])
+	seg(v, fs, "", func(id): res(O.foco_equipe(g, sq, id)))
+func velenco() -> void:
+	var g = game; var S = O.S; var its = []
+	for sq in O.SQUADS: its.append([sq, O.SQUADS[sq].nome.split(" (")[0] + ("" if S.games[g].squads[sq].on else " +")])
+	seg(content, its, squad, func(id): squad = id; render(), GCOL.get(g, ACC))
+	var q = S.games[g].squads[squad]
+	if not q.on:
+		var c = panel(content, O.SQUADS[squad].nome, "users")
+		lbl(c, "Criar este time custa %s de licença." % O.money(O.SQUADS[squad].licenca), 24)
+		ibtn(c, "Criar time", "plus", func(): res(O.ativar_squad(g, squad)), true)
+		return
+	var left = content; var right = content
+	if wide:
+		var r = _row(content); left = _col(r, 1.7); right = _col(r, 1.0)
+	_resumo_elenco(right, g, squad)
+	var roles: Array = O.GAMES[g].roles; var n: int = roles.size()
+	var pl = panel(left, "Titulares", "shield", "%d/%d" % [O.titulares(g, squad).filter(func(x): return x != null).size(), n])
+	cur_parent = pl
+	for i in q.slots.size():
+		if i == n:
+			cur_parent = null; var pr = panel(left, "Reservas", "users"); cur_parent = pr
+		var p = q.slots[i]; var rl: String = roles[i] if i < n else "RES"; var rc: Color = ROLE_COL[mini(i, ROLE_COL.size() - 1)]
+		if p == null: _empty_slot(rl, rc, g)
+		else: _player_card(p, g, squad, i, rl, rc, i < n)
+	cur_parent = null
+	cur_parent = right; vvestiario(g, squad); vstaff(); _base_card(g); cur_parent = null
+
+# ---------- Agenda ----------
+func vcal() -> void:
+	var itens: Array = _agenda_all(7); var res_l = []
+	for g in O.GAMES:
+		if not O.ativo(g) or not O.aberto(g): continue
+		for sq in O.SQUADS:
+			var c = O.comp_for(g, sq)
+			if c == null: continue
+			for l in c.last: var x: Dictionary = l.duplicate(); x["tag"] = O.tag_de(g, sq); x["g"] = g; res_l.append(x)
+	res_l.sort_custom(func(a, b): return a.y * 100 + a.s > b.y * 100 + b.s)
+	var left = content; var right = content
+	if wide:
+		var r = _row(content); left = _col(r, 1.7); right = _col(r, 1.0)
+	else: _p_next(content, _prox_jogo())
+	var pt = panel(left, "Calendário competitivo", "calendar", "%d eventos" % itens.size())
+	if itens.is_empty(): lbl(pt, "Nada agendado: complete os titulares de um time.", 22, DIM)
+	var mes_ant = -1
+	for a in itens.slice(0, 18):
+		if a.data.m != mes_ant:
+			mes_ant = a.data.m; sec(pt, "%s %d" % [MES_FULL[a.data.m], a.data.y])
+		var col: Color = GCOL.get(a.g, ACC); var rw = PanelContainer.new(); rw.add_theme_stylebox_override("panel", _sbf(Color("101128"), 12, LINE, 1, 0)); pt.add_child(rw)
+		var sh = Control.new(); sh.mouse_filter = Control.MOUSE_FILTER_IGNORE; rw.add_child(sh); var st = ColorRect.new(); st.color = col; st.set_anchors_preset(Control.PRESET_LEFT_WIDE); st.offset_right = 5; st.offset_top = 10; st.offset_bottom = -10; sh.add_child(st)
+		var mc = MarginContainer.new(); mc.add_theme_constant_override("margin_left", 20); mc.add_theme_constant_override("margin_right", 14); mc.add_theme_constant_override("margin_top", 10); mc.add_theme_constant_override("margin_bottom", 10); rw.add_child(mc)
+		var h = HBoxContainer.new(); h.add_theme_constant_override("separation", 14); mc.add_child(h)
+		var d = vstack(h, 0, false); d.custom_minimum_size.x = 70; var dn = hl(d, str(a.data.d), 40, TXT); dn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; var dm = lbl(d, O.MES[a.data.m].to_upper(), 17, DIM, false); dm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if a.tipo == "ini":
+			h.add_child(ico("flag" if false else "play", 26, col)); var iv = vstack(h, 0); hl(iv, str(a.label), 28, TXT); lbl(iv, "%s · em %d sem." % [a.tag, a.em], 19, DIM, false)
+		else:
+			h.add_child(crest(O.S.org.nome, 46)); hl(h, "VS", 20, DIM).size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			if a.op != null: h.add_child(crest(str(a.op), 46))
+			var iv = vstack(h, 0); var ol = hl(iv, str(a.op) if a.op != null else str(a.label), 28, TXT); ol.clip_text = true; ol.custom_minimum_size.x = 40
+			var l2 = lbl(iv, "%s · %s" % [a.tag, str(a.label)], 18, DIM, false); l2.clip_text = true; l2.custom_minimum_size.x = 40
+		var rv = vstack(h, 0, false); var wl = hl(rv, "em %d sem." % a.em if a.em > 0 else "esta semana", 22, col); wl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	if wide: _p_next(right, _prox_jogo())
+	var pr = panel(right, "Resultados", "trophy")
+	if res_l.is_empty(): lbl(pr, "Ainda sem jogos.", 22, DIM); return
+	var fh = hrow(pr); fh.add_theme_constant_override("separation", 6); lbl(fh, "Forma", 19, DIM, false).size_flags_horizontal = Control.SIZE_FILL
+	for r in res_l.slice(0, 8): var pp = pill(fh, "V" if r.v else "D", OK if r.v else BAD, true); pp.custom_minimum_size.x = 34; pp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for r in res_l.slice(0, 12):
+		var rw = PanelContainer.new(); rw.add_theme_stylebox_override("panel", _sbf(Color("101128"), 10, null, 0, 8)); pr.add_child(rw)
+		var h = hrow(rw); h.add_theme_constant_override("separation", 12)
+		var pp = pill(h, "V" if r.v else "D", OK if r.v else BAD, true); pp.custom_minimum_size.x = 38; pp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		h.add_child(crest(str(r.op), 36))
+		var iv = vstack(h, 0); var ol = lbl(iv, "vs %s" % r.op, 22, TXT, false); ol.clip_text = true; ol.custom_minimum_size.x = 40
+		var l2 = lbl(iv, "%s · S%d/%d · %s" % [r.tag, r.s, r.y, r.f], 16, DIM, false); l2.clip_text = true; l2.custom_minimum_size.x = 40
+		hl(h, str(r.pl), 24, OK if r.v else BAD)
+
+# ---------- Mercado ----------
+func vmercado() -> void:
+	var g = game; var roles: Array = O.GAMES[g].roles
+	var left = content; var right = content
+	if wide:
+		var r = _row(content); left = _col(r, 1.8); right = _col(r, 1.0)
+	cur_parent = right if wide else content; vtransf(); cur_parent = null
+	var pf = panel(left, "Mercado de transferências", "search", O.SQUADS[squad].nome.split(" (")[0])
+	if not O.S.games[g].squads[squad].on: lbl(pf, "Crie esse time na aba Elenco.", 24, DIM); return
+	var its = [["", "Todos"]]; for r in roles: its.append([r, r])
+	seg(pf, its, merc.role, func(id): merc.role = id; merc.n = 25; render())
+	var tg = CheckButton.new(); tg.text = "Só quem posso pagar"; tg.button_pressed = merc.pay; tg.toggled.connect(func(on): merc.pay = on; render()); pf.add_child(tg)
+	var lst: Array = O.livres(g).filter(func(p): return (merc.role == "" or p.r == merc.role) and (not merc.pay or O.S.org.caixa >= O.fee(p.o)))
+	lst.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
+	var hd = hrow(pf); hd.add_theme_constant_override("separation", 12)
+	var sp0 = Control.new(); sp0.custom_minimum_size.x = 50; hd.add_child(sp0); lbl(hd, "JOGADOR · %d NO MERCADO" % lst.size(), 17, DIM, false).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for cdef in [["POS", 62], ["IDADE", 56], ["NOTA", 64], ["PREÇO", 112]]:
+		var ch = lbl(hd, cdef[0], 17, DIM, false); ch.custom_minimum_size.x = cdef[1]; ch.size_flags_horizontal = Control.SIZE_FILL; ch.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for p in lst.slice(0, merc.n):
+		var ri: int = roles.find(p.r); var rc: Color = ROLE_COL[mini(maxi(ri, 0), ROLE_COL.size() - 1)]
+		var rb = cardbtn(pf, func(): ficha_mercado(g, p), rc, 74); var rr: HBoxContainer = rb[1]; rr.add_theme_constant_override("separation", 12)
+		rr.add_child(crest(p.t, 42))
+		var cv = vstack(rr, 0); var nl = hl(cv, p.n, 28, TXT); nl.clip_text = true; nl.custom_minimum_size.x = 40
+		var tl = lbl(cv, p.t, 17, DIM, false); tl.clip_text = true; tl.custom_minimum_size.x = 40
+		var rt = role_tag(p.r, rc, 62); rr.add_child(rt)
+		var al = lbl(rr, str(p.get("a", "?")), 22, TXT, false); al.custom_minimum_size.x = 56; al.size_flags_horizontal = Control.SIZE_FILL; al.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var ob = ovr_badge(p.o, 56); ob.custom_minimum_size.x = 64; rr.add_child(ob)
+		var fe: int = O.fee(p.o); var pg = hl(rr, O.money(fe), 23, OK if O.S.org.caixa >= fe else BAD); pg.custom_minimum_size.x = 112; pg.size_flags_horizontal = Control.SIZE_FILL; pg.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		ignore_mouse(rb[0])
+	if lst.size() > merc.n: ibtn(pf, "Mostrar mais", "chev", func(): merc.n += 25; render())

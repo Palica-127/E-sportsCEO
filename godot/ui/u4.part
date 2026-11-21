@@ -1,35 +1,4 @@
 
-# ---------- Agenda (calendário geral: todos os jogos juntos) ----------
-func vcal() -> void:
-	var itens = []; var res_l = []
-	for g in O.GAMES:
-		if not O.ativo(g) or not O.aberto(g): continue
-		for sq in O.SQUADS:
-			var c = O.comp_for(g, sq)
-			if c == null: continue
-			for a in O.agenda(g, sq, 6): a["tag"] = O.tag_de(g, sq); itens.append(a)
-			for l in c.last: var x: Dictionary = l.duplicate(); x["tag"] = O.tag_de(g, sq); res_l.append(x)
-	itens.sort_custom(func(a, b): return a.em < b.em)
-	var c1 = card("Próximas partidas", null, GOLD)
-	if itens.is_empty(): lbl(c1, "Nada agendado: complete os titulares de um time.", 24, DIM)
-	for a in itens.slice(0, 12):
-		var rw = PanelContainer.new(); rw.add_theme_stylebox_override("panel", _sbf(SURF2, 12, LINE, 1, 10)); c1.add_child(rw)
-		var hh = hrow(rw)
-		var dv = VBoxContainer.new(); dv.custom_minimum_size.x = 92; hh.add_child(dv)
-		var dtxt = str(a.data.txt).split(" ")
-		lbl(dv, dtxt[0] if dtxt.size() > 0 else "", 34, GOLD, false); lbl(dv, dtxt[1] if dtxt.size() > 1 else "", 19, DIM, false)
-		var mv = VBoxContainer.new(); mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mv.add_theme_constant_override("separation", 2); hh.add_child(mv)
-		lbl(mv, "%s%s" % [a.label, ("  ×  " + str(a.op)) if a.op != null else ""], 25)
-		lbl(mv, "%s · em %d sem." % [a.tag, a.em], 19, DIM)
-	var c2 = card("Resultados", null, ACC2)
-	if res_l.is_empty(): lbl(c2, "Ainda sem jogos.", 24, DIM)
-	res_l.sort_custom(func(a, b): return a.y * 100 + a.s > b.y * 100 + b.s)
-	for r in res_l.slice(0, 20):
-		var hh = hrow(c2); var pl_ = pill(hh, "V" if r.v else "D", OK if r.v else BAD, true); pl_.custom_minimum_size.x = 44; pl_.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var mv = VBoxContainer.new(); mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mv.add_theme_constant_override("separation", 0); hh.add_child(mv)
-		lbl(mv, "vs %s" % r.op, 25); lbl(mv, "%s · S%d/%d · %s" % [r.tag, r.s, r.y, r.f], 19, DIM)
-		lbl(hh, str(r.pl), 22, OK if r.v else BAD, false)
-
 # ---------- Ligas ----------
 func vligas() -> void:
 	var g = game; var its = []
