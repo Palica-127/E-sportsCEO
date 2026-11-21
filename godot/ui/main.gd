@@ -1,7 +1,7 @@
 extends Control
 ## Interface do eSports CEO (Godot). Tudo é montado por código; render() refaz a tela atual.
 
-const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"]]
+const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const BG := Color("0f1220"); const CARD := Color("1a1f35"); const ACC := Color("7c8cff"); const TXT := Color("e8ebff"); const DIM := Color("8b93b8")
 const OK := Color("49d17d"); const BAD := Color("ff6b6b"); const GOLD := Color("ffc857")
 var O: Node
@@ -98,7 +98,7 @@ func render() -> void:
 		if not O.ativo(g): continue
 		if O.aberto(g): var b = Button.new(); b.text = gname(g); b.toggle_mode = true; b.button_pressed = (g == game); b.pressed.connect(func(): game = g; squad = "t1"; render()); gbar.add_child(b)
 	for t in TABS:
-		var b = Button.new(); b.text = t[1]; b.toggle_mode = true; b.button_pressed = (t[0] == tab); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.add_theme_font_size_override("font_size", 20)
+		var b = Button.new(); b.text = t[1]; b.toggle_mode = true; b.button_pressed = (t[0] == tab); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.add_theme_font_size_override("font_size", 17)
 		b.pressed.connect(func(): tab = t[0]; render()); nav.add_child(b)
 	match tab:
 		"org": vorg()
@@ -108,6 +108,7 @@ func render() -> void:
 		"ligas": vligas()
 		"neg": vneg()
 		"hall": vhall()
+		"mundo": vmundo()
 	scroll.scroll_vertical = 0
 func _fmt_n(n) -> String: return "%.1f mi" % (n / 1e6) if n >= 1e6 else "%.1f mil" % (n / 1e3) if n >= 1e4 else str(int(n))
 
@@ -426,6 +427,9 @@ func vhall() -> void:
 	var ys: Array = anos.keys(); ys.sort(); ys.reverse()
 	if ys.is_empty(): lbl(card("Hall"), "Sem histórico para este jogo ainda.", 24, DIM); return
 	if hy == 0 or not ys.has(hy): hy = ys[0]
+	var cm = card()
+	chips(cm, [["ano", "Por ano"], ["lendas", "Lendas"]], hall_mode, func(id): hall_mode = id; render())
+	if hall_mode == "lendas": vlendas(g); return
 	var cn = card("Torneios por ano")
 	var h = hrow(cn)
 	var i: int = ys.find(hy)
@@ -705,3 +709,74 @@ func ficha_jog(nick, g) -> void:
 			for x in bo: lbl(v, "%s %d · %dº lugar" % ["★" if x[1] == 0 else "•", x[0], x[1] + 1], 22, GOLD if x[1] == 0 else TXT)
 		if j == null and tit.is_empty() and mv.is_empty() and bo.is_empty(): lbl(v, "Sem dados de carreira.", 22, DIM)
 	if sim.size() and g != "lol": lbl(v, "No jogo (simulado): %d título(s), %d MVP(s)" % [sim.get("w", []).size() + sim.get("a", []).size(), sim.get("v", []).size()], 22, DIM)
+
+# ---------- Lendas (Hall) e aba Mundo ----------
+func lendas(g) -> Array:  # [{n, pts, partes:[texto]}] ordenado
+	var sim: Dictionary = O.S.hon.get(g, {}); var out = {}
+	var add = func(n, pts, parte):
+		if not out.has(n): out[n] = {"n": n, "pts": 0.0, "p": []}
+		out[n].pts += pts; out[n].p.append(parte)
+	if g == "lol":
+		for n in O.LOLX.hon:
+			var h: Dictionary = O.LOLX.hon[n]; var wc: int = h.get("wc", []).size(); var msi: int = h.get("msi", []).size(); var lg: int = int(h.get("lg", 0)); var mv: int = h.get("mv", []).size()
+			if wc: add.call(n, wc * 3, "%d Mundial" % wc)
+			if msi: add.call(n, msi * 2, "%d MSI" % msi)
+			if lg: add.call(n, lg * 0.5, "%d ligas" % lg)
+			if mv: add.call(n, mv, "%d MVP" % mv)
+	else:
+		var H: Dictionary = O.HIST.get(g, {}); var MAIN: String = H.get("main", ""); var cont = {}
+		for t in H.get("torneios", []):
+			for n in t.get("r", []):
+				if not cont.has(n): cont[n] = [0, 0, 0]
+				if t.tp == MAIN: cont[n][0] += 1
+				else: cont[n][1] += 1
+			if t.get("mvp") != null:
+				if not cont.has(t.mvp[0]): cont[t.mvp[0]] = [0, 0, 0]
+				cont[t.mvp[0]][2] += 1
+		for n in cont:
+			var c: Array = cont[n]
+			if c[0]: add.call(n, c[0] * 3, "%d %s" % [c[0], H.get("tipos", {}).get(MAIN, "principais")])
+			if c[1]: add.call(n, c[1], "%d outros" % c[1])
+			if c[2]: add.call(n, c[2], "%d MVP" % c[2])
+	for n in sim:   # honras simuladas (2027+)
+		var s: Dictionary = sim[n]; var w: int = s.get("w", []).size(); var a: int = s.get("a", []).size(); var l: int = int(s.get("l", 0)); var v: int = s.get("v", []).size(); var b: int = s.get("b", []).size()
+		if w + a: add.call(n, w * 3 + a * 2, "%d título(s) no jogo" % (w + a))
+		if l: add.call(n, l * 0.5, "%d ligas no jogo" % l)
+		if v: add.call(n, v, "%d MVP no jogo" % v)
+		if b: add.call(n, b * 2, "%d Bola de Ouro" % b)
+	var arr: Array = out.values(); arr.sort_custom(func(a, b): return a.pts > b.pts or (a.pts == b.pts and str(a.n) < str(b.n))); return arr
+func vlendas(g) -> void:
+	var c = card("Lendas")
+	lbl(c, "Ranking por títulos, MVPs e prêmios (histórico real + o que acontece no seu jogo).", 20, DIM)
+	for x in lendas(g).slice(0, 40):
+		var h = hrow(c); h.add_child(avatar(x.n, 44, g))
+		var b = Button.new(); b.flat = true; b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.clip_text = true; b.text = "%s\n%s" % [x.n, " · ".join(x.p)]; b.add_theme_font_size_override("font_size", 22); b.pressed.connect(func(): ficha_jog(str(x.n), g)); h.add_child(b)
+		if g == "lol": h.add_child(flag_ctl(nat_iso(x.n, g)[0]))
+func vmundo() -> void:
+	var g = game; var S = O.S
+	var c1 = card("Melhores jogadores · " + gname(g))
+	var pl: Array = O.pool(g).duplicate(); pl.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
+	for p in pl.slice(0, 12):
+		var h = hrow(c1); h.add_child(avatar(p.n, 44, g)); var b = Button.new(); b.flat = true; b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.clip_text = true
+		b.text = "%s · %s · %sa" % [p.n, p.t, str(p.get("a", "?"))]; b.pressed.connect(func(): ficha_jog(str(p.n), g)); h.add_child(b); var n = Label.new(); n.text = str(p.o); n.add_theme_color_override("font_color", nota_col(p.o)); h.add_child(n)
+	var c2 = card("Revelações (jovens que entraram no mundo)")
+	var ov: Dictionary = S.mundo.ov.get(g, {}); var rev = []
+	for id in ov:
+		var e: Array = ov[id]
+		if e.size() > 3 and e[3]: rev.append([id, e])
+	rev.sort_custom(func(a, b): return a[1][2] > b[1][2])
+	var porid = {}
+	for p in O.pool(g): porid[str(p.id).split("~")[0]] = p
+	if rev.is_empty(): lbl(c2, "Ainda ninguém: os primeiros regens aparecem na virada do ano.", 20, DIM)
+	for r in rev.slice(0, 12):
+		var e: Array = r[1]; var pp = porid.get(r[0]); var h = hrow(c2); h.add_child(avatar(e[4], 44, g))
+		var b = Button.new(); b.flat = true; b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.clip_text = true
+		b.text = "%s · %s · %da · %d/%d" % [e[4], pp.t if pp != null else "", e[1], e[0], e[2]]; b.pressed.connect(func(): ficha_jog(str(e[4]), g)); h.add_child(b); h.add_child(flag_ctl(e[5]))
+	var c3 = card("Aposentadorias de lendas")
+	var ap: Array = O.aposentados(g)
+	if ap.is_empty(): lbl(c3, "Nenhuma ainda.", 20, DIM)
+	for x in ap.slice(0, 12): lbl(c3, "%d · %s (%da) · pico %d" % [x.ano, x.nick, x.idade, x.o], 22)
+	var c4 = card("Notícias do elenco")
+	var ns: Array = S.noticias.filter(func(x): return x.g == g)
+	if ns.is_empty(): lbl(c4, "Sem notícias.", 20, DIM)
+	for x in ns.slice(0, 15): lbl(c4, "S%d/%d · %s" % [x.s, x.y, x.t], 20, OK if x.k == "up" else BAD if x.k == "down" else TXT)

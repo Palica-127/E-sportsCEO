@@ -1,7 +1,7 @@
 extends Control
 ## Interface do eSports CEO (Godot). Tudo é montado por código; render() refaz a tela atual.
 
-const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"]]
+const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const BG := Color("0f1220"); const CARD := Color("1a1f35"); const ACC := Color("7c8cff"); const TXT := Color("e8ebff"); const DIM := Color("8b93b8")
 const OK := Color("49d17d"); const BAD := Color("ff6b6b"); const GOLD := Color("ffc857")
 var O: Node
@@ -98,7 +98,7 @@ func render() -> void:
 		if not O.ativo(g): continue
 		if O.aberto(g): var b = Button.new(); b.text = gname(g); b.toggle_mode = true; b.button_pressed = (g == game); b.pressed.connect(func(): game = g; squad = "t1"; render()); gbar.add_child(b)
 	for t in TABS:
-		var b = Button.new(); b.text = t[1]; b.toggle_mode = true; b.button_pressed = (t[0] == tab); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.add_theme_font_size_override("font_size", 20)
+		var b = Button.new(); b.text = t[1]; b.toggle_mode = true; b.button_pressed = (t[0] == tab); b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.add_theme_font_size_override("font_size", 17)
 		b.pressed.connect(func(): tab = t[0]; render()); nav.add_child(b)
 	match tab:
 		"org": vorg()
@@ -108,5 +108,6 @@ func render() -> void:
 		"ligas": vligas()
 		"neg": vneg()
 		"hall": vhall()
+		"mundo": vmundo()
 	scroll.scroll_vertical = 0
 func _fmt_n(n) -> String: return "%.1f mi" % (n / 1e6) if n >= 1e6 else "%.1f mil" % (n / 1e3) if n >= 1e4 else str(int(n))

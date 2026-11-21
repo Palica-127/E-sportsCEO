@@ -93,6 +93,9 @@ func vhall() -> void:
 	var ys: Array = anos.keys(); ys.sort(); ys.reverse()
 	if ys.is_empty(): lbl(card("Hall"), "Sem histórico para este jogo ainda.", 24, DIM); return
 	if hy == 0 or not ys.has(hy): hy = ys[0]
+	var cm = card()
+	chips(cm, [["ano", "Por ano"], ["lendas", "Lendas"]], hall_mode, func(id): hall_mode = id; render())
+	if hall_mode == "lendas": vlendas(g); return
 	var cn = card("Torneios por ano")
 	var h = hrow(cn)
 	var i: int = ys.find(hy)

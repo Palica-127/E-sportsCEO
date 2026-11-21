@@ -18,4 +18,4 @@ com a mesma semente, o resultado é **idêntico ao do JS** (conferido em LoL, CS
 - Visual/fumaça: `xvfb-run -a godot --path godot --rendering-driver opengl3 --script tests/shots.gd` (PNGs em /tmp/shots) e `tests/soak.gd` (6 anos, 8 jogos).
 
 ## O que ainda não foi portado da versão web
-Fotos de jogadores (a versão web também usa só iniciais enquanto `fotos/` estiver vazia), histórico real do LoL por time (aba Lendas) e a aba Mundo. O motor já tem tudo.
+Fotos de jogadores (a versão web também usa só iniciais enquanto `fotos/` estiver vazia). Hall → Lendas e a aba Mundo já estão portados.
