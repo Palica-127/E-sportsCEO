@@ -89,7 +89,15 @@ FC_PROS = ['Vejrgang','ManuBachoore','PHzin','nicolas99fc','Levi de Weerd','GuiB
 FC_CLUB = {'Vejrgang':'Team Falcons','ManuBachoore':'Team Liquid','PHzin':'Tuzzy Esports','Levi de Weerd':'Team Liquid','GuiBarros':'RBLZ Gaming',
  'Tekkz':'RBLZ Gaming','Jafonso':'Man City Esports','Umut':'RBLZ Gaming','Emre Yilmaz':'Team Liquid','Obrun':'Exeed','Yuval':'Gaimin Gladiators',
  'Brice':'Team Vitality','LJR Peixoto':'Twisted Minds','AboFawzi':'Twisted Minds','Nassada':'SC Freiburg'}
-_fc = iter(FC_PROS); _fcn = {}
+_fcn = {}
+# liga de cada pro pelo clube real (EU = clubes europeus; BR = pros brasileiros sem clube europeu; GL = resto)
+_pref = {'EU': ['Vejrgang','ManuBachoore','Levi de Weerd','Emre Yilmaz','Umut','Tekkz','GuiBarros','Brice','Nassada','Jafonso','Yuval','Obrun'],
+         'GL': ['LJR Peixoto','AboFawzi','PHzin'],
+         'BR': ['nicolas99fc','GugaFerrez','Darkley11','Caccia']}
+_rest = [x for x in FC_PROS if not any(x in v for v in _pref.values())]
+_q = {k: list(v) for k, v in _pref.items()}
+for _i, _x in enumerate(_rest): _q[('BR', 'EU', 'GL')[_i % 3]].append(_x)
+_fq = {k: iter(v) for k, v in _q.items()}
 # Nacionalidades (ISO2) só onde a fonte ou o nome do jogador deixam claro; o resto fica em branco.
 NAC = {}
 def _n(iso, *nicks):
@@ -116,7 +124,7 @@ for gi, (g, regs) in enumerate(L.items()):
         def time(nm, base):
             if nm in REAL.get(g, {}): return real_time(g, nm, base)
             if g == 'fifa':
-                n = next(_fc, None)
+                n = next(_fq[key], None)
                 if n:
                     if n in FC_CLUB:
                         c = FC_CLUB[n]; _fcn[c] = _fcn.get(c, 0) + 1
