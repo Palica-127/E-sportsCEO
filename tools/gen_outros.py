@@ -69,6 +69,8 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'Falcons': ['karrigan','kyousuke','m0NESY','NiKo','TeSeS'],
   '9z Team': ['max','HUASOPEEK','luchov','meyern','dgt'], 'paiN Gaming': ['vsm','biguzera','piriajr','snow','saffee'],
   'The MongolZ': ['bLitz','Techno','mzinho','910','cobrazera'], 'Astralis': ['HooXi','phzy','jabbi','Staehr','ryu']},
+ 'dota2': {'Team Spirit': ['Yatoro','Larl','Collapse','not_me','rue'], 'Aurora': ['Nightfall','Mikoto','Ws','Mira','kaori'],
+  'BetBoom Team': ['Kiritych','gpk','MieRo','Save-','Kataomi'], 'Team Liquid': ['m1CKe','Nisha','Ace','Boxi','tOfu']},
  'valorant': {'Karmine Corp': ['LewN','dos9','Avez','SUYGETSU','N4RRATE'], 'Nongshim RedForce': ['Ivy','Rb','Francis','Xross','Dambi'],
   'Paper Rex': ['something','f0rsakeN','d4v41','Jinggg','invy'], 'T1': ['Meteor','stax','Munchkin','iZu','BuZz'],
   'BBL Esports': ['Rosé','Crewen','Lar0k','Loita','lovers rock']},
