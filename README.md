@@ -49,3 +49,6 @@ O botão ▶ (cabeçalho e Início/Calendário) avança semana a semana sem para
 - Dota 2 (`tools/gen_hist_dota.py` → `js/data/hist_dota.js`): The International 2011–2026 com rosters, Riyadh Masters/EWC 2022–2026, ~60 Majors/Tier 1 (sem rosters); sem MVP oficial de TI; Bola de Ouro provisória só com TI e EWC.
 - Rainbow Six Siege (`tools/gen_hist_r6.py` → `js/data/hist_r6.js`): Six Invitational 2017–2026, EWC 2024–2026 e Majors 2018–2026 com MVPs conferidos; line-ups só das conferidas (a da época do título); Prêmio anual chamado "Martelo de Ouro" (Top 10 do SiegeGG em 2021/22/23/26; 2024 por títulos, provisório).
 - Free Fire (`tools/gen_hist_ff.py` → `js/data/hist_ff.js`): Mundiais 2019–2025, EWC 2024–26, LBFF 3–8/2023 e FFWS Brasil 2024; rosters só dos campeões com line-up verificada; Bola de Ouro provisória 2019–2025 (pesos do BrasLOL; 2026 fica para depois do Mundial).
+
+
+Nomes do prêmio anual por jogo (mapa `PREMIO` em `js/ui.js`): LoL Bola de Ouro, CS2 Faca de Ouro, Valorant Spike de Ouro, Free Fire Booyah de Ouro, Dota 2 Aegis de Ouro, R6 Martelo de Ouro, EA FC Ícone de Ouro, Wild Rift Nexus de Ouro.

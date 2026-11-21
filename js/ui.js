@@ -113,9 +113,10 @@
   const flagIso = c => c ? `<img class="flag" src="flags/${String(c).toLowerCase()}.svg" alt="${esc(c)}" title="${esc(c)}" loading="lazy" onerror="this.remove()">` : '';
     function vHallGen() {
     const H = (window.HIST || {})[UI.game];
+    const PREMIO = { cs2: 'Faca de Ouro', valorant: 'Spike de Ouro', ff: 'Booyah de Ouro', dota2: 'Aegis de Ouro', r6: 'Martelo de Ouro', fifa: 'Ícone de Ouro', wr: 'Nexus de Ouro' }, BON = H && (H.boNome || PREMIO[UI.game]) || 'Bola de Ouro';
     if (!H) return `<section class="card empty"><h2>${O.GAMES[UI.game].nome}</h2><p>Histórico deste jogo ainda não foi levantado.</p></section>`;
     const TIPOS = H.tipos || {}, MAIN = H.main || '', sub = ['tor', 'tit', H.bo ? 'bo' : '', 'leg'].includes(UI.hall) ? UI.hall : 'tor', fl = UI.hf && TIPOS[UI.hf] ? UI.hf : '';
-    const chips = `<div class="chips">${[['tor', '🏆 Torneios'], ['tit', '🏅 Títulos por time'], ...(H.bo ? [['bo', '🥇 ' + (H.boNome || 'Bola de Ouro')]] : []), ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
+    const chips = `<div class="chips">${[['tor', '🏆 Torneios'], ['tit', '🏅 Títulos por time'], ...(H.bo ? [['bo', '🥇 ' + BON]] : []), ['leg', '⭐ Lendas']].map(([k, n]) => `<button class="chip ${k === sub ? 'on' : ''}" data-act="hall" data-id="${k}">${n}</button>`).join('')}</div>`;
     const all = H.torneios, cnt = {}, mv = {};
     all.forEach(t => { if (t.tp === MAIN || !fl) cnt[t.c] = (cnt[t.c] || 0) + 1; });
     if (sub === 'tit') {
@@ -123,7 +124,7 @@
       return chips + `<section class="card"><h2>Títulos por time</h2><p class="hint">Majors e demais torneios levantados.</p>` + Object.entries(cm).sort((a, b) => b[1].M - a[1].M || b[1].o - a[1].o).map(([n, c]) => `<div class="tb"><span>${c.M}</span>${crest(n)}<b>${esc(n)}</b><em>${c.M ? c.M + ' ' + (TIPOS[MAIN] || MAIN) + ' · ' : ''}${c.o} outros</em></div>`).join('') + '</section>';
     }
     if (sub === 'bo') {
-      return chips + `<section class="card"><h2>${esc(H.boNome || 'Bola de Ouro')} · Top 10 do ano${H.boNota ? '' : ' (HLTV)'}</h2>${H.boNota ? `<p class="hint">${esc(H.boNota)}</p>` : ''}` + Object.keys(H.bo).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${flagIso(H.bo[y][0][1])}🥇 ${esc(H.bo[y][0][0])}</b><div class="lu">${H.bo[y].slice(1).map((r, i) => `<span>${i + 2}º ${flagIso(r[1])}${esc(r[0])}${r[3] != null ? ` <small>${r[3]}</small>` : ''}</span>`).join('')}</div></div></div>`).join('') + '</section>';
+      return chips + `<section class="card"><h2>${esc(BON)} · Top 10 do ano${H.boNota ? '' : ' (HLTV)'}</h2>${H.boNota ? `<p class="hint">${esc(H.boNota)}</p>` : ''}` + Object.keys(H.bo).sort((a, b) => b - a).map(y => `<div class="hrow"><span class="yr">${y}</span><div class="who"><b>${flagIso(H.bo[y][0][1])}🥇 ${esc(H.bo[y][0][0])}</b><div class="lu">${H.bo[y].slice(1).map((r, i) => `<span>${i + 2}º ${flagIso(r[1])}${esc(r[0])}${r[3] != null ? ` <small>${r[3]}</small>` : ''}</span>`).join('')}</div></div></div>`).join('') + '</section>';
     }
     if (sub === 'leg') {
       const L = {}; const g = n => { const k = n.toLowerCase().replace('device', 'dev1ce'); return (L[k] = L[k] || { n: n === 'device' ? 'dev1ce' : n, bo1: [], top: 0, mvp: [], iso: '', maj: [], oth: [] }); };
