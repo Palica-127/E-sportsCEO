@@ -114,11 +114,13 @@ _n('US','EliGE','Asuna','vora','bang','Cryo','skuba','brawk','Ethan','mada'); _n
 _n('UY','max','dgt'); _n('CL','HUASOPEEK'); _n('AR','luchov','meyern','tomaszin'); _n('AR','try'); _n('PL','siuhy'); _n('UA','cmtry'); _n('LT','ryu','dziugss'); _n('SE','phzy'); _n('BR','arT','dumau','latto','n1ssim'); _n('TR','XANTARES','woxic','xfl0ud'); _n('FI','Jimpphat','Derke','Jamppi'); _n('ES','SunPayus'); _n('RU','Chronicle'); _n('US','valyn','trent','leaf'); _n('MN','bLitz','Techno','mzinho','910','cobrazera')
 _n('KR','Meteor','stax','Munchkin','iZu','BuZz','Ivy','Rb','Francis','Xross','Dambi'); _n('RU','something'); _n('ID','f0rsakeN'); _n('MY','d4v41'); _n('SG','Jinggg')
 _n('TR','Rosé','Crewen','Lar0k','Loita','lovers rock'); _n('NL','ManuBachoore','Levi de Weerd'); _n('PT','Jafonso')
+# idades em 20/11/2026 só com data de nascimento conferida (ZywOo 09/11/2000, donk 25/01/2007, NiKo 16/02/1997, yuurih 22/12/1999)
+AGE = {'ZywOo': 26, 'donk': 19, 'NiKo': 29, 'yuurih': 26}
 def real_time(g, nm, base):
     ps = []
     for k, n in enumerate(REAL[g][nm]):
         o = HLTV20[n] if g == 'cs2' and n in HLTV20 else round(92 - SGG20.index(n) * 0.8) if n in SGG20 else max(55, min(90, round(base - 4 - k * 0.5)))
-        ps.append([n, o, None, NAC[n]] if n in NAC else [n, o, None])
+        ps.append([n, o, AGE.get(n), NAC[n]] if n in NAC else [n, o, AGE.get(n)])
     return {'n': nm, 'p': ps}
 res = {}
 for gi, (g, regs) in enumerate(L.items()):
