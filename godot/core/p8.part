@@ -95,5 +95,57 @@ func fin_resumo() -> Dictionary:
 		folha_t += fj; base_t += custo_base(g)
 		if p.receita > 0 or p.despesa > 0: por_jogo.append([g, p.saldo])
 	var rec = [["Patrocínios", renda_patro()], ["Seguidores e redes", renda_social()], ["Loja e itens", renda_merch()], ["Competições e streaming", comp]]
-	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Foco de mídia", custo_foco()]]
+	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Comissão técnica", staff_folha()], ["Foco de mídia", custo_foco()]]
 	return {"rec": rec, "des": des, "por_jogo": por_jogo}
+
+# ---------- Comissão técnica e vestiário (novo no Godot) ----------
+const STAFF := {
+	"tecnico": {"nome": "Treinador principal", "desc": "Cada nível: +6% na evolução dos jogadores.", "max": 5},
+	"analista": {"nome": "Analista de desempenho", "desc": "Cada nível: +0.5 de força dos times em partida.", "max": 5},
+	"preparador": {"nome": "Preparador mental", "desc": "Cada nível: +2 no alvo de moral do elenco.", "max": 5}}
+func staff_nivel(id) -> int:
+	if dir_off: return 0
+	var s = S.get("staff"); return int(s.get(id, 0)) if s is Dictionary else 0
+func staff_custo(id) -> int: return 30000 * (staff_nivel(id) + 1)
+func staff_folha() -> int:
+	if dir_off: return 0
+	var t = 0
+	for id in STAFF: t += staff_nivel(id) * 2500
+	return t
+func contratar_staff(id) -> Dictionary:
+	if not STAFF.has(id): return {"ok": false, "msg": "Cargo inválido."}
+	var n = staff_nivel(id)
+	if n >= STAFF[id].max: return {"ok": false, "msg": "Já está no nível máximo."}
+	var c = staff_custo(id)
+	if S.org.caixa < c: return {"ok": false, "msg": "Caixa insuficiente (%s)." % money(c)}
+	S.org.caixa -= c
+	if not (S.get("staff") is Dictionary): S["staff"] = {}
+	S.staff[id] = n + 1; log_("%s agora no nível %d" % [STAFF[id].nome, n + 1]); save()
+	return {"ok": true, "msg": "%s: nível %d." % [STAFF[id].nome, n + 1]}
+func dispensar_staff(id) -> Dictionary:
+	var n = staff_nivel(id)
+	if n <= 0: return {"ok": false, "msg": "Cargo vazio."}
+	S.staff[id] = n - 1; save(); return {"ok": true, "msg": "%s reduzido para o nível %d." % [STAFF[id].nome, n - 1]}
+func conversar(g, sq, i) -> Dictionary:   # conversa individual: sobe a moral, com intervalo de 4 semanas
+	var p = S.games[g].squads[sq].slots[i]
+	if p == null: return {"ok": false, "msg": "Vaga vazia."}
+	if S.tempo < int(p.get("conv", -99)) + 4: return {"ok": false, "msg": "%s já conversou há pouco (espere %d sem.)." % [p.n, int(p.get("conv", -99)) + 4 - S.tempo]}
+	p["conv"] = S.tempo; p.mo = min(100.0, p.mo + 10.0); save()
+	return {"ok": true, "msg": "Conversa com %s: moral subiu." % p.n}
+func vestiario_tick() -> void:
+	if dir_off: return
+	for g in GAMES:
+		if not ativo(g) or not aberto(g): continue
+		var t = titulares(g, "t1").filter(func(p): return p != null)
+		if t.size() < 2: continue
+		var baixos = t.filter(func(p): return p.mo < 45)
+		if baixos.size() >= 1 and rnd() < 0.10:
+			var a = baixos[floori(rnd() * baixos.size())]; var b = t[floori(rnd() * t.size())]
+			if b != a:
+				a.mo = max(0.0, a.mo - 5.0); b.mo = max(0.0, b.mo - 5.0); noticia("Discussão no vestiário: %s e %s" % [a.n, b.n], g, "down"); log_("%s: discussão entre %s e %s" % [GAMES[g].curto, a.n, b.n])
+		else:
+			var m = 0.0
+			for p in t: m += p.mo
+			if m / t.size() > 80.0 and rnd() < 0.06:
+				for p in t: p.mo = min(100.0, p.mo + 3.0)
+				noticia("Elenco unido: o ambiente está ótimo", g, "up")

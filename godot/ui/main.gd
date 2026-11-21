@@ -371,6 +371,8 @@ func velenco() -> void:
 		var l2 = Label.new(); l2.text = "%s · %sa · %s · pot %d · contrato %d" % [rl, str(p.get("a", "?")), tr.s, p.pot, int(p.get("ct", O.CONTRATO))]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
 		var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 32); ov.add_theme_color_override("font_color", nota_col(p.o)); ov.custom_minimum_size.x = 56; ov.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; rr.add_child(ov)
 		ignore_mouse(rb[0])
+	vvestiario(g, squad)
+	vstaff()
 	_base_card(g)
 func _moral_media(g, sq) -> float:
 	var t: Array = O.titulares(g, sq).filter(func(p): return p != null)
@@ -964,3 +966,27 @@ func vfin() -> void:
 		var cj = card("Resultado por jogo", null, GOLD)
 		for x in R.por_jogo:
 			var h = hrow(cj); pill(h, gname(x[0]), GCOL.get(x[0], ACC), true); var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(sl); lbl(h, O.money(x[1]), 24, OK if x[1] >= 0 else BAD, false)
+
+# ---------- Vestiário e comissão técnica ----------
+func vvestiario(g, sq) -> void:
+	var q = O.S.games[g].squads[sq]; var c = card("Vestiário", null, ACC2)
+	var tem = false
+	for i in q.slots.size():
+		var p = q.slots[i]
+		if p == null: continue
+		tem = true; var h = hrow(c); var nm = lbl(h, p.n, 22, TXT, false); nm.custom_minimum_size.x = 150; nm.clip_text = true
+		var pb = ProgressBar.new(); pb.max_value = 100; pb.value = p.mo; pb.show_percentage = false; pb.custom_minimum_size.y = 14; pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL; pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var mc = OK if p.mo >= 70 else GOLD if p.mo >= 45 else BAD
+		pb.add_theme_stylebox_override("background", _sbf(SURF2, 8, null, 0, 0)); pb.add_theme_stylebox_override("fill", _sbf(mc, 8, null, 0, 0)); h.add_child(pb)
+		var b = btn(h, "Conversar", func(): res(O.conversar(g, sq, i))); b.custom_minimum_size = Vector2(150, 48); b.add_theme_font_size_override("font_size", 21)
+	if not tem: lbl(c, "Contrate jogadores para ver o clima do elenco.", 21, DIM)
+func vstaff() -> void:
+	var c = card("Comissão técnica", null, GOLD)
+	lbl(c, "Vale para todos os seus times. Salário: R$ 2,5 mil por nível por semana.", 19, DIM)
+	for id in O.STAFF:
+		var d: Dictionary = O.STAFF[id]; var n: int = O.staff_nivel(id)
+		var h = hrow(c); var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 4); h.add_child(v)
+		lbl(v, d.nome, 25); lbl(v, d.desc, 18, DIM); bar(v, "", n, d.max, GOLD, "%d/%d" % [n, d.max])
+		var bb = VBoxContainer.new(); h.add_child(bb)
+		btn(bb, "Máximo" if n >= d.max else O.money(O.staff_custo(id)), func(): res(O.contratar_staff(id)), n >= d.max)
+		if n > 0: var bd = btn(bb, "Reduzir", func(): res(O.dispensar_staff(id))); bd.custom_minimum_size.y = 44; bd.add_theme_font_size_override("font_size", 20)

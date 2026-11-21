@@ -87,12 +87,12 @@ func atualiza_moral(p, g, sq, tit) -> void:
 			if x.v: v += 1
 		res = (float(v) / l.size() - 0.5) * 16
 	var ext = {"men": 6, "mec": -4, "fis": 2}.get(p.foco, 0)
-	var tgt = 62 + infra_nivel("psi", g) * 6 + infra_nivel("casa", g) * 1.5 + (8 if tit else -10) + res + (4 if p.get("tr") == "lid" else 0) + (3 if p.get("tr") == "rel" else 0) + (6 if p.get("estrela", false) else 0) + ext
+	var tgt = 62 + infra_nivel("psi", g) * 6 + infra_nivel("casa", g) * 1.5 + (8 if tit else -10) + res + (4 if p.get("tr") == "lid" else 0) + (3 if p.get("tr") == "rel" else 0) + (6 if p.get("estrela", false) else 0) + ext + staff_nivel("preparador") * 2
 	p.mo = cl(p.mo + (tgt - p.mo) * 0.12, 55 if p.get("tr") == "frio" else 0, 100)
 	if p.get("neg", 0) > 0: p.neg -= 1
 func treina_um(p, g, sq, tit) -> void:
 	iniciar_jogador(p); p.tmp += 1; atualiza_moral(p, g, sq, tit)
-	var x = ganho_xp(p, g, sq, tit); p["rate"] = x; p.xp += x
+	var x = ganho_xp(p, g, sq, tit) * (1.0 + 0.06 * staff_nivel("tecnico")); p["rate"] = x; p.xp += x
 	while p.o < p.pot and p.xp >= xp_necessario(p.o):
 		p.xp -= xp_necessario(p.o); p.o += 1
 		if p.get("estrela", false) and S.estrela != null: S.estrela.o = p.o
@@ -308,4 +308,4 @@ func prontos(g, sq) -> bool:
 func forca(g, sq) -> float:
 	var st = titulares(g, sq); var s = 0.0
 	for p in st: s += 55.0 if p == null else float(p.o)
-	return s / st.size() + infra_bonus(g) + bonus_temp(g) + bonus_equipe(g, sq)
+	return s / st.size() + infra_bonus(g) + bonus_temp(g) + bonus_equipe(g, sq) + staff_nivel("analista") * 0.5

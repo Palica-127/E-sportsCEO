@@ -561,12 +561,12 @@ func atualiza_moral(p, g, sq, tit) -> void:
 			if x.v: v += 1
 		res = (float(v) / l.size() - 0.5) * 16
 	var ext = {"men": 6, "mec": -4, "fis": 2}.get(p.foco, 0)
-	var tgt = 62 + infra_nivel("psi", g) * 6 + infra_nivel("casa", g) * 1.5 + (8 if tit else -10) + res + (4 if p.get("tr") == "lid" else 0) + (3 if p.get("tr") == "rel" else 0) + (6 if p.get("estrela", false) else 0) + ext
+	var tgt = 62 + infra_nivel("psi", g) * 6 + infra_nivel("casa", g) * 1.5 + (8 if tit else -10) + res + (4 if p.get("tr") == "lid" else 0) + (3 if p.get("tr") == "rel" else 0) + (6 if p.get("estrela", false) else 0) + ext + staff_nivel("preparador") * 2
 	p.mo = cl(p.mo + (tgt - p.mo) * 0.12, 55 if p.get("tr") == "frio" else 0, 100)
 	if p.get("neg", 0) > 0: p.neg -= 1
 func treina_um(p, g, sq, tit) -> void:
 	iniciar_jogador(p); p.tmp += 1; atualiza_moral(p, g, sq, tit)
-	var x = ganho_xp(p, g, sq, tit); p["rate"] = x; p.xp += x
+	var x = ganho_xp(p, g, sq, tit) * (1.0 + 0.06 * staff_nivel("tecnico")); p["rate"] = x; p.xp += x
 	while p.o < p.pot and p.xp >= xp_necessario(p.o):
 		p.xp -= xp_necessario(p.o); p.o += 1
 		if p.get("estrela", false) and S.estrela != null: S.estrela.o = p.o
@@ -782,7 +782,7 @@ func prontos(g, sq) -> bool:
 func forca(g, sq) -> float:
 	var st = titulares(g, sq); var s = 0.0
 	for p in st: s += 55.0 if p == null else float(p.o)
-	return s / st.size() + infra_bonus(g) + bonus_temp(g) + bonus_equipe(g, sq)
+	return s / st.size() + infra_bonus(g) + bonus_temp(g) + bonus_equipe(g, sq) + staff_nivel("analista") * 0.5
 
 # ---------- Competições ----------
 func prob_vit(fa, fb) -> float: return 1.0 / (1.0 + exp(-(fa - fb) / 4.0))
@@ -1487,7 +1487,7 @@ func projecao(g) -> Dictionary:
 	despesa += custo_base(g)
 	return {"receita": receita, "despesa": despesa, "saldo": receita - despesa}
 func projecao_org() -> Dictionary:
-	var receita = renda_patro() + renda_social() + renda_merch(); var despesa = upkeep_semanal() + custo_foco()
+	var receita = renda_patro() + renda_social() + renda_merch(); var despesa = upkeep_semanal() + custo_foco() + staff_folha()
 	for g in GAMES:
 		if ativo(g):
 			var p = projecao(g); receita += p.receita; despesa += p.despesa
@@ -1510,7 +1510,7 @@ func avancar(semanas: int) -> bool:
 					for x in S.log.slice(0, min(S.logN - l0, S.log.size())):
 						var rx = RegEx.new(); rx.compile("^S\\d+/\\d+: "); notas.append(rx.sub(x, ""))
 					d["notas"] = notas
-		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick()
+		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick()
 		S.org.semana += 1
 		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
 		mundo_tick()
@@ -1882,5 +1882,57 @@ func fin_resumo() -> Dictionary:
 		folha_t += fj; base_t += custo_base(g)
 		if p.receita > 0 or p.despesa > 0: por_jogo.append([g, p.saldo])
 	var rec = [["Patrocínios", renda_patro()], ["Seguidores e redes", renda_social()], ["Loja e itens", renda_merch()], ["Competições e streaming", comp]]
-	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Foco de mídia", custo_foco()]]
+	var des = [["Salários", folha_t], ["Estrutura e base", base_t], ["Manutenção da org", upkeep_semanal()], ["Comissão técnica", staff_folha()], ["Foco de mídia", custo_foco()]]
 	return {"rec": rec, "des": des, "por_jogo": por_jogo}
+
+# ---------- Comissão técnica e vestiário (novo no Godot) ----------
+const STAFF := {
+	"tecnico": {"nome": "Treinador principal", "desc": "Cada nível: +6% na evolução dos jogadores.", "max": 5},
+	"analista": {"nome": "Analista de desempenho", "desc": "Cada nível: +0.5 de força dos times em partida.", "max": 5},
+	"preparador": {"nome": "Preparador mental", "desc": "Cada nível: +2 no alvo de moral do elenco.", "max": 5}}
+func staff_nivel(id) -> int:
+	if dir_off: return 0
+	var s = S.get("staff"); return int(s.get(id, 0)) if s is Dictionary else 0
+func staff_custo(id) -> int: return 30000 * (staff_nivel(id) + 1)
+func staff_folha() -> int:
+	if dir_off: return 0
+	var t = 0
+	for id in STAFF: t += staff_nivel(id) * 2500
+	return t
+func contratar_staff(id) -> Dictionary:
+	if not STAFF.has(id): return {"ok": false, "msg": "Cargo inválido."}
+	var n = staff_nivel(id)
+	if n >= STAFF[id].max: return {"ok": false, "msg": "Já está no nível máximo."}
+	var c = staff_custo(id)
+	if S.org.caixa < c: return {"ok": false, "msg": "Caixa insuficiente (%s)." % money(c)}
+	S.org.caixa -= c
+	if not (S.get("staff") is Dictionary): S["staff"] = {}
+	S.staff[id] = n + 1; log_("%s agora no nível %d" % [STAFF[id].nome, n + 1]); save()
+	return {"ok": true, "msg": "%s: nível %d." % [STAFF[id].nome, n + 1]}
+func dispensar_staff(id) -> Dictionary:
+	var n = staff_nivel(id)
+	if n <= 0: return {"ok": false, "msg": "Cargo vazio."}
+	S.staff[id] = n - 1; save(); return {"ok": true, "msg": "%s reduzido para o nível %d." % [STAFF[id].nome, n - 1]}
+func conversar(g, sq, i) -> Dictionary:   # conversa individual: sobe a moral, com intervalo de 4 semanas
+	var p = S.games[g].squads[sq].slots[i]
+	if p == null: return {"ok": false, "msg": "Vaga vazia."}
+	if S.tempo < int(p.get("conv", -99)) + 4: return {"ok": false, "msg": "%s já conversou há pouco (espere %d sem.)." % [p.n, int(p.get("conv", -99)) + 4 - S.tempo]}
+	p["conv"] = S.tempo; p.mo = min(100.0, p.mo + 10.0); save()
+	return {"ok": true, "msg": "Conversa com %s: moral subiu." % p.n}
+func vestiario_tick() -> void:
+	if dir_off: return
+	for g in GAMES:
+		if not ativo(g) or not aberto(g): continue
+		var t = titulares(g, "t1").filter(func(p): return p != null)
+		if t.size() < 2: continue
+		var baixos = t.filter(func(p): return p.mo < 45)
+		if baixos.size() >= 1 and rnd() < 0.10:
+			var a = baixos[floori(rnd() * baixos.size())]; var b = t[floori(rnd() * t.size())]
+			if b != a:
+				a.mo = max(0.0, a.mo - 5.0); b.mo = max(0.0, b.mo - 5.0); noticia("Discussão no vestiário: %s e %s" % [a.n, b.n], g, "down"); log_("%s: discussão entre %s e %s" % [GAMES[g].curto, a.n, b.n])
+		else:
+			var m = 0.0
+			for p in t: m += p.mo
+			if m / t.size() > 80.0 and rnd() < 0.06:
+				for p in t: p.mo = min(100.0, p.mo + 3.0)
+				noticia("Elenco unido: o ambiente está ótimo", g, "up")
