@@ -25,3 +25,6 @@ O preset "Android" já está em `export_presets.cfg`. No editor: Editor → Gere
 
 ## Novidades só do Godot
 Diretoria (objetivos anuais e confiança), aba Finanças, bônus por título e rescisão de patrocínio, comissão técnica, vestiário (conversas e eventos), olheiros e propostas de compra. Tudo isso está em `core/p8.part` e `ui/u7.part` e não existe na versão web. Os testes de paridade com o JS (`tests/trace.gd`) ligam `dir_off` para desativar essas regras e continuarem idênticos.
+
+## Testes de longo prazo
+`tests/soak20.gd` simula 10 anos com os 8 jogos, renova contratos, renderiza todas as abas todo ano, mede tempo de render (avisa acima de 250 ms) e confere o save (JSON ida e volta). Resultado atual: sem renders lentos, save ~360 KB após 10 anos.
