@@ -87,7 +87,7 @@ REAL = {'cs2': {'MOUZ': ['torzsi','xertioN','Spinx','xelex','PR'], 'Vitality': [
   'Team Vitality': ['Sayonara','Jamppi','jawgemo','PROFEK','Chronicle'], 'G2 Esports': ['kiNgg','leaf','Sato','HYUNMIN','trent']},
  'r6': {'FaZe Clan': ['Cyber','soulz1','KDS','Handyy','VITAKING'], 'FURIA': ['HerdsZ','Loira','DiasLucas','volpz','Bokzera'],
   'Team Liquid': ['Kheyze','FelipoX','Nade','Maia','Jv92'], 'LOUD': ['resetz','stemp','Gabu7z','live','Flastry'],
-  'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Hotancold','GMZ','SpiriTz','Atom','Kason'],
+  'DarkZero Esports': ['Fultz','Kyno','njr','J9O','Nuers'], '100 Thieves': ['Yoggah','GMZ','SpiriTz','Atom','Panbazou'],
   'Cloud9': ['Centir','Focal','Ewzy','Eddy','Kixhro'],
   'Fluxo W7M': ['L0BIN','Paluh','Dotz','Hatez','Fntzy'], 'Falcons': ['LikEfac','jume','Solotov','Yuzus','BriD'], 'G2 Esports': ['Stompn','Benjamaster','Shaiiko','Doki','Alem4o']}}
 # EA FC: pros reais do circuito FC Pro 2026 (EA/FUTWIZ/Red Bull). Nota por ranking mundial quando citado; sem time real (as orgs da liga são fictícias para este jogo).
