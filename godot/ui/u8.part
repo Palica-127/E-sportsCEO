@@ -40,3 +40,66 @@ func vnoticias() -> void:
 		var v = VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 0); h.add_child(v)
 		lbl(v, x.t, 23 if x.i >= 2 else 21, TXT if x.i >= 2 else DIM)
 		lbl(v, "S%d/%d%s" % [x.s, x.y, (" · " + gname(x.g)) if x.g != "" else ""], 17, DIM, false)
+
+# ---------- Rankings, recordes e rivalidades (bloco 4) ----------
+var rank_modo = "orgs"
+func _rank_pontos(g) -> Dictionary:
+	var H: Dictionary = O.hist_de(g); var real: Dictionary = O.HIST.get(g, {}); var P = {}; var tit = {}
+	var all: Array = []
+	all.append_array(real.get("torneios", [])); all.append_array(H.torneios)
+	if g == "lol":
+		for y in O.LOLX.get("wct", {}): all.append({"a": int(y), "c": O.LOLX.wct[y], "v": O.LOLX.get("wcv", {}).get(y, "?")})
+		for y in O.LOLX.get("mst", {}): all.append({"a": int(y), "c": O.LOLX.mst[y], "v": O.LOLX.get("msv", {}).get(y, "?")})
+	for t in all:
+		var c = org_cur(str(t.c)); var v = org_cur(str(t.v))
+		P[c] = P.get(c, 0) + 5; tit[c] = tit.get(c, 0) + 1
+		if v != "" and v != "?": P[v] = P.get(v, 0) + 2
+	return {"p": P, "t": tit, "all": all}
+func vrank() -> void:
+	var g = game; var S = O.S; var me: String = S.org.nome
+	var c0 = card()
+	chips(c0, [["orgs", "Orgs"], ["rec", "Recordes"], ["riv", "Rivalidades"]], rank_modo, func(id): rank_modo = id; render())
+	var R = _rank_pontos(g); var P: Dictionary = R.p
+	if rank_modo == "orgs":
+		var c = card("Ranking de orgs · " + gname(g))
+		lbl(c, "Pontos: título = 5, vice = 2 (histórico real e simulado).", 20, DIM)
+		var arr = P.keys(); arr.sort_custom(func(a, b): return P[a] > P[b] or (P[a] == P[b] and a < b))
+		if arr.is_empty(): lbl(c, "Sem histórico ainda.", 22, DIM)
+		var mypos = arr.find(me)
+		for i in min(15, arr.size()):
+			var h = hrow(c); lbl(h, "%d." % (i + 1), 24, GOLD); lbl(h, arr[i], 24, TXT if arr[i] != me else GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			lbl(h, "%d pts · %d tít." % [P[arr[i]], R.t.get(arr[i], 0)], 22, TXT if arr[i] != me else GOLD)
+		if mypos >= 15: lbl(c, "Sua org: %dº lugar (%d pts)" % [mypos + 1, P[me]], 24, GOLD)
+		elif mypos < 0: lbl(c, "Sua org ainda não pontuou neste jogo.", 22, DIM)
+	elif rank_modo == "rec":
+		var c = card("Recordes da " + me)
+		var tit = 0; var vic = 0; var best = 0; var seq = 0; var anos = {}
+		for t in R.all:
+			if org_cur(str(t.c)) == me: tit += 1; anos[int(t.a)] = true
+			elif org_cur(str(t.v)) == me: vic += 1
+		var ys = anos.keys(); ys.sort()
+		for i in ys.size():
+			seq = seq + 1 if i > 0 and ys[i] == ys[i - 1] + 1 else 1
+			best = max(best, seq)
+		for kv in [["Títulos", tit], ["Vice-campeonatos", vic], ["Anos com título", ys.size()], ["Maior sequência de anos com título", best]]:
+			var h = hrow(c); lbl(h, kv[0], 24, TXT).size_flags_horizontal = Control.SIZE_EXPAND_FILL; lbl(h, str(kv[1]), 28, GOLD)
+		var c2 = card("Recordes do mundo")
+		var top = P.keys(); top.sort_custom(func(a, b): return R.t.get(a, 0) > R.t.get(b, 0))
+		if top.size(): lbl(c2, "Mais títulos: %s (%d)" % [top[0], R.t.get(top[0], 0)], 24, TXT)
+		var pl: Array = O.pool(g).duplicate(); pl.sort_custom(func(a, b): return a.o > b.o)
+		if pl.size(): lbl(c2, "Maior nota atual: %s (%d) · %s" % [pl[0].n, pl[0].o, pl[0].t], 24, TXT)
+		if S.mundo.apos.size():
+			var ap = O.aposentados(g)
+			if ap.size(): lbl(c2, "Aposentado com maior pico: %s (%d)" % [ap[0].nick, ap[0].o], 24, TXT)
+	else:
+		var c = card("Rivalidades da " + me)
+		lbl(c, "Quem mais cruzou seu caminho em finais.", 20, DIM)
+		var riv = {}
+		for t in R.all:
+			var tc = org_cur(str(t.c)); var tv = org_cur(str(t.v))
+			if tc == me and tv != "": riv[tv] = riv.get(tv, [0, 0]); riv[tv][0] += 1
+			elif tv == me: riv[tc] = riv.get(tc, [0, 0]); riv[tc][1] += 1
+		var ks = riv.keys(); ks.sort_custom(func(a, b): return riv[a][0] + riv[a][1] > riv[b][0] + riv[b][1])
+		if ks.is_empty(): lbl(c, "Nenhuma final disputada ainda.", 22, DIM)
+		for k in ks.slice(0, 10):
+			var h = hrow(c); lbl(h, k, 24, TXT).size_flags_horizontal = Control.SIZE_EXPAND_FILL; lbl(h, "%d vit. · %d der." % [riv[k][0], riv[k][1]], 22, TXT)

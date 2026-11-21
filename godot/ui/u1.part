@@ -3,7 +3,7 @@ extends Control
 
 const TABS := [["org", "Org"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"], ["ligas", "Ligas"], ["neg", "Negócios"], ["hall", "Hall"], ["mundo", "Mundo"]]
 const NAV_MAIN := [["org", "Painel"], ["elenco", "Elenco"], ["mercado", "Mercado"], ["cal", "Agenda"]]
-const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
+const NAV_MORE := [["inbox", "Caixa de entrada"], ["noticias", "Central de notícias"], ["ligas", "Ligas e tabelas"], ["fin", "Finanças"], ["neg", "Negócios e patrocínios"], ["rank", "Rankings e recordes"], ["hall", "Hall da fama"], ["mundo", "Mundo e revelações"]]
 const BG := Color("0a0d16"); const SURF := Color("131929"); const SURF2 := Color("1b2338"); const LINE := Color("27314a")
 const CARD := SURF; const ACC := Color("4f8cff"); const ACC2 := Color("22d3ee"); const TXT := Color("eef1ff"); const DIM := Color("8a94b8")
 const OK := Color("3ddc97"); const BAD := Color("ff5d6c"); const GOLD := Color("ffc857")
@@ -193,6 +193,7 @@ func render() -> void:
 		"noticias": vnoticias()
 		"fin": vfin()
 		"neg": vneg()
+		"rank": vrank()
 		"hall": vhall()
 		"mundo": vmundo()
 	scroll.scroll_vertical = 0
