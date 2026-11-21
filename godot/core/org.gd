@@ -1520,7 +1520,7 @@ func avancar(semanas: int) -> bool:
 					for x in S.log.slice(0, min(S.logN - l0, S.log.size())):
 						var rx = RegEx.new(); rx.compile("^S\\d+/\\d+: "); notas.append(rx.sub(x, ""))
 					d["notas"] = notas
-		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick()
+		reg_semana(); treinar_semana(); contratos(); semanal_org(); S.tempo += 1; fin_tick(); vestiario_tick(); propostas_tick(); contrato_tick()
 		S.org.semana += 1
 		if S.org.semana > 52: S.org.semana = 1; S.org.ano += 1; reg_fim_ano(S.org.ano - 1); dir_virada(S.org.ano - 1)
 		mundo_tick()
@@ -2115,8 +2115,54 @@ func msg_agir(id, i) -> Dictionary:
 			if ix < 0: r = {"ok": false, "msg": "A proposta expirou."}
 			elif op.k == "prop_sim": r = aceitar_proposta(ix)
 			else: recusar_proposta(ix); r = {"ok": true, "msg": "Proposta recusada."}
+		"renov":
+			var f = achar_jog(op.pid)
+			if f == null: r = {"ok": false, "msg": "Jogador não está mais no elenco."}
+			else: r = renovar(f[0], f[1], f[2], op.of, 2)
+		"lib":
+			var f2 = achar_jog(op.pid)
+			if f2 == null: r = {"ok": false, "msg": "Jogador não está mais no elenco."}
+			else: r = vender(f2[0], f2[1], f2[2])
+		"conv":
+			var f3 = achar_jog(op.pid)
+			if f3 == null: r = {"ok": false, "msg": "Jogador não está mais no elenco."}
+			else:
+				var p3 = f3[3]; var bonus: int = int(op.v)
+				if S.org.caixa < bonus: r = {"ok": false, "msg": "Caixa insuficiente para o bônus."}
+				else:
+					S.org.caixa -= bonus; p3.mo = min(100.0, p3.mo + 30.0); p3.erase("pedido"); r = {"ok": true, "msg": "%s aceitou ficar (bônus %s)." % [p3.n, money(bonus)]}
+		"ign":
+			var f4 = achar_jog(op.pid)
+			if f4 != null: f4[3].mo = max(0.0, f4[3].mo - 6.0); f4[3].erase("pedido")
+			r = {"ok": true, "msg": "Você ignorou."}
 		"evento":
 			if S.evento != null and S.evento.id == op.eid: r = escolher_evento(int(op.a))
 			else: r = {"ok": false, "msg": "O evento já expirou."}
 	m.res = op.t if r.ok else "Expirou"
 	m.lida = true; save(); return r
+
+# ---------- Contratos e insatisfação (bloco 3, só Godot) ----------
+func achar_jog(id):
+	for g in GAMES:
+		for sq in SQUADS:
+			var sl = S.games[g].squads[sq].slots
+			for i in sl.size():
+				if sl[i] != null and sl[i].get("id") == id: return [g, sq, i, sl[i]]
+	return null
+func contrato_tick() -> void:
+	if dir_off: return
+	for g in GAMES:
+		if not ativo(g) or not aberto(g): continue
+		for sq in ["t1", "t2"]:
+			for p in S.games[g].squads[sq].slots:
+				if p == null or p.get("estrela", false): continue
+				if p.get("ct") == 26 and p.o >= 55:
+					var c1 = proposta_renovar(p, "justa", 2); var c2 = proposta_renovar(p, "alta", 2)
+					msg("diretoria", "Contrato de %s termina em 6 meses" % p.n, "%s (nota %d, %s) fica livre em 26 semanas. Renovar agora evita perdê-lo de graça. Humor atual: %d." % [p.n, p.o, GAMES[g].curto, int(p.mo)],
+						[{"t": "Renovar (%s)" % money(c1.custo), "k": "renov", "pid": p.id, "of": "justa"}, {"t": "Generosa (%s)" % money(c2.custo), "k": "renov", "pid": p.id, "of": "alta"}, {"t": "Deixar para depois", "k": "ign", "pid": p.id}], g)
+				elif p.mo < 22 and not p.get("pedido", false) and rnd() < 0.05:
+					p["pedido"] = true; var b: int = jr(fee(p.o) * 0.15 / 1000.0) * 1000
+					msg("evento", "%s pede para sair" % p.n, "%s está insatisfeito (humor %d) e quer deixar a org. Você pode liberá-lo pelo valor de mercado, tentar convencê-lo com um bônus ou ignorar (o clima piora)." % [p.n, int(p.mo)],
+						[{"t": "Liberar (%s)" % money(valor_venda(p)), "k": "lib", "pid": p.id}, {"t": "Bônus %s" % money(b), "k": "conv", "pid": p.id, "v": b}, {"t": "Ignorar", "k": "ign", "pid": p.id}], g)
+	if S.org.caixa < 0 and S.tempo % 4 == 0 and rnd() < 0.5:
+		msg("diretoria", "Caixa no vermelho", "A org está com %s em caixa. Venda jogadores, corte staff ou renegocie patrocínios antes que a diretoria perca a confiança." % money(S.org.caixa), [], "")
