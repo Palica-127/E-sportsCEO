@@ -25,9 +25,14 @@ func velenco() -> void:
 		if p == null:
 			lbl(row, "%s — vaga vazia (%s)" % [rl, tit], 24, DIM); continue
 		var tr: Dictionary = O.tendencia(p, g, squad, i < n)
-		var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.clip_text = true
-		b.text = "%s  %s  %d/%d %s  %sa  ct %d" % [rl, p.n, p.o, p.pot, tr.s, str(p.get("a", "?")), int(p.get("ct", O.CONTRATO))]
-		b.pressed.connect(func(): ficha_slot(g, squad, i)); row.add_child(b)
+		row.queue_free()
+		var rb = rowbtn(c, func(): ficha_slot(g, squad, i)); var rr: HBoxContainer = rb[1]
+		var av = avatar(p.n, 56, g); rr.add_child(av)
+		var cv = VBoxContainer.new(); cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; cv.add_theme_constant_override("separation", 0); rr.add_child(cv)
+		var l1 = Label.new(); l1.text = p.n; l1.add_theme_font_size_override("font_size", 28); cv.add_child(l1)
+		var l2 = Label.new(); l2.text = "%s · %sa · %s · pot %d · contrato %d" % [rl, str(p.get("a", "?")), tr.s, p.pot, int(p.get("ct", O.CONTRATO))]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
+		var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 32); ov.add_theme_color_override("font_color", nota_col(p.o)); ov.custom_minimum_size.x = 56; ov.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; rr.add_child(ov)
+		ignore_mouse(rb[0])
 	_base_card(g)
 func _moral_media(g, sq) -> float:
 	var t: Array = O.titulares(g, sq).filter(func(p): return p != null)
@@ -92,9 +97,14 @@ func vmercado() -> void:
 	lst.sort_custom(func(a, b): return a.o > b.o or (a.o == b.o and a.id < b.id))
 	var c2 = card("%d jogadores" % lst.size())
 	for p in lst.slice(0, merc.n):
-		var h = hrow(c2); h.add_child(crest(p.t, 44)); var b = Button.new(); b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b.custom_minimum_size.y = 64; b.clip_text = true
-		b.text = "%s %s · %d · %sa · %s" % [p.r, p.n, p.o, str(p.get("a", "?")), p.t]; b.pressed.connect(func(): ficha_mercado(g, p)); h.add_child(b)
-		btn(h, O.money(O.fee(p.o)), func(): res(O.contratar(g, squad, p)), O.S.org.caixa < O.fee(p.o))
+		var rb = rowbtn(c2, func(): ficha_mercado(g, p)); var rr: HBoxContainer = rb[1]
+		rr.add_child(crest(p.t, 48))
+		var cv = VBoxContainer.new(); cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; cv.add_theme_constant_override("separation", 0); rr.add_child(cv)
+		var l1 = Label.new(); l1.text = p.n; l1.add_theme_font_size_override("font_size", 27); l1.clip_text = true; cv.add_child(l1)
+		var l2 = Label.new(); l2.text = "%s · %sa · %s" % [p.r, str(p.get("a", "?")), p.t]; l2.add_theme_font_size_override("font_size", 19); l2.add_theme_color_override("font_color", DIM); l2.clip_text = true; cv.add_child(l2)
+		var ov = Label.new(); ov.text = str(p.o); ov.add_theme_font_size_override("font_size", 30); ov.add_theme_color_override("font_color", nota_col(p.o)); ov.custom_minimum_size.x = 50; ov.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; rr.add_child(ov)
+		var pg = Label.new(); pg.text = O.money(O.fee(p.o)); pg.add_theme_font_size_override("font_size", 21); pg.add_theme_color_override("font_color", OK if O.S.org.caixa >= O.fee(p.o) else BAD); pg.custom_minimum_size.x = 100; pg.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; rr.add_child(pg)
+		ignore_mouse(rb[0])
 	if lst.size() > merc.n: btn(c2, "Mostrar mais", func(): merc.n += 25; render())
 func ficha_mercado(g, p) -> void:
 	var v = modal(p.n)

@@ -30,29 +30,46 @@ func jr100(x) -> int: return int(round(x * 100))
 # ---------- Org ----------
 func vorg() -> void:
 	var S = O.S; var pr: Dictionary = O.projecao_org()
-	var c = card("Resumo semanal")
-	lbl(c, "Receita %s · Despesa %s · Saldo %s" % [O.money(pr.receita), O.money(pr.despesa), O.money(pr.saldo)], 24, OK if pr.saldo >= 0 else BAD)
+	kpi(content, [["SALDO / SEMANA", O.money(pr.saldo), OK if pr.saldo >= 0 else BAD], ["RECEITA", O.money(pr.receita), TXT], ["DESPESA", O.money(pr.despesa), TXT]])
+	var c = card()
 	var h = hrow(c)
-	btn(h, "⏸ Parar" if play else "▶ Avançar", _toggle_play, false, true)
-	btn(h, "+1 semana", func(): _manual(1))
-	btn(h, "Até o jogo", _ate_jogo)
+	var b1 = btn(h, "Parar" if play else "Avançar", _toggle_play, false, true); b1.custom_minimum_size.y = 72; b1.size_flags_horizontal = Control.SIZE_EXPAND_FILL; b1.add_theme_font_size_override("font_size", 30)
+	var b2 = btn(h, "+1 semana", func(): _manual(1)); b2.custom_minimum_size.y = 72
+	var b3 = btn(h, "Até o jogo", _ate_jogo); b3.custom_minimum_size.y = 72
 	var h2 = hrow(c)
-	var tg = CheckButton.new(); tg.text = "Pular partidas"; tg.button_pressed = auto; tg.toggled.connect(func(on):
+	var tg = CheckButton.new(); tg.text = "Pular partidas"; tg.button_pressed = auto; tg.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tg.toggled.connect(func(on):
 		auto = on
 		if on: FileAccess.open("user://auto", FileAccess.WRITE).store_string("1")
 		else: DirAccess.remove_absolute(ProjectSettings.globalize_path("user://auto"))); h2.add_child(tg)
+	lbl(h2, "Velocidade", 22, DIM, false)
 	var sp = OptionButton.new(); sp.add_item("1x"); sp.add_item("2x"); sp.add_item("6x"); sp.selected = [0.45, 0.22, 0.07].find(vel) if [0.45, 0.22, 0.07].has(vel) else 0
 	sp.item_selected.connect(func(i): vel = [0.45, 0.22, 0.07][i]; if play: timer.start(vel)); h2.add_child(sp)
+	# próximo jogo (o mais cedo entre todos os jogos)
+	var prox = null
 	for g in O.GAMES:
 		if not O.ativo(g) or not O.aberto(g): continue
-		var cg = card(O.GAMES[g].nome)
 		for sq in O.SQUADS:
-			var cp = O.comp_for(g, sq)
-			if cp == null: continue
-			var st: String = {"off": "entressafra", "wait": "à espera (complete os titulares)", "reg": "rodada %d" % (cp.round + 1), "po": "playoffs", "intl": "internacional"}[cp.phase]
-			lbl(cg, "%s · força %.1f · %s" % [O.SQUADS[sq].nome, O.forca(g, sq), st], 24)
-	var cn = card("Notícias")
-	for l in S.log.slice(0, 10): lbl(cn, l, 22, DIM)
+			if O.comp_for(g, sq) == null: continue
+			for a in O.agenda(g, sq, 3):
+				a["g"] = g; a["tag"] = O.tag_de(g, sq)
+				if a.tipo != "ini" and (prox == null or a.em < prox.em): prox = a
+	var cp = card("Próximo jogo", null, GOLD)
+	if prox == null: lbl(cp, "Nada agendado: complete os titulares de um time.", 24, DIM)
+	else:
+		var hp = hrow(cp); pill(hp, gname(prox.g), GCOL.get(prox.g, ACC), true); pill(hp, prox.tag, DIM); pill(hp, "em %d sem." % prox.em if prox.em > 0 else "esta semana", GOLD)
+		lbl(cp, "%s%s" % [prox.label, ("  ×  " + str(prox.op)) if prox.op != null else ""], 30, TXT)
+		lbl(cp, str(prox.data.txt), 22, DIM)
+	for g in O.GAMES:
+		if not O.ativo(g) or not O.aberto(g): continue
+		var cg = card(O.GAMES[g].nome, null, GCOL.get(g, ACC))
+		for sq in O.SQUADS:
+			var cpt = O.comp_for(g, sq)
+			if cpt == null: continue
+			var st: String = {"off": "entressafra", "wait": "aguardando titulares", "reg": "rodada %d" % (cpt.round + 1), "po": "playoffs", "intl": "internacional"}[cpt.phase]
+			var hh = hrow(cg); lbl(hh, O.SQUADS[sq].nome, 24, TXT, false); var sl = Control.new(); sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hh.add_child(sl); pill(hh, st, ACC2)
+			var fo: float = O.forca(g, sq); bar(cg, "Força", fo, 100.0, nota_col(fo), "%.1f" % fo)
+	var cn = card("Notícias", null, ACC2)
+	for l in S.log.slice(0, 8): lbl(cn, l, 21, DIM)
 	var cr = card()
 	btn(cr, "Tem certeza? Toque de novo" if fm == "reset" else "Nova org (apaga o save)", func():
 		if fm == "reset": fm = ""; O.reset_estado(); O.comecar(); render()
@@ -88,7 +105,7 @@ func mostra_pre(r: Dictionary) -> void:
 	var v = modal("Partida na semana %d" % r.semana)
 	for p in r.partidas:
 		var c = card("", v)
-		lbl(c, p.tag, 24, DIM); var hv := hrow(c); hv.add_child(crest(p.euNome, 56)); lbl(hv, "vs", 26, DIM); hv.add_child(crest(p.op, 56)); lbl(c, "%s  vs  %s" % [p.euNome, p.op], 30, TXT)
+		lbl(c, p.tag, 24, DIM); var hv = hrow(c); hv.add_child(crest(p.euNome, 56)); lbl(hv, "vs", 26, DIM); hv.add_child(crest(p.op, 56)); lbl(c, "%s  vs  %s" % [p.euNome, p.op], 30, TXT)
 		lbl(c, "%s · Bo%d · força %.1f x %.1f · chance %d%%" % [p.fase, p.bo, p.fMeu, p.fOp, jr100(p.p)], 24)
 	btn(v, "Simular partida", func(): _simular(), false, true)
 func _simular() -> void:
@@ -100,7 +117,7 @@ func mostra_res(ps: Array) -> void:
 	for d in ps:
 		var nar: Dictionary = d.nar; var c = card("", v)
 		lbl(c, d.tag + " · " + d.fase, 22, DIM)
-		var hv := hrow(c); hv.add_child(crest(d.euNome, 56)); hv.add_child(crest(d.op, 56)); lbl(c, "%s %d x %d %s" % [d.euNome, d.meus, d.deles, d.op], 34, OK if d.v else BAD)
+		var hv = hrow(c); hv.add_child(crest(d.euNome, 56)); hv.add_child(crest(d.op, 56)); lbl(c, "%s %d x %d %s" % [d.euNome, d.meus, d.deles, d.op], 34, OK if d.v else BAD)
 		lbl(c, "VITÓRIA" if d.v else "DERROTA", 26, OK if d.v else BAD)
 		for j in nar.jogos:
 			var t = "%s (%s)" % [j.lbl, j.sub]; for m in j.m: t += "  %s %d-%d" % [m.n, m.a, m.b]

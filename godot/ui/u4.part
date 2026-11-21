@@ -10,15 +10,25 @@ func vcal() -> void:
 			for a in O.agenda(g, sq, 6): a["tag"] = O.tag_de(g, sq); itens.append(a)
 			for l in c.last: var x: Dictionary = l.duplicate(); x["tag"] = O.tag_de(g, sq); res_l.append(x)
 	itens.sort_custom(func(a, b): return a.em < b.em)
-	var c1 = card("Próximas partidas")
+	var c1 = card("Próximas partidas", null, GOLD)
 	if itens.is_empty(): lbl(c1, "Nada agendado: complete os titulares de um time.", 24, DIM)
-	for a in itens.slice(0, 14):
-		var t = "%s · sem. +%d · %s" % [a.data.txt, a.em, a.tag]
-		lbl(c1, t, 20, DIM); lbl(c1, "%s%s" % [a.label, (" — vs " + str(a.op)) if a.op != null else ""], 24)
-	var c2 = card("Resultados")
+	for a in itens.slice(0, 12):
+		var rw = PanelContainer.new(); rw.add_theme_stylebox_override("panel", _sbf(SURF2, 12, LINE, 1, 10)); c1.add_child(rw)
+		var hh = hrow(rw)
+		var dv = VBoxContainer.new(); dv.custom_minimum_size.x = 92; hh.add_child(dv)
+		var dtxt = str(a.data.txt).split(" ")
+		lbl(dv, dtxt[0] if dtxt.size() > 0 else "", 34, GOLD, false); lbl(dv, dtxt[1] if dtxt.size() > 1 else "", 19, DIM, false)
+		var mv = VBoxContainer.new(); mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mv.add_theme_constant_override("separation", 2); hh.add_child(mv)
+		lbl(mv, "%s%s" % [a.label, ("  ×  " + str(a.op)) if a.op != null else ""], 25)
+		lbl(mv, "%s · em %d sem." % [a.tag, a.em], 19, DIM)
+	var c2 = card("Resultados", null, ACC2)
 	if res_l.is_empty(): lbl(c2, "Ainda sem jogos.", 24, DIM)
 	res_l.sort_custom(func(a, b): return a.y * 100 + a.s > b.y * 100 + b.s)
-	for r in res_l.slice(0, 20): lbl(c2, "%s · S%d/%d · %s %s vs %s (%s)" % [r.tag, r.s, r.y, "V" if r.v else "D", r.pl, r.op, r.f], 22, OK if r.v else BAD)
+	for r in res_l.slice(0, 20):
+		var hh = hrow(c2); var pl_ = pill(hh, "V" if r.v else "D", OK if r.v else BAD, true); pl_.custom_minimum_size.x = 44; pl_.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var mv = VBoxContainer.new(); mv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mv.add_theme_constant_override("separation", 0); hh.add_child(mv)
+		lbl(mv, "vs %s" % r.op, 25); lbl(mv, "%s · S%d/%d · %s" % [r.tag, r.s, r.y, r.f], 19, DIM)
+		lbl(hh, str(r.pl), 22, OK if r.v else BAD, false)
 
 # ---------- Ligas ----------
 func vligas() -> void:
@@ -54,14 +64,15 @@ func vneg() -> void:
 	var cf = card("Foco da semana")
 	chips(cf, [["nenhum", "Nenhum"], ["treino", "Treino (+custo de moral)"], ["midia", "Mídia (R$ 3 mil/sem)"]], S.foco, func(id): res(O.set_foco(id)))
 	var cp = card("Patrocínios (%d/3) · renda %s/sem" % [S.patro.size(), O.money(O.renda_patro())])
-	for x in S.patro: lbl(cp, "%s · %s/sem · %d sem." % [x.n, O.money(x.pay), x.sem], 22)
+	for x in S.patro:
+		var hh = hrow(cp); pill(hh, "ATIVO", OK, true); lbl(hh, "%s · %s/sem · %d sem." % [x.n, O.money(x.pay), x.sem], 22)
 	for o in O.ofertas():
-		var h = hrow(cp); lbl(h, "%s · %s/sem · %d sem." % [o.n, O.money(o.pay), o.sem], 22); btn(h, "Fechar", func(): res(O.aceitar_patro(o.id)))
+		var h = hrow(cp); var vv = VBoxContainer.new(); vv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; h.add_child(vv); lbl(vv, o.n, 26); lbl(vv, "%s/sem · %d sem." % [O.money(o.pay), o.sem], 20, DIM); btn(h, "Fechar", func(): res(O.aceitar_patro(o.id)))
 	var ci = card("Estrutura · " + gname(g))
 	for it in O.INFRA:
-		var nv: int = O.infra_nivel(it.id, g); var h = hrow(ci)
-		lbl(h, "%s  nv %d/%d\n%s" % [it.nome, nv, it.max, it.desc], 22)
-		btn(h, "Maxímo" if nv >= it.max else O.money(O.infra_custo(it, g)), func(): res(O.comprar_infra(it.id, g)), nv >= it.max)
+		var nv: int = O.infra_nivel(it.id, g); var h = hrow(ci); var vv = VBoxContainer.new(); vv.size_flags_horizontal = Control.SIZE_EXPAND_FILL; vv.add_theme_constant_override("separation", 4); h.add_child(vv)
+		lbl(vv, it.nome, 26); lbl(vv, it.desc, 19, DIM); bar(vv, "Nível", nv, it.max, ACC2, "%d/%d" % [nv, it.max])
+		btn(h, "Máximo" if nv >= it.max else O.money(O.infra_custo(it, g)), func(): res(O.comprar_infra(it.id, g)), nv >= it.max)
 	var cl_ = card("Loja (renova a cada 4 sem.)")
 	for it in O.loja_itens():
 		var h = hrow(cl_); lbl(h, "%s\n%s" % [it.nome, it.desc], 22)
@@ -109,12 +120,12 @@ func vhall() -> void:
 		var ct = card("%s%s" % [t.n, " (simulado)" if t.get("sim", 0) else ""])
 		time_row(ct, t.c, "   (campeão)"); lbl(ct, "Vice: %s%s" % [str(t.v), (" · " + str(t.p)) if str(t.get("p", "")) != "" else ""], 22, DIM)
 		if t.get("mvp") != null:
-			var hm := hrow(ct); hm.add_child(avatar(t.mvp[0], 40, g)); lbl(hm, "MVP: %s (%s)" % [t.mvp[0], t.mvp[1]], 22, DIM)
+			var hm = hrow(ct); hm.add_child(avatar(t.mvp[0], 40, g)); lbl(hm, "MVP: %s (%s)" % [t.mvp[0], t.mvp[1]], 22, DIM)
 	var B = O.S.bo.get(g, {}).get(str(hy))
 	if B != null:
 		var cb = card("Bola de Ouro %d (Top 10)" % hy)
 		for k in B.t.size():
-			var hb := hrow(cb); hb.add_child(avatar(B.t[k][0], 40, g)); lbl(hb, "%d. %s (%s) · nota %s" % [k + 1, B.t[k][0], B.t[k][1], str(B.t[k][2])], 22, GOLD if k == 0 else TXT)
+			var hb = hrow(cb); hb.add_child(avatar(B.t[k][0], 40, g)); lbl(hb, "%d. %s (%s) · nota %s" % [k + 1, B.t[k][0], B.t[k][1], str(B.t[k][2])], 22, GOLD if k == 0 else TXT)
 		var ctoy = card("Time do ano %d" % hy)
 		for x in B.a: lbl(ctoy, "%s · %s (%s)" % [x[0], x[1], x[2]], 22)
 	var cl_ = card("Aposentadorias de lendas")
