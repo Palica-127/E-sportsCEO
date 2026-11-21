@@ -72,9 +72,9 @@
       games[g] = { squads: { t1: Object.assign(mk(), { on: true }), t2: mk(), acad: mk() } };
     }
     return { v: 1, seed: (Date.now() & 0x7fffffff) || 12345, org: { nome: 'Minha Org', caixa: 500000, rep: 1, semana: 1, ano: 2026, regiao: 'CBLOL', logo: { s: '🐺', c: '#7c8cff', f: 'escudo' } }, setup: null, tempo: 0, inicio: 'lol', ordem: [], tent: 0, estrela: null,
-             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, aporte: 0, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], log: [] };
+             infra: {}, games, comp: {}, ligas: {}, base: {}, patro: [], ofertas: [], ofertaSem: 0, social: { seg: 5000 }, foco: 'nenhum', buff: null, aporte: 0, itens: [], loja: [], lojaSem: 0, evento: null, intlHist: [], reg: {}, hon: {}, bo: {}, pts: {}, log: [] };
   }
-  let S = novoJogo();
+  let S = novoJogo(), ultSerie = null;
   const get = () => S;
   const set = s => { S = s; };
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -84,7 +84,7 @@
       if (s && s.v === 1 && s.org && s.games) { // completa campos que faltarem (saves de versões anteriores)
         const base = novoJogo();
         for (const g in base.games) if (!s.games[g]) s.games[g] = base.games[g];
-        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.seed = s.seed || base.seed; s.infra = s.infra || {}; if (Object.values(s.infra).some(v => typeof v === 'number')) { const old = s.infra; s.infra = {}; for (const g in base.games) s.infra[g] = Object.assign({}, old); }; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
+        s.comp = s.comp || {}; s.ligas = s.ligas || {}; s.base = s.base || {}; s.tempo = s.tempo || 0; s.ordem = s.ordem || []; s.org.logo = s.org.logo || { s: '🐺', c: '#7c8cff', f: 'escudo' }; if (s.setup === undefined) s.setup = null; s.patro = s.patro || []; s.ofertas = s.ofertas || []; s.ofertaSem = s.ofertaSem || 0; s.social = s.social || { seg: 5000 }; s.foco = s.foco || 'nenhum'; s.intlHist = s.intlHist || []; s.reg = s.reg || {}; s.hon = s.hon || {}; s.bo = s.bo || {}; s.pts = s.pts || {}; s.seed = s.seed || base.seed; s.infra = s.infra || {}; if (Object.values(s.infra).some(v => typeof v === 'number')) { const old = s.infra; s.infra = {}; for (const g in base.games) s.infra[g] = Object.assign({}, old); }; s.itens = s.itens || []; s.loja = s.loja || []; s.lojaSem = s.lojaSem || 0; s.log = s.log || [];
         S = s; return true;
       }
     } catch (e) {}
@@ -383,7 +383,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     log(`${GAMES[c.game].curto} ${SQUADS[c.sq].nome} (${c.reg}): split ${c.split} começou`);
   }
   function jogo(c, T, a, b, n, fase, ctx, bonus) { // joga uma série entre T[a] e T[b]; registra se o usuário participou; devolve o vencedor
-    const [wa, wb] = serie(n, fT(c, T[a]), fT(c, T[b])), venc = wa > wb ? a : b, eu = T.findIndex(t => t.eu);
+    const [wa, wb] = serie(n, fT(c, T[a]), fT(c, T[b])), venc = wa > wb ? a : b, eu = T.findIndex(t => t.eu); ultSerie = [wa, wb]; // placar da última série (registro histórico)
     if (a === eu || b === eu) {
       const op = a === eu ? b : a, meus = a === eu ? wa : wb, deles = a === eu ? wb : wa;
       c.last.unshift({ s: S.org.semana, y: S.org.ano, op: nomeT(T[op]), v: venc === eu, pl: `${meus}-${deles}`, f: fase }); c.last.length = Math.min(c.last.length, 8);
@@ -422,7 +422,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       S.org.rep = clamp(S.org.rep + ganhoRep(({ campeao: 0.3, vice: 0.15, semi: 0.08, quartas: 0.04 })[meu] * (c.sq === 't1' ? 1 : 0.3)), 0.5, 10);
       log(`${GAMES[c.game].curto} ${SQUADS[c.sq].nome}: ${({ campeao: 'CAMPEÃO', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas' })[meu]} (+${money(bolsa)})`);
     } else { S.org.rep = clamp(S.org.rep - 0.03 * (c.sq === 't1' ? 1 : 0.3), 0.5, 10); log(`${GAMES[c.game].curto} ${SQUADS[c.sq].nome}: fora dos playoffs`); }
-    c.hist.unshift({ y: S.org.ano, s: c.split, camp: nome(c, campeao), vice: nome(c, vice), eu: meu || null }); c.hist.length = Math.min(c.hist.length, 12);
+    c.hist.unshift({ y: S.org.ano, s: c.split, camp: nome(c, campeao), vice: nome(c, vice), eu: meu || null }); c.hist.length = Math.min(c.hist.length, 12); regFinal(c, campeao, vice, po, meu);
     const pr = i => po.rs.indexOf(i), com = k => Object.keys(po.lugar).filter(x => po.lugar[x] === k).map(Number).sort((x, y) => pr(x) - pr(y));
     const ordem = [campeao, vice].concat(com('semi'), com('quartas'), po.rs.filter(i => !(i in po.lugar) && i !== campeao));
     c.po = null; c.phase = 'off'; if (c.sq === 't1') { gerarBase(); evoluir(); } c.wk = Math.max(2, CICLO - c.sched.length - 3);
@@ -435,11 +435,11 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     const rs = times.map((_, i) => i).sort((a, b) => w[b] - w[a] || times[b].f - times[a].f), s = rs.slice(0, 6);
     const v = (a, b, bo) => { const [x, y] = serie(bo, times[a].f, times[b].f); return x > y ? a : b; };
     const q1 = v(s[2], s[5], 3), q2 = v(s[3], s[4], 3), ord = [q1, q2].sort((x, y) => s.indexOf(y) - s.indexOf(x));
-    const f1 = v(s[0], ord[0], 3), f2 = v(s[1], ord[1], 3), camp = v(f1, f2, 5), vice = camp === f1 ? f2 : f1;
+    const f1 = v(s[0], ord[0], 3), f2 = v(s[1], ord[1], 3), pl = serie(5, times[f1].f, times[f2].f), camp = pl[0] > pl[1] ? f1 : f2, vice = camp === f1 ? f2 : f1;
     const semis = [s[0], ord[0], s[1], ord[1]].filter(x => x !== f1 && x !== f2).sort((x, y) => rs.indexOf(x) - rs.indexOf(y));
     const quartas = [q1, q2].map((x, k) => [s[2], s[3]][k] === x ? [s[5], s[4]][k] : [s[2], s[3]][k]).sort((x, y) => rs.indexOf(x) - rs.indexOf(y));
     const dentro = new Set([camp, vice, ...semis, ...quartas]);
-    return [camp, vice, ...semis, ...quartas, ...rs.filter(i => !dentro.has(i))];
+    const res = [camp, vice, ...semis, ...quartas, ...rs.filter(i => !dentro.has(i))]; res.pl = Math.max(pl[0], pl[1]) + '-' + Math.min(pl[0], pl[1]); return res;
   }
   const intlDef = g => g === 'lol' ? INTL : D(g).intl;
   function sortear(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -449,7 +449,8 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       if (reg === c.reg) ordem.slice(0, I.vagas[reg]).forEach(i => { const t = c.teams[i]; q.push(t.eu ? { n: null, f: 0, eu: true, reg } : { n: t.n, f: t.f, eu: false, reg }); });
       else {
         const times = D(c.game).leagues[reg].t1.map(t => ({ n: t.n, f: mediaTime(t.p) + rnd() * 3 - 1.5 }));
-        simRapida(times).slice(0, I.vagas[reg]).forEach(i => q.push({ n: times[i].n, f: times[i].f, eu: false, reg }));
+        const ord = simRapida(times); regSimul(c.game, reg, c.split, times, ord);
+        ord.slice(0, I.vagas[reg]).forEach(i => q.push({ n: times[i].n, f: times[i].f, eu: false, reg }));
       }
     }
     const T = sortear(q), intl = { tipo, teams: T, alive: T.map((_, i) => i), res: [], lugar: {} };
@@ -471,7 +472,7 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
       const bolsa = Math.round(I.bolsa * PCT_INTL[meu]); S.org.caixa += bolsa; S.org.rep = clamp(S.org.rep + ganhoRep(I.rep * PCT_INTL[meu] * 2), 0.5, 10);
       log(`${GAMES[c.game].curto} ${I.nome}: ${({ campeao: 'CAMPEÃO', vice: 'vice-campeão', semi: 'semifinalista', quartas: 'eliminado nas quartas', oitavas: 'eliminado nas oitavas' })[meu]} (+${money(bolsa)})`);
     } else log(`${GAMES[c.game].curto} ${I.nome} ${S.org.ano}: campeão ${nomeT(intl.teams[camp])}`);
-    S.intlHist = S.intlHist || []; S.intlHist.unshift({ g: c.game, nome: I.nome, y: S.org.ano, tipo: intl.tipo, camp: nomeT(intl.teams[camp]), reg: intl.teams[camp].reg, eu: meu || null }); S.intlHist.length = Math.min(S.intlHist.length, 30);
+    S.intlHist = S.intlHist || []; S.intlHist.unshift({ g: c.game, nome: I.nome, y: S.org.ano, tipo: intl.tipo, camp: nomeT(intl.teams[camp]), reg: intl.teams[camp].reg, eu: meu || null }); S.intlHist.length = Math.min(S.intlHist.length, 30); regIntl(c, intl, camp, meu);
     c.intl = null; c.phase = 'off'; c.wk = Math.max(2, CICLO - c.sched.length - 3 - I.semanas);
     if (intl.tipo === Object.keys(intlDef(c.game))[1]) promoRebaixa(c);
   }
@@ -485,6 +486,107 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     if (!out || !up) return;
     Lg.d1 = Lg.d1.filter(t => t !== out).concat([up]); Lg.d2 = Lg.d2.filter(t => t !== up).concat([out]);
     log(`Fim do ano: ${up.n} sobe para o T1 e ${out.n} cai para o T2`);
+  }
+  /* ---------- Registro histórico (2027+): campeões de torneios simulados, honras individuais e Bola de Ouro ----------
+     S.reg[jogo][ano] = [{ k:'i'|'r', t:tipo|região, c:campeão, v:vice, s:[semis], m:[mvp,time], p:placar da final, eu:colocação da org, sp:split(1|2), q:'t2'|'acad', r:[elenco campeão (só internacionais)] } (nome do torneio é derivado em histDe)
+     S.hon[jogo][nick] = { w:[anos de título principal], a:[anos de título do 1º internacional], l:ligas, v:[[ano,tipo]] MVPs, b:[anos de Bola de Ouro], t:vezes no Top 10 }
+     S.bo[jogo][ano] = { t:[[nick,time,nota,pts,papel,país]] (top 10), a:[[papel,nick,time]] (time do ano) }   S.pts = pontos do ano corrente (some após a premiação) */
+  const ANO_SIM = 2027, REG_ANOS = 8, REG_MAX = 24;
+  const placar = () => ultSerie ? Math.max(ultSerie[0], ultSerie[1]) + '-' + Math.min(ultSerie[0], ultSerie[1]) : '';
+  const kindIntl = (g, t) => Object.keys(intlDef(g)).indexOf(t) === 1 ? 'w' : 'a';
+  function rosterOf(g, nome, sq) { // [[nick, nota, papel, país]] do time pelo nome (org do usuário: titulares atuais)
+    if (nome == null) return [];
+    if (nome === S.org.nome) { const q = S.games[g].squads[sq || 't1']; return q && q.on ? q.slots.slice(0, GAMES[g].roles.length).map((p, i) => p ? [p.n, p.o, i, p.c || ''] : null).filter(Boolean) : []; }
+    const d = D(g), lg = S.ligas && S.ligas[g], fontes = lg ? [lg.d1, lg.d2, lg.d3] : [];
+    for (const k in d.leagues) fontes.push(d.leagues[k].t1, d.leagues[k].t2 || []);
+    for (const L of fontes) { const t = (L || []).find(x => x.n === nome); if (t && t.p) return t.p.map((p, i) => [p[0], p[1], i, p[3] || '']); }
+    return [];
+  }
+  function mvpDe(ros) { if (!ros.length) return null; const w = ros.map(p => Math.pow(Math.max(1, p[1] - 45), 3)); let r = rnd() * w.reduce((a, b) => a + b, 0), i = 0; while (i < ros.length - 1 && (r -= w[i]) > 0) i++; return ros[i]; }
+  function honra(g, n, k, v, d) {
+    const G = S.hon[g] = S.hon[g] || {}, h = G[n] = G[n] || {};
+    if (k === 'l' || k === 't') h[k] = Math.max(0, (h[k] || 0) + d);
+    else { const a = h[k] = h[k] || []; if (d > 0) a.push(v); else { const i = a.findIndex(x => JSON.stringify(x) === JSON.stringify(v)); if (i >= 0) a.splice(i, 1); } }
+  }
+  const pontua = (g, n, p) => { if (!p) return; const P = S.pts[g] = S.pts[g] || {}; P[n] = (P[n] || 0) + p; };
+  function regPush(g, rec, kind, rs) { // grava o torneio (substitui o mesmo torneio do mesmo ano) e distribui honras e pontos da Bola de Ouro
+    const y = S.org.ano; if (y < ANO_SIM) return;
+    S.reg = S.reg || {}; S.hon = S.hon || {}; S.pts = S.pts || {};
+    const L = ((S.reg[g] = S.reg[g] || {})[y] = S.reg[g][y] || []), i = L.findIndex(x => x.k === rec.k && x.t === rec.t && x.sp === rec.sp && x.q === rec.q);
+    if (i >= 0) { const o = L[i]; (o.r || []).forEach(n => honra(g, n, kind, y, -1)); if (o.m && kind !== 'l') honra(g, o.m[0], 'v', [y, kind], -1); L.splice(i, 1); }
+    else if (rec.k === 'r' && L.length >= REG_MAX) return;
+    const P = { w: [10, 4, 2, 6], a: [5, 2, 1, 3], l: [2, 1, 0, 1.5] }[kind];
+    rs.c.forEach(p => { pontua(g, p[0], P[0]); honra(g, p[0], kind, y, 1); }); rs.v.forEach(p => pontua(g, p[0], P[1])); rs.s.forEach(a => a.forEach(p => pontua(g, p[0], P[2])));
+    if (rec.m) { pontua(g, rec.m[0], P[3]); if (kind !== 'l') honra(g, rec.m[0], 'v', [y, kind], 1); }
+    if (kind !== 'l') rec.r = rs.c.map(p => p[0]);
+    L.push(rec);
+  }
+  function regFinal(c, campeao, vice, po, meu) { // fim dos playoffs de uma liga do usuário
+    if (S.org.ano < ANO_SIM) return;
+    const g = c.game, Lg = D(g).leagues[c.reg], sp = c.split % 2 === 1 ? 1 : 2, q = c.sq, nm = i => nome(c, i), ros = i => rosterOf(g, nm(i), q);
+    const sem = Object.keys(po.lugar).filter(k => po.lugar[k] === 'semi').map(Number), m = mvpDe(ros(campeao));
+    regPush(g, { k: 'r', t: c.reg, q: q === 't1' ? undefined : q, sp, c: nm(campeao), v: nm(vice), s: sem.map(nm), m: m ? [m[0], nm(campeao)] : undefined, p: placar(), eu: meu || undefined },
+      'l', { c: ros(campeao), v: ros(vice), s: sem.map(ros) });
+  }
+  function regSimul(g, reg, split, times, ord) { // liga de outra região simulada de uma vez (ord = ordem final de simRapida)
+    if (S.org.ano < ANO_SIM || !D(g).leagues[reg]) return;
+    const sp = split % 2 === 1 ? 1 : 2, nm = i => times[i].n, ros = i => rosterOf(g, nm(i)), m = mvpDe(ros(ord[0])), sem = [ord[2], ord[3]];
+    regPush(g, { k: 'r', t: reg, sp, c: nm(ord[0]), v: nm(ord[1]), s: sem.map(nm), m: m ? [m[0], nm(ord[0])] : undefined, p: ord.pl }, 'l', { c: ros(ord[0]), v: ros(ord[1]), s: sem.map(ros) });
+  }
+  function regIntl(c, intl, camp, meu) { // fim de um internacional (do usuário ou simulado)
+    if (S.org.ano < ANO_SIM) return;
+    const g = c.game, I = intlDef(g)[intl.tipo], T = intl.teams, nm = i => nomeT(T[i]), ros = i => rosterOf(g, nm(i), 't1');
+    const vice = +Object.keys(intl.lugar).find(k => intl.lugar[k] === 'vice'), sem = Object.keys(intl.lugar).filter(k => intl.lugar[k] === 'semi').map(Number), m = mvpDe(ros(camp));
+    regPush(g, { k: 'i', t: intl.tipo, c: nm(camp), v: nm(vice), s: sem.map(nm), m: m ? [m[0], nm(camp)] : undefined, p: placar(), eu: meu || undefined },
+      kindIntl(g, intl.tipo), { c: ros(camp), v: ros(vice), s: sem.map(ros) });
+  }
+  function simIntlOff(g, ti) { // internacional de um jogo que o usuário não joga: todas as regiões simuladas de uma vez
+    const d = D(g); if (!d || S.org.ano < ANO_SIM) return;
+    const ks = Object.keys(intlDef(g)), tipo = ks[ti], I = intlDef(g)[tipo], q = [], reg0 = regiaoDe(g), lg = S.ligas && S.ligas[g] && S.ligas[g].reg === reg0 ? S.ligas[g] : null;
+    for (const reg in I.vagas) {
+      const L = d.leagues[reg]; if (!L) continue;
+      const times = (reg === reg0 && lg ? lg.d1 : L.t1).map(t => ({ n: t.n, f: mediaTime(t.p) + rnd() * 3 - 1.5 })), ord = simRapida(times);
+      regSimul(g, reg, ti + 1, times, ord); ord.slice(0, I.vagas[reg]).forEach(i => q.push({ n: times[i].n, f: times[i].f, eu: false, reg }));
+    }
+    if (q.length < 2) return;
+    const T = sortear(q), intl = { tipo, teams: T, alive: T.map((_, i) => i), res: [], lugar: {} }, c = { game: g, sq: 't1', reg: reg0, teams: T, last: [] };
+    while (intl.alive.length > 1) etapaIntl(c, intl, { jogou: false });
+    intl.lugar[intl.alive[0]] = 'campeao'; regIntl(c, intl, intl.alive[0], null);
+  }
+  function regSemana() { // jogos que o usuário não abriu: MSI/equivalente na semana 20 e Mundial/equivalente na 46 (não deixa buracos no histórico)
+    const w = S.org.semana; if (S.org.ano < ANO_SIM || (w !== 20 && w !== 46)) return;
+    for (const g in GAMES) { if (!GAMES[g].ativo || S.games[g].squads.t1.on) continue; simIntlOff(g, w === 20 ? 0 : 1); }
+  }
+  function calcBO(g, y) { // Bola de Ouro por mérito: nota + pontos de títulos/MVP do ano + sorte; Top 10 e time do ano
+    const d = D(g), pts = (S.pts && S.pts[g]) || {}, roles = GAMES[g].roles, cand = {}, lg = S.ligas && S.ligas[g];
+    const add = (n, o, r, t, c) => { const sc = (o - 60) * 0.9 + (pts[n] || 0) + (rnd() + rnd() - 1) * 3; if (!cand[n] || cand[n].sc < sc) cand[n] = { n, o, r, t, c: c || '', sc }; };
+    for (const k in d.leagues) ((lg && lg.reg === k ? lg.d1 : d.leagues[k].t1) || []).forEach(t => (t.p || []).forEach((p, i) => add(p[0], p[1], i, t.n, p[3])));
+    const q = S.games[g].squads.t1; if (q.on) q.slots.slice(0, roles.length).forEach((p, i) => p && add(p.n, p.o, i, S.org.nome, p.c));
+    const arr = Object.values(cand).sort((a, b) => b.sc - a.sc), top = arr.slice(0, 10), toy = [];
+    roles.forEach((rl, i) => { const b = arr.find(x => x.r === i); if (b) toy.push([rl, b.n, b.t]); });
+    (S.bo[g] = S.bo[g] || {})[y] = { t: top.map(x => [x.n, x.t, x.o, Math.round(x.sc), x.r, x.c]), a: toy };
+    top.forEach((x, i) => { honra(g, x.n, 't', 0, 1); if (!i) honra(g, x.n, 'b', y, 1); });
+  }
+  function regFimAno(y) { // virada do ano: Bola de Ouro de y, zera pontos, poda ligas regionais antigas (internacionais ficam para sempre)
+    if (y < ANO_SIM) return;
+    S.bo = S.bo || {}; S.hon = S.hon || {};
+    for (const g in GAMES) if (GAMES[g].ativo) calcBO(g, y);
+    S.pts = {};
+    for (const g in S.reg) for (const a in S.reg[g]) if (+a < y - REG_ANOS) { const L = S.reg[g][a].filter(x => x.k === 'i'); if (L.length) S.reg[g][a] = L; else delete S.reg[g][a]; }
+  }
+  /* estrutura consumida pelo Hall: torneios no formato de window.HIST (com sim:1), Bola de Ouro, time do ano e honras */
+  const TPMAP = { cs2: { A: 'IEM', B: 'Major' }, dota2: { A: 'Major', B: 'TI' }, valorant: { A: 'Masters', B: 'Champions' }, ff: { A: 'EWC', B: 'Mundial' }, r6: { A: 'Major', B: 'SI' }, fifa: { A: 'EWC', B: 'Mundial' }, wr: { A: 'Horizon', B: 'Icons' }, lol: { MSI: 'MSI', WORLDS: 'WORLDS' } };
+  const nomeReg = (g, x, y) => x.k === 'i' ? `${intlDef(g)[x.t].nome} ${y}` : `${(D(g).leagues[x.t] || {}).nome || x.t}${x.q === 't2' ? ' T2' : x.q === 'acad' ? ' Academy' : ''} ${y} Split ${x.sp}`;
+  const PTS_BO = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+  function histDe(g) {
+    const R = (S.reg && S.reg[g]) || {}, tor = [], bo = {}, boLol = {}, toy = {};
+    for (const y of Object.keys(R).map(Number).sort((a, b) => a - b)) for (const x of R[y]) {
+      const meuC = x.eu === 'campeao', meuV = x.eu === 'vice';
+      tor.push({ n: nomeReg(g, x, y), a: y, tp: x.k === 'r' ? 'REG' : (TPMAP[g] || {})[x.t] || x.t, c: meuC ? S.org.nome : x.c, v: meuV ? S.org.nome : x.v, p: x.p || '', mvp: x.m ? [x.m[0], x.m[1], ''] : null, s: x.s || [], eu: x.eu || null, sim: 1, k: x.k, t: x.t, sp: x.sp });
+    }
+    for (const y in (S.bo && S.bo[g]) || {}) { const B = S.bo[g][y];
+      bo[y] = B.t.map((r, i) => [r[0], r[5] || '', PTS_BO[i], r[2], r[1]]); boLol[y] = B.t.map(r => [r[0], r[1], r[4]]); toy[y] = B.a; }
+    return { torneios: tor, bo, boLol, toy, hon: (S.hon && S.hon[g]) || {} };
   }
   /* ---------- Calendário: datas e agenda do usuário ---------- */
   const MDN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -554,8 +656,8 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
     for (let i = 0; i < semanas; i++) {
       S.org.caixa += projecaoOrg().saldo;
       for (const g in GAMES) { if (!GAMES[g].ativo) continue; for (const sq in SQUADS) { const c = compFor(g, sq); if (c && semanaComp(c)) jogou = true; } }
-      contratos(); semanalOrg(); S.tempo++;
-      S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; }
+      regSemana(); contratos(); semanalOrg(); S.tempo++;
+      S.org.semana++; if (S.org.semana > 52) { S.org.semana = 1; S.org.ano++; regFimAno(S.org.ano - 1); }
     }
     save(); return jogou;
   }
@@ -584,5 +686,5 @@ function seguidores(m) { // crescimento com rendimento decrescente (evita bola d
 
   root.Org = { LOJA, lojaItens, comprarLoja, itemAtivo, rendaMerch, GAMES, SQUADS, INFRA, KEY, CICLO, slotsDe, get, set, save, load, reset, log, novoJogo, money, fee, salary, region, poolLol, pool, regiaoDe, dataOf, intlDef, livres,
     infraNivel, infraBonus, infraCusto, upkeepSemanal, projecaoOrg, salarioDe, passo, agenda, dataDe, emSemanas, MES, MDN, comecar, iniciar, convidarEstrela, semEstrela, abrirJogo, aberto, desbloqueio, chanceEstrela, comprarInfra, ativarSquad, contratar, ofertas, aceitarPatro, setFoco, escolherEvento, EVENTOS, rendaPatro, rendaSocial, custoFoco, bonusTemp, renovar, custoRenovar, mover, promoverBase, CONTRATO, dispensar, folha, forca, titulares, prontos, mediaTime,
-    compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
+    histDe, regSimulOff: simIntlOff, regFimAno, ANO_SIM, compFor, classificacao, nome, nomeT, ligaSync, INTL, simRapida, projecao, avancar, avancarAteJogo, trocarRegiao, probVit, serie, roundRobin };
 })(typeof window !== 'undefined' ? window : globalThis);
