@@ -1,6 +1,7 @@
 // Calendário dia a dia: abre os campeonatos de cada jogo nas datas do ano, joga as partidas e avança fases.
 import { fecharAcademy } from './academy';
 import { hypePartida, mudaHype } from './marca';
+import { aposentadorias, premiosDoAno, registraTemporada } from './legado';
 import { GAMES, GameId } from './games';
 import { clamp, ri } from './rng';
 import type { Match, State, Torneio } from './types';
@@ -96,7 +97,7 @@ function fimTorneio(s: State, tor: Torneio) {
   if (tor.kind !== 'acesso') {
     s.hist.push({ ano: tor.ano, game: g, tor: tor.id, nome: tor.nome, kind: tor.kind, campeao: campeao.nome, vice: vice.nome, org: !!(campeao.org || vice.org) });
     noticia(s, `${GAMES[g].curto}: ${campeao.nome} é campeã do ${tor.nome}!`);
-    for (const id of campeao.elenco) { const p = s.players[id]; if (p) (p.hist ??= []).push({ d: s.dia, t: `🏆 Campeão do ${tor.nome} pela ${campeao.nome}` }); }
+    for (const id of campeao.elenco) { const p = s.players[id]; if (p) { (p.hist ??= []).push({ d: s.dia, t: `🏆 Campeão do ${tor.nome} pela ${campeao.nome}` }); p.titulos = (p.titulos ?? 0) + 1; if (campeao.org) p.titulosOrg = (p.titulosOrg ?? 0) + 1; } }
     if (campeao.org) post(s, `É CAMPEÃ! 🏆 ${tor.nome} é da ${campeao.sigla}!!!`, 'bom');
     if (campeao.org && !campeao.acad) mudaHype(s, ['split', 'd2'].includes(tor.kind) ? 20 : 30);
   }
@@ -131,6 +132,8 @@ function fimTorneio(s: State, tor: Torneio) {
 
 // ---------- fim de temporada: idade, evolução e limpeza ----------
 function fimDeTemporada(s: State) {
+  registraTemporada(s);
+  premiosDoAno(s);
   for (const p of Object.values(s.players)) {
     if (!s.jogos.includes(p.game)) continue;
     p.idade++;
@@ -141,6 +144,7 @@ function fimDeTemporada(s: State) {
     p.ovr = clamp(p.ovr + delta, 45, 97);
     if (!s.teams[p.teamId ?? '']?.org) p.sal = salario(p.ovr);
   }
+  aposentadorias(s);
   contratosFimDeAno(s, m => msg(s, m));
   for (const t of Object.values(s.teams)) if (!t.org || !t.manual) escalarAuto(s, t);
   const ano = anoDe(s.dia);

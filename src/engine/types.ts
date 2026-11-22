@@ -30,6 +30,8 @@ export interface Player {
   jogos: number;
   mvps: number;
   hist?: { d: number; t: string }[]; // carreira: transferências, títulos, marcos
+  titulos?: number; titulosOrg?: number; mvpAno?: number; pico?: number; orgAnos?: number; desde?: number;
+  premios?: { ano: number; t: string }[];
   evo?: number[]; // nota no fim de cada mês (gráfico de evolução)
   venda?: boolean; // colocado à venda
   prometido?: number; // dia até quando o CEO prometeu chances
@@ -223,6 +225,9 @@ export interface State {
   orgTeams: Partial<Record<GameId, string>>;
   academias?: Partial<Record<GameId, string>>;
   marca?: Marca;
+  premiosAno?: PremioAno[];
+  hall?: HallEntry[];
+  temporadas?: TemporadaOrg[];
   players: Record<string, Player>;
   teams: Record<string, Team>;
   leagues: Record<string, League>;
@@ -260,3 +265,8 @@ export interface Marca {
   eventos: EventoFa[];
   hist: { sem: number; loja: number; socio: number }[];
 }
+
+export interface Premiado { pid: string; nick: string; nat: string; role: number; time: string; sigla: string; nota: number; org?: boolean; motivo?: string }
+export interface PremioAno { ano: number; game: GameId; liga?: string; mundial?: Premiado | null; mvp: Premiado | null; revelacao: Premiado | null; selecao: Premiado[]; timeDoAno: string | null; tecnico?: { nome: string; time: string } }
+export interface HallEntry { pid: string; nick: string; nat: string; game: GameId; role: number; ano: number; inicio: number; idade: number; titulos: number; mvps: number; jogos: number; pico: number; premios: string[]; ultimoTime: string; pontos: number; hof: boolean; lendaOrg: boolean; orgAnos: number; titulosOrg: number; camisa?: boolean }
+export interface TemporadaOrg { ano: number; caixa: number; rep: number; fas: number; jogos: Partial<Record<GameId, { liga: string; v: number; d: number; titulos: string[] }>> }

@@ -55,7 +55,7 @@ function posJogo(s: State, t: Team, venceu: boolean, pontos: Record<string, numb
     p.forma = clamp(Math.round((p.forma * (1 - peso) + perf * peso * 2) * 10) / 10, -3, 3);
     p.moral = clamp(p.moral + (venceu ? 2 : -2) + (p.id === mvp ? 2 : 0) - (p.traco === 'tranquilo' && !venceu ? -1 : 0), 20, 98);
     p.jogos++;
-    if (p.id === mvp) p.mvps++;
+    if (p.id === mvp) { p.mvps++; p.mvpAno = (p.mvpAno ?? 0) + 1; }
   }
   for (const p of t.elenco.slice(tit.length).map(id => s.players[id]).filter(Boolean)) {
     p.moral = clamp(p.moral + (p.moral > 55 ? -0.5 : 0.2), 20, 98);

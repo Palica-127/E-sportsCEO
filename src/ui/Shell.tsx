@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, Bell, Briefcase, Building2, CalendarDays, ChevronLeft, ChevronRight, ChevronsRight, Home, Mail, Pause, Search, Settings, Shirt, Trophy, UserCog, Users } from 'lucide-react';
+import { ArrowLeftRight, Bell, Briefcase, Building2, CalendarDays, ChevronLeft, ChevronRight, ChevronsRight, Home, Mail, Pause, Award, Search, Settings, Shirt, Trophy, UserCog, Users } from 'lucide-react';
 import { passo, temJogoOrgHoje, dataDe, proximoEvento, fmtData } from '../engine/sim';
 import { act, useGame } from '../store';
 import { Crest } from './common';
@@ -17,8 +17,9 @@ import { Olheiros } from './telas/Olheiros';
 import { Mercado } from './telas/Mercado';
 import { SedeTela } from './telas/Sede';
 import { MarcaTela } from './telas/Marca';
+import { Historia } from './telas/Historia';
 
-export type Tela = 'inicio' | 'inbox' | 'elenco' | 'perfil' | 'staff' | 'olheiros' | 'mercado' | 'competicoes' | 'calendario' | 'sede' | 'financas' | 'marca' | 'org';
+export type Tela = 'inicio' | 'inbox' | 'elenco' | 'perfil' | 'staff' | 'olheiros' | 'mercado' | 'competicoes' | 'calendario' | 'sede' | 'financas' | 'marca' | 'historia' | 'org';
 const NAV: ({ id: Tela; nome: string; Ico: typeof Home; curto?: string } | 'gap')[] = [
   { id: 'inicio', nome: 'Início', Ico: Home },
   { id: 'inbox', nome: 'Mensagens', Ico: Mail, curto: 'E-mail' },
@@ -35,10 +36,11 @@ const NAV: ({ id: Tela; nome: string; Ico: typeof Home; curto?: string } | 'gap'
   { id: 'sede', nome: 'Sede', Ico: Building2 },
   { id: 'financas', nome: 'Finanças', Ico: Briefcase },
   { id: 'marca', nome: 'Marca e loja', Ico: Shirt, curto: 'Marca' },
+  { id: 'historia', nome: 'História', Ico: Award },
   'gap',
   { id: 'org', nome: 'Organização', Ico: Settings, curto: 'Org' },
 ];
-const TITULO: Record<Tela, string> = { inicio: 'Início', inbox: 'Mensagens', elenco: 'Elenco', perfil: 'Perfil do jogador', staff: 'Comissão técnica', olheiros: 'Olheiros', mercado: 'Transferências', competicoes: 'Competições', calendario: 'Calendário', sede: 'Sede', financas: 'Finanças', marca: 'Marca e loja', org: 'Organização' };
+const TITULO: Record<Tela, string> = { inicio: 'Início', inbox: 'Mensagens', elenco: 'Elenco', perfil: 'Perfil do jogador', staff: 'Comissão técnica', olheiros: 'Olheiros', mercado: 'Transferências', competicoes: 'Competições', calendario: 'Calendário', sede: 'Sede', financas: 'Finanças', marca: 'Marca e loja', historia: 'História', org: 'Organização' };
 const SEM = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -139,6 +141,7 @@ export function Shell() {
           {tela === 'sede' && <SedeTela />}
           {tela === 'financas' && <Financas />}
           {tela === 'marca' && <MarcaTela />}
+          {tela === 'historia' && <Historia abrir={(t, a) => ir(t as Tela, a)} />}
           {tela === 'org' && <OrgTela />}
         </main>
       </div>

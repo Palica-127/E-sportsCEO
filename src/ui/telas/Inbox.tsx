@@ -86,6 +86,7 @@ export function Inbox({ abrir, ir }: { abrir?: string; ir: (t: Tela, a?: string)
             </div>
             <Termos s={s} m={m} />
             {quem(m) && <button className="btn sm" onClick={() => ir('perfil', quem(m)!)}><Gamepad2 size={16} /> Ver perfil</button>}
+            {m.dados?.tela && <button className="btn sm" onClick={() => ir(m.dados.tela)}>Abrir {m.dados.tela === 'historia' ? 'História' : m.dados.tela}</button>}
             {m.acoes && (
               <div className="md-acoes">
                 {m.resolvida ? <span className="mut">Decisão: {m.resolvida === 'expirou' ? 'a proposta expirou' : m.acoes.find(a => a.id === m.resolvida)?.txt}</span> :

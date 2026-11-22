@@ -139,6 +139,14 @@ export function criaJogo(s: State, g: GameId) {
       const cc = sorteiaPais(s, cl);
       criaJogador(s, { game: g, role: k % GAMES[g].roles.length, ovr: ri(s, 60, 72), nick: geraNick(s, cc), nat: cc.toLowerCase(), idade: ri(s, 16, 26) });
     }
+  }  // currículo inicial dos veteranos (para o Hall da Fama não começar vazio)
+  for (const p of Object.values(s.players)) {
+    if (p.game !== g || p.idade < 20) continue;
+    const anos = p.idade - 18, peso = Math.max(0, p.ovr - 76) / 6 * (s.teams[p.teamId ?? '']?.tier === 1 ? 1 : 0.3);
+    p.titulos = Math.round(anos * peso * (0.5 + rnd(s)) * 0.8);
+    p.mvps = Math.round(anos * Math.max(0, p.ovr - 70) * (0.5 + rnd(s)) * 0.6);
+    p.jogos = Math.max(p.jogos, anos * ri(s, 25, 45));
+    p.pico = p.ovr + (p.idade > 27 ? Math.min(6, p.idade - 27) : 0);
   }
 }
 

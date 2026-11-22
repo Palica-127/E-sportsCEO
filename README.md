@@ -58,5 +58,13 @@ Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa 
 - Marca e loja: produtos com lote, faixa de preço e estoque (camisa, moletom, boné, mousepad, camisa assinada do Rosto, coleção de campeão, collab), sócio-torcedor, eventos com ingresso (bar, teatro, ginásio, arena) e hype.
 - Finanças rebalanceadas com valores reais do cenário e crédito bancário quando o caixa aperta.
 
+## Fase 4 (feita)
+- Tela História: sala de troféus, temporadas da org, prêmios do ano (MVP, Revelação, Seleção, Time e Técnico do ano da liga da org + Melhor do mundo), Hall da Fama, Lendas da org (aposentar a camisa) e campeões de cada competição.
+- Jogadores se aposentam no fim da temporada; a carreira vira pontos para o Hall da Fama.
+- Versão de PC (.exe): pasta `desktop/` (Electron). Na aba Actions do GitHub, o workflow "Gerar .exe (Windows)" gera o arquivo `eSportsCEO-x.y.z.exe` (portátil, é só abrir). Criar uma tag `v1.0.0` publica um Release com o .exe.
+  - Para testar no PC: `npm run build` na raiz, depois `cd desktop && npm install && npm start`.
+  - O Windows pode avisar que o app não é assinado: clique em "Mais informações" → "Executar assim mesmo".
+  - O save do .exe fica no próprio PC, separado do save do navegador.
+
 ## Próximas fases
 4. Históricos e prêmios (Golden Crown etc.), Hall da Fama, versão .exe.

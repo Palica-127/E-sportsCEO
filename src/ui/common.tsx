@@ -4,7 +4,7 @@ import type { Player, Staff, State, Team } from '../engine/types';
 import { estrelas, humor, logoUrl, slug } from '../engine/world';
 import FOTOS from '../data/fotos.json';
 
-const FOTO_SET = new Set<string>(FOTOS as string[]);
+export const FOTO_SET = new Set<string>(FOTOS as string[]);
 function hash(s: string) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 
 // ---------- escudos ----------
