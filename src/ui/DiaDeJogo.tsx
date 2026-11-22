@@ -1,66 +1,47 @@
 import { CSSProperties, useState } from 'react';
 import { GAMES } from '../engine/games';
-import { probSerie } from '../engine/match';
 import { fmtData, isOrg, jogarDia, jogosDoDia } from '../engine/sim';
-import type { Match } from '../engine/types';
-import { forca } from '../engine/world';
 import { act, useGame } from '../store';
-import { Crest, pct } from './common';
-import { Resumo, nomeFase } from './Resumo';
+import { Crest } from './common';
+import { Resumo } from './Resumo';
+import { PreDados, PreJogo, preDados } from './PreJogo';
 
-/** tela do dia de jogo: antes, durante (resumos) e depois (resultados de todos os jogos da org) */
+/** dia de jogo: para cada partida da org, a tela de pré-jogo (stats, confrontos, chances) e a escolha entre assistir ou simular */
 export function DiaDeJogo({ onFechar }: { onFechar: () => void }) {
   const s = useGame()!;
-  const [fase, setFase] = useState<'pre' | 'play' | 'res'>(s.diaJogo?.dia === s.dia ? 'res' : 'pre');
+  const jaJogou = s.diaJogo?.dia === s.dia;
+  const [fase, setFase] = useState<'pre' | 'play' | 'res'>(jaJogou ? 'res' : 'pre');
   const [idx, setIdx] = useState(0);
-  const [ids, setIds] = useState<string[]>(s.diaJogo?.dia === s.dia ? s.diaJogo.ids : []);
-  const hoje = jogosDoDia(s, s.dia);
-  const daOrg = fase === 'pre' ? hoje.filter(m => isOrg(s, m.a) || isOrg(s, m.b)) : ids.map(id => s.matches[id]);
+  const [assistir, setAssistir] = useState(true);
+  // o pré-jogo de todas as partidas é calculado antes de simular, para a 2ª não mostrar o resultado
+  const [pre] = useState<PreDados[]>(() => (jaJogou ? [] : jogosDoDia(s, s.dia).filter(m => m.sa == null && (isOrg(s, m.a) || isOrg(s, m.b))).map(m => preDados(s, m))));
+  const [ids, setIds] = useState<string[]>(jaJogou ? s.diaJogo!.ids : pre.map(d => d.id));
 
-  function jogar() {
-    const ms = act(st => jogarDia(st));
-    setIds(ms.map(m => m.id));
-    setIdx(0);
+  function escolher(ver: boolean) {
+    if (s.diaJogo?.dia !== s.dia) { const ms = act(st => jogarDia(st)); if (idx === 0) setIds(ms.map(m => m.id)); }
+    setAssistir(ver);
     setFase('play');
   }
+  function proxima() {
+    if (idx + 1 < pre.length) { setIdx(idx + 1); setFase('pre'); } else setFase('res');
+  }
+  const atual = pre[idx] ? s.matches[pre[idx].id] : null;
 
   return (
     <div className="overlay">
-      <div className="modal dia">
-        {fase === 'pre' && (
-          <>
-            <h2>Dia de jogo <small>{fmtData(s.dia)}</small></h2>
-            <div className="pre-list">
-              {daOrg.map(m => <Confronto key={m.id} m={m} />)}
-            </div>
-            <div className="modal-f"><button className="btn ghost" onClick={onFechar}>Depois</button><button className="btn primary big" onClick={jogar}>Jogar {daOrg.length > 1 ? `as ${daOrg.length} partidas` : 'a partida'}</button></div>
-          </>
+      <div className={'modal dia ' + (fase === 'pre' ? 'largo' : '')}>
+        {fase === 'pre' && atual && (
+          <PreJogo s={s} m={atual} d={pre[idx]} n={idx + 1} total={pre.length}
+            onAssistir={() => escolher(true)} onSimular={() => escolher(false)} onDepois={idx === 0 && !jaJogou && s.diaJogo?.dia !== s.dia ? onFechar : undefined} />
         )}
-        {fase === 'play' && daOrg[idx] && (
+        {fase === 'play' && atual && (
           <>
-            {daOrg.length > 1 && <div className="play-count">Partida {idx + 1} de {daOrg.length}</div>}
-            <Resumo key={daOrg[idx].id} s={s} m={daOrg[idx]} onFim={() => (idx + 1 < daOrg.length ? setIdx(idx + 1) : setFase('res'))} />
+            {pre.length > 1 && <div className="play-count">Partida {idx + 1} de {pre.length}</div>}
+            <Resumo key={atual.id + (assistir ? 'v' : 's')} s={s} m={atual} auto={assistir} onFim={proxima} />
           </>
         )}
         {fase === 'res' && <Resultados ids={ids} onFechar={onFechar} />}
       </div>
-    </div>
-  );
-}
-
-function Confronto({ m }: { m: Match }) {
-  const s = useGame()!;
-  const A = s.teams[m.a], B = s.teams[m.b];
-  const pa = probSerie(forca(s, A), forca(s, B), m.bo);
-  return (
-    <div className="confronto" style={{ '--g': GAMES[m.game].cor } as CSSProperties}>
-      <div className="cf-top"><span className="gtag">{GAMES[m.game].curto}</span>{s.torneios[m.tor]?.nome} · {nomeFase(m)} · Bo{m.bo}</div>
-      <div className="cf-row">
-        <span className="cf-t"><Crest s={s} team={A} size={44} /><b>{A.nome}</b><small>Força {forca(s, A).toFixed(1)}</small></span>
-        <span className="vs">VS</span>
-        <span className="cf-t r"><Crest s={s} team={B} size={44} /><b>{B.nome}</b><small>Força {forca(s, B).toFixed(1)}</small></span>
-      </div>
-      <div className="prob"><span>{pct(pa)}</span><div><i style={{ width: pa * 100 + '%' }} /></div><span>{pct(1 - pa)}</span></div>
     </div>
   );
 }
