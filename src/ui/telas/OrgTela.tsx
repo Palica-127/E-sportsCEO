@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { act, setState, useGame } from '../../store';
 import { Escudo, Panel } from '../common';
+import { Modalidades } from './Expansao';
 
 export function OrgTela() {
   const s = useGame()!;
@@ -21,6 +22,7 @@ export function OrgTela() {
   }
   return (
     <div className="orgtela">
+      <Modalidades />
       <Panel title="Identidade">
         <div className="org-form">
           <div className="org-preview">{s.org.logo ? <img src={s.org.logo} width={110} height={110} className="crest-img" /> : <Escudo sigla={s.org.sigla} cor={s.org.cor} size={110} />}<strong>{s.org.nome}</strong></div>

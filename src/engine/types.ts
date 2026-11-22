@@ -87,6 +87,7 @@ export interface Team {
   /** índices: [0..nRoles-1] titulares por função, resto reservas */
   elenco: string[];
   org?: boolean;
+  acad?: boolean; // Academy da org (joga a Challengers, não sobe)
   manual?: boolean; // CEO interveio na escalação
   ult: ('V' | 'D')[];
 }
@@ -220,6 +221,8 @@ export interface State {
   org: Org;
   jogos: GameId[];
   orgTeams: Partial<Record<GameId, string>>;
+  academias?: Partial<Record<GameId, string>>;
+  marca?: Marca;
   players: Record<string, Player>;
   teams: Record<string, Team>;
   leagues: Record<string, League>;
@@ -245,4 +248,15 @@ export interface State {
   redes: Post[];
   diaJogo?: { dia: number; ids: string[] } | null;
   noticiasDia?: string[];
+}
+
+export type FaixaPreco = 'pop' | 'padrao' | 'premium';
+export interface ProdutoEstado { lancado: number; estoque: number; chegando?: { qtd: number; dia: number }; preco: FaixaPreco; vendidos: number; receita: number; semana?: number }
+export interface EventoFa { id: string; mid: string; local: string; preco: number; dia: number; res?: { publico: number; receita: number; cap: number } }
+export interface Marca {
+  hype: number; // 0..100
+  produtos: Record<string, ProdutoEstado>;
+  socio?: { preco: number; membros: number; desde: number };
+  eventos: EventoFa[];
+  hist: { sem: number; loja: number; socio: number }[];
 }

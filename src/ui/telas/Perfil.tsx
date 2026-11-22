@@ -1,3 +1,4 @@
+import { academyDe, moverBase } from '../../engine/academy';
 import { CSSProperties, useState } from 'react';
 import { Award, Search, Star } from 'lucide-react';
 import { GAMES } from '../../engine/games';
@@ -52,6 +53,9 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
               <div className="pf-l">{t ? <><Crest s={s} team={t} size={26} />{t.nome}</> : 'Agente livre'}</div>
               <div className="pf-l"><Flag nat={p.nat} />{(p.nat ?? '').toUpperCase()} · {p.idade} anos</div>
               <div className="pf-l"><Chips p={p} titular={t ? titular : false} /></div>
+              {meu && academyDe(s, g) && (
+                <div className="pf-l"><button className="btn sm" onClick={() => setMsg(act(st => moverBase(st, g, p.id)) ?? '')}>{t?.acad ? '⬆ Promover ao time principal' : '⬇ Mandar para a Academy'}</button></div>
+              )}
               <div className="pf-gauges">
                 <Gauge v={50 + p.forma * 16} label="Forma" size={92} />
                 <Gauge v={p.moral} label="Moral" size={92} />

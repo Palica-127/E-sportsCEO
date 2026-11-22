@@ -51,7 +51,8 @@ function Resultados({ ids, onFechar }: { ids: string[]; onFechar: () => void }) 
   const [rever, setRever] = useState<string | null>(null);
   const org = ids.map(id => s.matches[id]).filter(Boolean);
   const ligas = new Set(org.map(m => m.tor));
-  const outros = jogosDoDia(s, s.dia).filter(m => !ids.includes(m.id) && m.sa != null && ligas.has(m.tor));
+  const academy = jogosDoDia(s, s.dia).filter(m => m.sa != null && (s.teams[m.a].acad || s.teams[m.b].acad));
+  const outros = jogosDoDia(s, s.dia).filter(m => !ids.includes(m.id) && m.sa != null && ligas.has(m.tor) && !academy.includes(m));
   if (rever) return <Resumo s={s} m={s.matches[rever]} onFim={() => setRever(null)} auto={false} />;
   return (
     <>
@@ -72,6 +73,20 @@ function Resultados({ ids, onFechar }: { ids: string[]; onFechar: () => void }) 
           );
         })}
       </div>
+      {academy.length > 0 && (
+        <>
+          <h4 className="sub">Academy</h4>
+          <div className="res-outros">
+            {academy.map(m => (
+              <div key={m.id} className="ro">
+                <span className={m.sa! > m.sb! ? 'w' : ''}><Crest s={s} team={s.teams[m.a]} size={20} />{s.teams[m.a].sigla}</span>
+                <b>{m.sa}–{m.sb}</b>
+                <span className={m.sb! > m.sa! ? 'w' : ''}>{s.teams[m.b].sigla}<Crest s={s} team={s.teams[m.b]} size={20} /></span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
       {outros.length > 0 && (
         <>
           <h4 className="sub">Outros jogos das suas ligas</h4>

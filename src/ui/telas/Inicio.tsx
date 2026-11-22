@@ -66,8 +66,8 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
   const ligasOrg = new Set(s.jogos.map(g => torneioDaLiga(s, ligaDoTime(s, s.orgTeams[g]!).id)?.id));
   const jogosDia = jogosDoDia(s, diaJ).filter(m => ligasOrg.has(m.tor) || isOrg(s, m.a) || isOrg(s, m.b)).slice(0, 10);
   // ranking mundial do jogo escolhido
-  const rank = Object.values(s.teams).filter(t => t.game === gR && (t.tier === 1 || t.org)).sort((a, b) => forca(s, b) - forca(s, a));
-  const posOrg = rank.findIndex(t => t.org);
+  const rank = Object.values(s.teams).filter(t => t.game === gR && (t.tier === 1 || (t.org && !t.acad))).sort((a, b) => forca(s, b) - forca(s, a));
+  const posOrg = rank.findIndex(t => t.org && !t.acad);
 
   return (
     <div className="home">

@@ -769,3 +769,61 @@ kbd { font: 600 10px var(--f); padding: 1px 5px; border: 1px solid var(--line2);
   .pj-cmp b { font-size: 14px; } .pj-cmp span { font-size: 11px; }
   .pj-acoes .btn { min-width: 0; }
 }
+
+/* ===== marca e loja ===== */
+.grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; align-items: start; }
+.marca-top { display: grid; grid-template-columns: auto auto 1fr 1fr 1.4fr; align-items: center; gap: 22px; padding: 16px 20px; margin-bottom: 16px; border-radius: 4px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 14%, transparent), rgba(255,255,255,.03)); box-shadow: inset 0 0 0 1px var(--line); }
+.mt-brand { display: flex; align-items: center; gap: 14px; } .mt-brand img { border-radius: 6px; } .mt-brand h2 { font-size: 24px; }
+.mt-kpi { display: flex; flex-direction: column; } .mt-kpi span { font-size: 12px; color: var(--mut); text-transform: uppercase; letter-spacing: .08em; } .mt-kpi b { font-size: 24px; }
+.mt-dica { font-size: 13px; margin: 0; }
+.loja-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.loja-grid .span2 { grid-column: 1 / -1; }
+.produto { display: grid; grid-template-columns: 64px 1fr; gap: 14px; padding: 16px; background: var(--panel2); border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line); }
+.produto.bloq { opacity: .6; }
+.pr-ico { font-size: 40px; width: 64px; height: 64px; display: grid; place-items: center; background: rgba(0,0,0,.25); border-radius: 6px; }
+.pr-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .pr-info > b { font-size: 18px; }
+.pr-st { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--mut); margin-top: 4px; } .pr-st b { color: var(--txt); }
+.pr-prev { font-size: 13px; color: var(--mut); } .pr-prev b { color: var(--cyan); }
+.pr-acoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.pr-acoes .seg { display: inline-flex; border: 1px solid var(--line2); border-radius: 3px; overflow: hidden; }
+.pr-acoes .seg button { background: none; border: 0; color: var(--mut); padding: 6px 10px; font: 600 12px var(--f); cursor: pointer; }
+.pr-acoes .seg button.on { background: rgba(46,197,232,.18); color: var(--cyan); }
+.socio-planos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+.plano { display: flex; flex-direction: column; gap: 4px; padding: 14px; text-align: left; background: rgba(0,0,0,.2); border: 1px solid var(--line2); border-radius: 4px; color: var(--txt); cursor: pointer; font: inherit; }
+.plano.on { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok), 0 0 18px rgba(63,209,122,.2); }
+.plano b { font-size: 24px; } .plano b small { font-size: 12px; } .plano span { font-size: 13px; color: var(--mut); }
+.locais { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.local { display: flex; flex-direction: column; gap: 2px; padding: 10px; text-align: left; background: rgba(0,0,0,.2); border: 1px solid var(--line2); border-radius: 4px; color: var(--txt); cursor: pointer; font: inherit; }
+.local.on { border-color: var(--cyan); background: rgba(46,197,232,.1); } .local.bloq { opacity: .45; }
+.local span { font-size: 13px; color: var(--mut); }
+.ev-prev { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; padding: 12px; background: rgba(0,0,0,.2); border-radius: 4px; }
+.ev-prev div { display: flex; flex-direction: column; } .ev-prev span { font-size: 11px; color: var(--mut); text-transform: uppercase; } .ev-prev b { font-size: 17px; }
+.ev-l { display: grid; grid-template-columns: 70px 74px 1fr auto; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.ev-j { display: flex; align-items: center; gap: 4px; color: var(--mut); }
+input[type=range] { width: 100%; padding: 0; accent-color: var(--cyan); }
+.grid2 select { width: 100%; }
+@media (max-width: 900px) { .marca-top, .grid2, .loja-grid { grid-template-columns: 1fr; } .locais, .ev-prev { grid-template-columns: 1fr 1fr; } }
+
+/* ===== modalidades / expansão ===== */
+.modal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.mod-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 4px; background: rgba(0,0,0,.18); border-top: 3px solid color-mix(in srgb, var(--g) 50%, transparent); box-shadow: inset 0 0 0 1px var(--line); min-height: 150px; }
+.mod-card.tem { border-top-color: var(--g); background: linear-gradient(180deg, color-mix(in srgb, var(--g) 12%, transparent), rgba(0,0,0,.18) 60%); }
+.mc-h { display: flex; align-items: center; gap: 8px; } .mc-h b { font-size: 15px; }
+.mc-t { display: flex; align-items: center; gap: 10px; min-width: 0; } .mc-t div { display: flex; flex-direction: column; min-width: 0; } .mc-t b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-ac { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--line2); margin-top: auto; }
+.mc-ac small { font-size: 12px; }
+.mc-novo { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.modal.largo2 { max-width: 1080px; display: flex; flex-direction: column; gap: 8px; }
+.modal.largo2 h2 { display: flex; align-items: center; gap: 10px; }
+.modos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.modo { display: flex; flex-direction: column; gap: 6px; padding: 14px; text-align: left; background: rgba(0,0,0,.2); border: 1px solid var(--line2); border-radius: 4px; color: var(--txt); font: inherit; cursor: pointer; }
+.modo.on { border-color: var(--g); box-shadow: 0 0 0 1px var(--g); background: color-mix(in srgb, var(--g) 10%, rgba(0,0,0,.2)); }
+.modo b { font-size: 17px; } .modo span { font-size: 13px; color: var(--mut); }
+.team-list.exp { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 260px; overflow: auto; }
+.team-list.exp .team-row span { margin-left: auto; font-weight: 700; color: var(--acc); }
+.exp-res { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; background: rgba(0,0,0,.2); border-radius: 4px; margin-top: 6px; }
+.exp-res div { display: flex; flex-direction: column; } .exp-res span { font-size: 11px; text-transform: uppercase; color: var(--mut); } .exp-res b { font-size: 20px; }
+.pend { margin: 4px 0 0; padding: 0; list-style: none; color: var(--bad); font-size: 14px; }
+@media (max-width: 900px) { .modal-grid, .modos, .team-list.exp { grid-template-columns: 1fr; } }
+.base-seg { margin-left: auto; align-self: center; }

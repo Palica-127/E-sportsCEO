@@ -37,7 +37,7 @@ function placaresExatos(p: number, bo: number) {
 }
 
 function lado(s: State, m: Match, t: Team): LadoDados {
-  const rank = Object.values(s.teams).filter(x => x.game === t.game && (x.tier === 1 || x.org)).sort((a, b) => forca(s, b) - forca(s, a)).findIndex(x => x.id === t.id) + 1;
+  const rank = Object.values(s.teams).filter(x => x.game === t.game && (x.tier === 1 || (x.org && !x.acad))).sort((a, b) => forca(s, b) - forca(s, a)).findIndex(x => x.id === t.id) + 1;
   const ts = titulares(s, t);
   const ve = (p: Player) => notaVista(s, p);
   const conhecidas = ts.map(ve).filter(v => v.a > 0);

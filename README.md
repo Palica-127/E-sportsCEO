@@ -52,6 +52,11 @@ Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa 
 - Periféricos por time (4 níveis, desgaste, patrocinador).
 - Saves da versão anterior não abrem: comece uma carreira nova.
 
+## Fase 3 (feita)
+- Expansão até 8 jogos em Organização → Modalidades: do zero (vaga + peneira), comprando uma org (rebrand) ou como investidor master. Pede reputação e camas na sede; o time estreia no próximo split.
+- Academies: jogam a Challengers (não sobem), jovens evoluem mais rápido; promover/rebaixar pela ficha do jogador. Rebaixamento do principal fecha a Academy.
+- Marca e loja: produtos com lote, faixa de preço e estoque (camisa, moletom, boné, mousepad, camisa assinada do Rosto, coleção de campeão, collab), sócio-torcedor, eventos com ingresso (bar, teatro, ginásio, arena) e hype.
+- Finanças rebalanceadas com valores reais do cenário e crédito bancário quando o caixa aperta.
+
 ## Próximas fases
-3. Expansão até 8 jogos (do zero, comprando uma org ou como investidor), Academies jogando, finanças e patrocínios completos, torneios internacionais.
 4. Históricos e prêmios (Golden Crown etc.), Hall da Fama, versão .exe.

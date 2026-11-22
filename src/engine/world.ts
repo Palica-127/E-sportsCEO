@@ -48,10 +48,10 @@ const isoMap = (LOLX as any).iso as Record<string, string>;
 const lolNat = (LOLX as any).nat as Record<string, string>;
 const N = NOMES as any;
 
-function natCluster(g: GameId, region: string): string {
+export function natCluster(g: GameId, region: string): string {
   return N.cluster?.[g]?.[region] ?? 'GLOBAL';
 }
-function sorteiaPais(s: HasSeed, cl: string): string {
+export function sorteiaPais(s: HasSeed, cl: string): string {
   const pesos: Record<string, number> = N.pesos?.[cl] ?? { BR: 1 };
   const ccs = Object.keys(pesos).filter(c => N.paises[c]);
   return ccs.length ? weighted(s, ccs, (c: string) => pesos[c]) : 'BR';
@@ -159,6 +159,7 @@ export function forca(s: State, t: Team): number {
 /** comissão técnica, sala de treino e periféricos. Times da IA têm uma estrutura padrão pela divisão */
 export function bonusEstrutura(s: State, t: Team): number {
   if (!t.org) return t.tier === 1 ? 2 : 1;
+  if (t.acad) return 1.5;
   if (!s.staff) return 1.5;
   const doJogo = (c: string) => Object.values(s.staff).find(x => x.cargo === c && x.game === t.game);
   const tec = doJogo('tecnico'), an = doJogo('analista');

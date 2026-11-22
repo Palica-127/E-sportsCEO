@@ -8,6 +8,7 @@ import { estrelas, forca } from '../../engine/world';
 import { maxElenco } from '../../engine/mercado';
 import { tecnicoDe } from '../../engine/staff';
 import { act, useGame } from '../../store';
+import { academyDe } from '../../engine/academy';
 import { Bar, Chips, Crest, Estrelas, Flag, Forma, RetratoJogador } from '../common';
 import type { Tela } from '../Shell';
 
@@ -16,7 +17,9 @@ export function Elenco({ jogo, ir }: { jogo?: string; ir: (t: Tela, a?: string) 
   const [g, setG] = useState<GameId>((jogo as GameId) && s.jogos.includes(jogo as GameId) ? (jogo as GameId) : s.jogos[0]);
   const [modo, setModo] = useState(false);
   const [sel, setSel] = useState<string | null>(null);
-  const t = s.teams[s.orgTeams[g]!];
+  const [base, setBase] = useState(false);
+  const ac = academyDe(s, g);
+  const t = base && ac ? ac : s.teams[s.orgTeams[g]!];
   const def = GAMES[g];
   const nR = def.roles.length;
   const L = ligaDoTime(s, t.id);
@@ -26,7 +29,7 @@ export function Elenco({ jogo, ir }: { jogo?: string; ir: (t: Tela, a?: string) 
   const fisico = Math.round(Math.min(100, Math.max(0, 70 + tit.reduce((a, p) => a + p.forma, 0) / Math.max(1, tit.length) * 10)));
   const moral = Math.round(tit.reduce((a, p) => a + p.moral, 0) / Math.max(1, tit.length));
   const entros = Math.round(Math.max(40, 100 - tit.filter(p => (p.hist ?? []).some(h => h.d > s.dia - 120 && h.t.startsWith('Contratado'))).length * 12));
-  const rank = Object.values(s.teams).filter(x => x.game === g && (x.tier === 1 || x.org)).sort((a, b) => forca(s, b) - forca(s, a)).findIndex(x => x.id === t.id) + 1;
+  const rank = Object.values(s.teams).filter(x => x.game === g && (x.tier === 1 || (x.org && !x.acad))).sort((a, b) => forca(s, b) - forca(s, a)).findIndex(x => x.id === t.id) + 1;
 
   function clicar(p: Player) {
     if (!modo) { ir('perfil', p.id); return; }
@@ -47,7 +50,9 @@ export function Elenco({ jogo, ir }: { jogo?: string; ir: (t: Tela, a?: string) 
 
   return (
     <div style={{ '--g': def.cor } as CSSProperties}>
-      <div className="tabs">{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} onClick={() => { setG(x); setSel(null); }}>{GAMES[x].nome}</button>)}</div>
+      <div className="tabs">{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} onClick={() => { setG(x); setSel(null); setBase(false); }}>{GAMES[x].nome}</button>)}
+        {ac && <span className="seg base-seg"><button className={!base ? 'on' : ''} onClick={() => setBase(false)}>Principal</button><button className={base ? 'on' : ''} onClick={() => setBase(true)}>Academy</button></span>}</div>
+      {base && ac && <div className="alerta ok" style={{ marginBottom: 12 }}><b>!</b>A Academy joga a {L.nome} e não pode subir. Abra a ficha de um jovem para promovê-lo ao principal.</div>}
       <section className="sec">
         <header className="sec-h"><h3><span className="chev">»</span>Informações do time</h3></header>
         <div className="team-info">

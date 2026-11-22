@@ -1,4 +1,6 @@
 // Calendário dia a dia: abre os campeonatos de cada jogo nas datas do ano, joga as partidas e avança fases.
+import { fecharAcademy } from './academy';
+import { hypePartida, mudaHype } from './marca';
 import { GAMES, GameId } from './games';
 import { clamp, ri } from './rng';
 import type { Match, State, Torneio } from './types';
@@ -15,6 +17,7 @@ export const DIAS_ANO = 364;
 const BASE = Date.UTC(2027, 0, 4); // segunda-feira
 export function dataDe(dia: number): Date { return new Date(BASE + dia * 86400000); }
 export function diaDoAno(dia: number): number { return dia % DIAS_ANO; }
+export function inicioAnoDia(dia: number): number { return dia - (dia % DIAS_ANO); }
 export function diaSemana(dia: number): number { return dia % 7; }
 const SEM = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
 const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -24,7 +27,8 @@ export function fmtData(dia: number, comSemana = true): string {
 }
 export const nomeMes = (m: number) => MES[m];
 
-export function isOrg(s: State, teamId: string): boolean { return !!s.teams[teamId]?.org; }
+/** time principal da org (a Academy fica de fora: joga sozinha, sem tela de partida) */
+export function isOrg(s: State, teamId: string): boolean { const t = s.teams[teamId]; return !!t?.org && !t.acad; }
 
 // ---------- índices em memória (não vão para o save) ----------
 interface Idx { dia: Map<number, Match[]>; tor: Map<string, Match[]> }
@@ -94,6 +98,7 @@ function fimTorneio(s: State, tor: Torneio) {
     noticia(s, `${GAMES[g].curto}: ${campeao.nome} é campeã do ${tor.nome}!`);
     for (const id of campeao.elenco) { const p = s.players[id]; if (p) (p.hist ??= []).push({ d: s.dia, t: `🏆 Campeão do ${tor.nome} pela ${campeao.nome}` }); }
     if (campeao.org) post(s, `É CAMPEÃ! 🏆 ${tor.nome} é da ${campeao.sigla}!!!`, 'bom');
+    if (campeao.org && !campeao.acad) mudaHype(s, ['split', 'd2'].includes(tor.kind) ? 20 : 30);
   }
   if (tor.kind === 'split' || tor.kind === 'd2') {
     const L = s.leagues[tor.league!];
@@ -104,7 +109,8 @@ function fimTorneio(s: State, tor: Torneio) {
       const t1 = L.tier === 1 ? tor : outra, t2 = L.tier === 1 ? outra : tor;
       const ultimo = t1.rank![t1.rank!.length - 1];
       const ultimoDia = Math.max(...[t1, t2].flatMap(t => jogosDoTorneio(s, t.id).map(m => m.dia)));
-      const ac = criaAcesso(s, g, L.region, tor.split!, Math.max(s.dia + 2, ultimoDia + 2), ultimo, t2.campeao!);
+      const desafiante = [t2.campeao!, ...(t2.rank ?? [])].find(id => !s.teams[id]?.acad) ?? t2.campeao!;
+      const ac = criaAcesso(s, g, L.region, tor.split!, Math.max(s.dia + 2, ultimoDia + 2), ultimo, desafiante);
       iniciaTorneio(s, ac, ganchos(s));
     }
   }
@@ -116,6 +122,7 @@ function fimTorneio(s: State, tor: Torneio) {
       T2.teams = T2.teams.filter(x => x !== desafiante).concat(ultimo);
       s.teams[ultimo].tier = 2; s.teams[desafiante].tier = 1;
       noticia(s, `${GAMES[g].curto}: ${s.teams[desafiante].nome} vence a série de acesso e sobe para a ${T1.nome}; ${s.teams[ultimo].nome} cai.`);
+      if (s.orgTeams[g] === ultimo && s.academias?.[g]) fecharAcademy(s, g, 'rebaixamento');
     } else noticia(s, `${GAMES[g].curto}: ${s.teams[ultimo].nome} vence a série de acesso e segue na elite.`);
   }
   const org = s.orgTeams[g];
@@ -158,6 +165,11 @@ function simulaDia(s: State, dia: number, comDetalhe: boolean) {
     if (daOrg && !comDetalhe) continue;
     for (const id of [m.a, m.b]) { const t = s.teams[id]; if (!t.org || !t.manual) escalarAuto(s, t); }
     simulaSerie(s, m, daOrg);
+    const ac = s.teams[m.a].acad ? m.a : s.teams[m.b].acad ? m.b : null;
+    if (ac) {
+      const meu = ac === m.a ? m.sa! : m.sb!, deles = ac === m.a ? m.sb! : m.sa!, adv = s.teams[ac === m.a ? m.b : m.a];
+      noticia(s, `${GAMES[m.game].curto} Academy: ${meu > deles ? 'vitória' : 'derrota'} por ${meu}-${deles} contra a ${adv.nome}`);
+    }
   }
   const h = ganchos(s);
   const tors = new Set(hoje.map(m => m.tor));
@@ -193,6 +205,7 @@ export function jogarDia(s: State): Match[] {
   simulaDia(s, s.dia, true);
   s.diaJogo = { dia: s.dia, ids: ms.map(m => m.id) };
   for (const m of ms) {
+    hypePartida(s, m);
     const meuA = isOrg(s, m.a), venceu = meuA === (m.sa! > m.sb!);
     const adv = s.teams[meuA ? m.b : m.a], mvp = m.mvp ? s.players[m.mvp] : null;
     const placar = meuA ? `${m.sa}-${m.sb}` : `${m.sb}-${m.sa}`;

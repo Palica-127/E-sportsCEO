@@ -1,5 +1,6 @@
 // Comissão técnica e staff da org como pessoas: técnico, auxiliar e analista por jogo; psicólogo,
 // nutricionista, chef, preparador físico, social media e olheiros para a org toda.
+import { moradores } from './academy';
 import { GAMES, GameId } from './games';
 import { chance, clamp, pick, ri, rnd } from './rng';
 import type { Cargo, ComodoId, Staff, State } from './types';
@@ -144,7 +145,7 @@ export function treinoMensal(s: State) {
 /** moral semanal: puxa para um alvo que depende da estrutura e do staff */
 export function moralSemanal(s: State) {
   const lazer = s.sede.comodos.lazer?.nivel ?? 0;
-  const lotado = s.jogos.reduce((a, g) => a + (s.teams[s.orgTeams[g]!]?.elenco.length ?? 0), 0) > QUARTOS[s.sede.nivel];
+  const lotado = moradores(s) > QUARTOS[s.sede.nivel];
   const alvoBase = 60 + cobertura(s, 'psicologo') * 10 + cobertura(s, 'chef') * 5 + lazer * 2 - (lotado ? 8 : 0) + (s.org.cenario === 'crise' ? -4 : 0);
   for (const g of s.jogos) {
     const t = s.teams[s.orgTeams[g]!];

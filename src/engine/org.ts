@@ -7,6 +7,8 @@ import { criaJogador, criaJogo, escalarAuto, forca, geraNick, novoId, salario, t
 import { DIAS_ANO, anoDe, diaDoAno, diaSemana, noticia } from './sim';
 import { CARGOS, cobertura, doCargo, moralSemanal, renovaPool, staffInicial, tecnicoDe, treinoMensal } from './staff';
 import { custoSede, obrasProntas, sedeInicial, tickSede } from './sede';
+import { treinoAcademy } from './academy';
+import { tickMarcaDia, tickMarcaSemana } from './marca';
 import { contratosFimDeAno, post, respostaNeg, respostaVenda, tickMercado } from './mercado';
 
 export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: number; meta: string; metaId: 'subir' | 'playoffs' | 'titulo'; detalhes: string[] }> = {
@@ -105,7 +107,7 @@ export function assumirCarreira(s: State, cfg: CarreiraCfg) {
   }
 }
 
-function noticia2(s: State, g: GameId, txt: string) { s.noticiasDia = [...(s.noticiasDia ?? []), `${GAMES[g].curto}: ${txt}`].slice(-30); }
+export function noticia2(s: State, g: GameId, txt: string) { s.noticiasDia = [...(s.noticiasDia ?? []), `${GAMES[g].curto}: ${txt}`].slice(-30); }
 
 export function msg(s: State, m: Omit<Msg, 'id' | 'dia' | 'lida'>): Msg {
   const mm: Msg = { id: novoId(s, 'i'), dia: s.dia, lida: false, ...m };
@@ -115,7 +117,7 @@ export function msg(s: State, m: Omit<Msg, 'id' | 'dia' | 'lida'>): Msg {
 }
 
 // ---------- peneira ----------
-function montaPeneira(s: State, g: GameId, region: string, slotTeam: string) {
+export function montaPeneira(s: State, g: GameId, region: string, slotTeam: string) {
   const nR = GAMES[g].roles.length;
   const livres = Object.values(s.players).filter(p => p.game === g && !p.teamId);
   const T2 = s.leagues[`${g}-${region}-2`];
@@ -208,7 +210,7 @@ export function confirmarPeneira(s: State): string | null {
   }
   s.peneira = {};
   s.fase = 'jogo';
-  msg(s, { de: 'Departamento de scouting', cargo: 'Scouting', cat: 'peneira', titulo: 'Peneira encerrada', corpo: `Elencos fechados. Agora é com o técnico: a pré-temporada começa e o primeiro split abre em 3 semanas.` });
+  msg(s, { de: 'Departamento de scouting', cargo: 'Scouting', cat: 'peneira', titulo: 'Peneira encerrada', corpo: s.dia < 5 ? `Elencos fechados. Agora é com o técnico: a pré-temporada começa e o primeiro split abre em 3 semanas.` : 'Elenco fechado. O time estreia no próximo split; até lá é pré-temporada.' });
   return null;
 }
 
@@ -225,13 +227,13 @@ export function repoeElenco(s: State, t: Team) {
 }
 
 // ---------- finanças ----------
-function lanca(s: State, tipo: 'rec' | 'desp', cat: string, v: number) {
+export function lanca(s: State, tipo: 'rec' | 'desp', cat: string, v: number) {
   s.finSemana[tipo][cat] = (s.finSemana[tipo][cat] ?? 0) + v;
 }
 
 export function folhaSemanal(s: State): number {
   let t = 0;
-  for (const g of s.jogos) { const tm = s.teams[s.orgTeams[g]!]; if (tm) for (const id of tm.elenco) t += s.players[id]?.sal ?? 0; }
+  for (const g of s.jogos) for (const tid of [s.orgTeams[g], s.academias?.[g]]) { const tm = tid ? s.teams[tid] : null; if (tm) for (const id of tm.elenco) t += s.players[id]?.sal ?? 0; }
   return t;
 }
 export function custosFixos(s: State): Record<string, number> {
@@ -251,15 +253,20 @@ export function receitasFixas(s: State): Record<string, number> {
   return r;
 }
 
+/** categorias que já entraram/saíram do caixa na hora (só aparecem no extrato da semana) */
+const REC_NA_HORA = new Set(['Premiações', 'Ingressos']);
+const DESP_NA_HORA = new Set(['Luvas e multas', 'Bootcamp', 'Expansão', 'Produção da loja', 'Eventos']);
+
 function fechaSemana(s: State) {
+  tickMarcaSemana(s);
   const fixos = custosFixos(s);
   lanca(s, 'desp', 'Salários', folhaSemanal(s));
   for (const [k, v] of Object.entries(fixos)) lanca(s, 'desp', k, v);
   for (const [k, v] of Object.entries(receitasFixas(s))) lanca(s, 'rec', k, v);
   const rec = Object.values(s.finSemana.rec).reduce((a, b) => a + b, 0);
-  const desp = Object.entries(s.finSemana.desp).filter(([k]) => k !== 'Luvas e multas').reduce((a, [, b]) => a + b, 0);
-  s.org.caixa += Object.entries(s.finSemana.rec).filter(([k]) => k !== 'Premiações').reduce((a, [, b]) => a + b, 0)
-    - Object.entries(s.finSemana.desp).filter(([k]) => k !== 'Luvas e multas' && k !== 'Bootcamp').reduce((a, [, b]) => a + b, 0);
+  const desp = Object.values(s.finSemana.desp).reduce((a, b) => a + b, 0);
+  s.org.caixa += Object.entries(s.finSemana.rec).filter(([k]) => !REC_NA_HORA.has(k)).reduce((a, [, b]) => a + b, 0)
+    - Object.entries(s.finSemana.desp).filter(([k]) => !DESP_NA_HORA.has(k)).reduce((a, [, b]) => a + b, 0);
   s.fin.push({ sem: Math.floor(s.dia / 7), rec, desp, caixa: s.org.caixa });
   s.fin = s.fin.slice(-60);
   s.finSemana = { rec: {}, desp: {} };
@@ -404,14 +411,15 @@ export function tickOrg(s: State) {
   if (dy === 0 && s.dia > 0) novaTemporada(s);
   // Fase 2: mercado, sede, staff, vestiário
   tickMercado(s, mm => msg(s, mm), t => noticia(s, t));
+  tickMarcaDia(s);
   for (const o of obrasProntas(s)) msg(s, { de: 'Gerente da sede', cargo: 'Sede', cat: 'financas', titulo: `Obra concluída: ${o}`, corpo: `A obra terminou e o cômodo já está funcionando.` });
   if (diaSemana(s.dia) === 0) { tickSede(s); moralSemanal(s); }
-  if (dy % 28 === 14) { treinoMensal(s); evolucaoMensal(s); vestiario(s); }
+  if (dy % 28 === 14) { treinoMensal(s); treinoAcademy(s); evolucaoMensal(s); vestiario(s); }
   if (dy % 28 === 0) renovaPool(s);
 }
 
 function evolucaoMensal(s: State) {
-  for (const g of s.jogos) for (const id of s.teams[s.orgTeams[g]!]?.elenco ?? []) { const p = s.players[id]; if (p) p.evo = [...(p.evo ?? []), p.ovr].slice(-36); }
+  for (const g of s.jogos) for (const id of [...(s.teams[s.orgTeams[g]!]?.elenco ?? []), ...(s.teams[s.academias?.[g] ?? '']?.elenco ?? [])]) { const p = s.players[id]; if (p) p.evo = [...(p.evo ?? []), p.ovr].slice(-36); }
 }
 
 function vestiario(s: State) {

@@ -5,7 +5,8 @@ import { Linha, Panel } from '../common';
 
 export function Financas() {
   const s = useGame()!;
-  const rec = receitasFixas(s);
+  const ultMarca = s.marca?.hist[s.marca.hist.length - 1];
+  const rec: Record<string, number> = { ...receitasFixas(s), ...(ultMarca?.loja ? { 'Loja da marca': ultMarca.loja } : {}), ...(ultMarca?.socio ? { 'Sócio-torcedor': ultMarca.socio } : {}) };
   const desp = { 'Salários': folhaSemanal(s), ...custosFixos(s) };
   const tr = Object.values(rec).reduce((a, b) => a + b, 0), td = Object.values(desp).reduce((a, b) => a + b, 0);
   const hist = s.fin.slice(-26);

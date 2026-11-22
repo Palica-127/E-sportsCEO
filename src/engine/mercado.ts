@@ -1,3 +1,4 @@
+import { mudaHype } from './marca';
 // Mercado: janelas, olheiros (notas escondidas), negociação em 2 etapas, rivais, propostas pelos seus
 // jogadores, renovação, dispensa, transferências da IA e o Rosto da Org.
 import { GAMES, GameId } from './games';
@@ -170,7 +171,7 @@ function fechar(s: State, n: Neg, msg: Msgr): string {
   }
   if (!t.manual) escalarAuto(s, t);
   (p.hist ??= []).push({ d: s.dia, t: `Contratado pela ${s.org.nome}${n.fee ? ` por ${fmt(n.fee)}` : ' (sem custo de transferência)'}${antigo ? `, vindo da ${antigo.nome}` : ''}` });
-  if (n.rosto) { s.rosto[g] = p.id; p.sal = Math.round(p.sal * 1.2); s.org.rep = clamp(s.org.rep + 6, 0, 100); s.org.fas = Math.round(s.org.fas * 1.25); }
+  if (n.rosto) { s.rosto[g] = p.id; p.sal = Math.round(p.sal * 1.2); s.org.rep = clamp(s.org.rep + 6, 0, 100); s.org.fas = Math.round(s.org.fas * 1.25); mudaHype(s, 15); }
   n.etapa = 'fechada';
   s.alvos = s.alvos.filter(x => x !== p.id);
   msg({ de: 'Departamento de esports', cargo: 'Contratações', cat: 'jogo', game: g, titulo: `${n.rosto ? '⭐ ' : ''}${p.nick} é da ${s.org.nome}!`,

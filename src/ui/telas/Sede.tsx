@@ -1,3 +1,4 @@
+import { moradores } from '../../engine/academy';
 import { useState } from 'react';
 import { GAMES } from '../../engine/games';
 import { moeda } from '../../engine/org';
@@ -65,7 +66,7 @@ export function SedeTela() {
   const s = useGame()!;
   const [msg, setMsg] = useState('');
   const T = SEDES[s.sede.nivel];
-  const nJog = s.jogos.reduce((a, g) => a + s.teams[s.orgTeams[g]!].elenco.length, 0);
+  const nJog = moradores(s);
   const faz = (f: () => string | null, ok: string) => { const e = act(f); setMsg(e ?? ok); };
   return (
     <div className="sede">
