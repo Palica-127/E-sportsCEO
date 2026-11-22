@@ -1,10 +1,10 @@
 // A org do jogador: cenários de início, peneira, finanças, patrocínios, caixa de entrada e decisões.
 import { GAMES, GameId } from './games';
 import { chance, clamp, pick, ri, rnd, shuffle } from './rng';
-import type { Candidato, Cenario, League, Msg, Player, State, Team } from './types';
+import type { Candidato, Cenario, Msg, Player, State, Team, Torneio } from './types';
 import { TRACOS } from './types';
 import { criaJogador, criaJogo, escalarAuto, forca, geraNick, novoId, salario, titulares, valorMercado } from './world';
-import { DIAS_ANO, anoDe, diaDoAno, diaSemana, tabela } from './sim';
+import { DIAS_ANO, anoDe, diaDoAno, diaSemana } from './sim';
 
 export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: number; meta: string; metaId: 'subir' | 'playoffs' | 'titulo'; detalhes: string[] }> = {
   nova: {
@@ -29,7 +29,7 @@ export function novoEstado(seed: number, jogos: GameId[]): State {
     v: 2, seed, nextId: 1, dia: 0, fase: 'peneira',
     org: { nome: '', sigla: '', cor: '#d4af37', cenario: 'nova', caixa: 0, rep: 20, fas: 5000 },
     jogos, orgTeams: {}, tecnicos: {}, players: {}, teams: {}, leagues: {}, matches: {},
-    inbox: [], patro: [], fin: [], finSemana: { rec: {}, desp: {} }, hist: [],
+    torneios: {}, ranks: {}, inbox: [], patro: [], fin: [], finSemana: { rec: {}, desp: {} }, hist: [],
     diretoria: { meta: '', metaId: 'subir', confianca: 60 }, peneira: {},
   };
   for (const g of jogos) criaJogo(s, g);
@@ -364,24 +364,54 @@ function novaTemporada(s: State) {
   msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', titulo: `Temporada ${ano}`, corpo: `Começa a temporada ${ano}. Meta: ${s.diretoria.meta.toLowerCase()}. Confiança atual da diretoria: ${Math.round(s.diretoria.confianca)}%.` });
 }
 
-/** chamado pela simulação quando o split de uma liga com a org termina */
-export function aoFimDaSerieOrg(s: State, L: League, split: number, fase: string, premio: number, rep: number) {
-  const g = L.game;
+const PREMIO: Record<string, number> = { split: 500000, d2: 100000, acesso: 0, fs: 400000, msi: 1000000, ewc: 1000000, worlds: 2500000, intlA: 600000, intlB: 1500000 };
+const INTL = new Set(['fs', 'msi', 'ewc', 'worlds', 'intlA', 'intlB']);
+
+/** a org se classificou para um internacional */
+export function aoClassificarOrg(s: State, tor: Torneio) {
+  const g = tor.game;
+  s.org.rep = clamp(s.org.rep + 2, 0, 100);
+  s.diretoria.confianca = clamp(s.diretoria.confianca + 4, 0, 100);
+  msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', game: g, titulo: `Classificados para o ${tor.nome}!`,
+    corpo: `O time de ${GAMES[g].nome} garantiu vaga no ${tor.nome}. É a chance de colocar a ${s.org.nome} no mapa do mundo.\n\nFormato: ${tor.stages.map(x => x.nome).join(' → ')}.` });
+}
+
+/** chamado quando termina um torneio em que a org jogou */
+export function aoFimTorneioOrg(s: State, tor: Torneio) {
+  const g = tor.game, org = s.orgTeams[g]!;
+  if (tor.kind === 'acesso') {
+    const [ultimo, desafiante] = tor.teams;
+    const subiu = desafiante === org && tor.campeao === org, caiu = ultimo === org && tor.campeao !== org;
+    const ficou = ultimo === org && tor.campeao === org;
+    if (subiu) { s.diretoria.confianca = clamp(s.diretoria.confianca + 20, 0, 100); s.org.rep = clamp(s.org.rep + 8, 0, 100); }
+    if (caiu) { s.diretoria.confianca = clamp(s.diretoria.confianca - 18, 0, 100); s.org.rep = clamp(s.org.rep - 6, 0, 100); }
+    msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', game: g,
+      titulo: subiu ? `ACESSO! ${s.org.nome} sobe para a elite` : caiu ? 'Rebaixados para a Challengers' : ficou ? 'Vaga na elite mantida' : 'Acesso adiado',
+      corpo: subiu ? 'Vitória na série de acesso. No próximo split o time joga a liga principal. Projeto no caminho certo.' : caiu ? 'Perdemos a série de acesso e vamos jogar a Challengers no próximo split.' : ficou ? 'Sofremos, mas vencemos a série de acesso e seguimos na elite.' : 'Batemos na trave na série de acesso. Fica para o próximo split.' });
+    return;
+  }
+  let fase: string;
+  if (tor.campeao === org) fase = 'CAMPEÃ';
+  else if (tor.elim[org]) fase = tor.elim[org];
+  else fase = `${(tor.rank ?? []).indexOf(org) + 1}º lugar`;
+  const mult = fase === 'CAMPEÃ' ? 1 : fase === 'Vice' ? 0.5 : /3º|4º|Semi/.test(fase) ? 0.25 : /Quartas|5º/.test(fase) ? 0.12 : INTL.has(tor.kind) ? 0.05 : 0;
+  const premio = Math.round((PREMIO[tor.kind] ?? 0) * mult);
+  const intl = INTL.has(tor.kind);
+  const rep = fase === 'CAMPEÃ' ? (intl ? 12 : tor.kind === 'split' ? 8 : 4) : fase === 'Vice' ? (intl ? 6 : 3) : mult >= 0.12 ? (intl ? 3 : 1) : intl ? 1 : -2;
   if (premio) { s.org.caixa += premio; lanca(s, 'rec', 'Premiações', premio); }
   s.org.rep = clamp(s.org.rep + rep, 0, 100);
   s.org.fas = Math.round(s.org.fas * (1 + Math.max(0, rep) * 0.02));
-  const camp = fase === 'CAMPEÃ';
-  // diretoria reage conforme a meta
   const meta = s.diretoria.metaId;
   let dc = 0;
-  if (camp) dc = 15;
-  else if (fase.includes('vice') || fase.includes('semi')) dc = meta === 'titulo' ? -4 : 6;
-  else if (fase.includes('quartas')) dc = meta === 'titulo' ? -8 : 2;
-  else dc = meta === 'titulo' ? -14 : meta === 'playoffs' ? -9 : -4;
+  if (fase === 'CAMPEÃ') dc = intl ? 20 : 12;
+  else if (intl) dc = mult >= 0.25 ? 6 : 1;
+  else if (mult >= 0.25) dc = meta === 'titulo' ? -4 : 5;
+  else if (mult > 0) dc = meta === 'titulo' ? -8 : 1;
+  else dc = meta === 'titulo' ? -12 : meta === 'playoffs' ? -8 : -3;
   s.diretoria.confianca = clamp(s.diretoria.confianca + dc, 0, 100);
   msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', game: g,
-    titulo: camp ? `🏆 ${s.org.nome} CAMPEÃ da ${L.nome}!` : `${GAMES[g].curto}: split ${split} encerrado`,
-    corpo: `${GAMES[g].nome}, ${L.nome}, split ${split}: ${fase}.${premio ? `\nPremiação: ${moeda(premio)}.` : ''}\n\nConfiança da diretoria: ${Math.round(s.diretoria.confianca)}% (${dc >= 0 ? '+' : ''}${dc}).` });
+    titulo: fase === 'CAMPEÃ' ? `🏆 ${s.org.nome} CAMPEÃ do ${tor.nome}!` : `${GAMES[g].curto}: ${tor.nome} encerrado`,
+    corpo: `${tor.nome}: ${fase === 'CAMPEÃ' ? 'campeã' : fase.toLowerCase()}.${premio ? `\nPremiação: ${moeda(premio)}.` : ''}\n\nConfiança da diretoria: ${Math.round(s.diretoria.confianca)}% (${dc >= 0 ? '+' : ''}${dc}).` });
 }
 
 /** CEO intervém: troca titular e reserva */
@@ -396,4 +426,3 @@ export function voltarAuto(s: State, teamId: string) {
   const t = s.teams[teamId]; t.manual = false; escalarAuto(s, t);
 }
 export const nomeTraco = (t: keyof typeof TRACOS) => TRACOS[t].nome;
-export { tabela };

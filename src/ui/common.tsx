@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { GAMES, GameId } from '../engine/games';
 import type { Player, State, Team } from '../engine/types';
 import { logoUrl, slug } from '../engine/world';
@@ -7,9 +7,10 @@ import FOTOS from '../data/fotos.json';
 const FOTO_SET = new Set<string>(FOTOS as string[]);
 
 export function Crest({ s, team, size = 32 }: { s: State; team: Team | undefined; size?: number }) {
+  const [falhou, setFalhou] = useState(false);
   if (!team) return <span style={{ width: size, height: size, display: 'inline-block' }} />;
   const real = team.slug === '__org' ? s.org.logo : logoUrl(team.slug);
-  if (real) return <img className="crest-img" src={real} alt={team.nome} width={size} height={size} loading="lazy" />;
+  if (real && !falhou) return <img className="crest-img" src={real} alt={team.nome} width={size} height={size} loading="lazy" onError={() => setFalhou(true)} />;
   return <Escudo sigla={team.slug === '__org' ? s.org.sigla : team.sigla} cor={team.cor} size={size} />;
 }
 

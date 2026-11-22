@@ -1,6 +1,7 @@
 import { CSSProperties, useState } from 'react';
 import { GAMES } from '../../engine/games';
-import { dataDe, isOrg, nomeMes } from '../../engine/sim';
+import { anoDe, dataDe, isOrg, nomeMes } from '../../engine/sim';
+import { calendario, inicioAno, nomeIntl } from '../../engine/comp';
 import type { Match } from '../../engine/types';
 import { useGame } from '../../store';
 import { Crest } from '../common';
@@ -19,6 +20,9 @@ export function Calendario() {
   const diaIdx = (d: number) => Math.round((Date.UTC(ym.y, ym.m, d) - BASE) / 86400000);
   const porDia: Record<number, Match[]> = {};
   for (const m of Object.values(s.matches)) if (isOrg(s, m.a) || isOrg(s, m.b)) (porDia[m.dia] ??= []).push(m);
+  const evs: Record<number, { g: string; txt: string }[]> = {};
+  for (const a of [ym.y - 1, ym.y, ym.y + 1]) if (a >= 2027) for (const g of s.jogos) for (const e of calendario(g)) (evs[inicioAno(a) + e.d] ??= []).push({ g, txt: e.kind === 'split' ? `Split ${e.split}` : nomeIntl(g, e.kind) });
+  void anoDe;
   const mudar = (k: number) => { const d = new Date(Date.UTC(ym.y, ym.m + k, 1)); setYm({ y: d.getUTCFullYear(), m: d.getUTCMonth() }); };
   const doMes = Array.from({ length: diasMes }, (_, i) => porDia[diaIdx(i + 1)] ?? []).flat().sort((a, b) => a.dia - b.dia);
 
@@ -39,6 +43,7 @@ export function Calendario() {
           return (
             <div key={i} className={'cal-d ' + (di === s.dia ? 'hoje ' : '') + (di < s.dia ? 'passou' : '')}>
               <span className="n">{i + 1}</span>
+              {(evs[di] ?? []).map((e, k) => <span key={k} className="cal-ev" style={{ '--g': GAMES[e.g as keyof typeof GAMES].cor } as CSSProperties}>{e.txt}</span>)}
               {ms.map(m => {
                 const meuA = isOrg(s, m.a);
                 const adv = s.teams[meuA ? m.b : m.a];

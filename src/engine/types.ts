@@ -71,23 +71,59 @@ export interface MapDet {
   mvp: string;
 }
 
-export type Fase = 'reg' | 'qf' | 'sf' | 'f';
 export interface Match {
   id: string;
   game: GameId;
-  league: string;
-  split: number;
+  tor: string; // torneio
+  st: number; // índice da fase dentro do torneio
+  k: string; // chave do confronto (rr, u1, gf, A:u1, sw...)
+  rodada: number;
+  label: string; // "Rodada 3", "Final da chave inferior"...
   dia: number;
   a: string;
   b: string;
   bo: number;
-  fase: Fase;
-  rodada: number;
-  slot?: number; // posição na chave
   sa?: number;
   sb?: number;
   mvp?: string;
   det?: MapDet[];
+}
+
+export type SpecId = 'de6' | 'de8' | 'de4' | 'se4' | 'ko8' | 'gsl4' | 'bo';
+export interface Stage {
+  tipo: 'rr' | 'br' | 'swiss' | 'gsl';
+  nome: string;
+  spec?: SpecId;
+  seeds: string[];
+  dias: number[];
+  ri: number;
+  bo: number;
+  boF: number;
+  rounds?: [string, string][][];
+  rec?: Record<string, { w: number; l: number; opp: string[] }>;
+  grupos?: { n: string; ids: string[] }[];
+  res: Record<string, string>; // chave -> id da partida
+  fim?: boolean;
+  out?: string[];
+}
+export type TorKind = 'split' | 'd2' | 'acesso' | 'fs' | 'msi' | 'ewc' | 'worlds' | 'intlA' | 'intlB';
+export interface Torneio {
+  id: string;
+  game: GameId;
+  ano: number;
+  kind: TorKind;
+  nome: string;
+  league?: string;
+  split?: number;
+  teams: string[];
+  stages: Stage[];
+  si: number;
+  direct?: string[]; // classificados direto para a fase seguinte (MSI/Mundial)
+  campeao?: string;
+  vice?: string;
+  elim: Record<string, string>;
+  rank?: string[];
+  fim?: boolean;
 }
 
 export type Cenario = 'nova' | 'crise' | 'investidor';
@@ -145,11 +181,13 @@ export interface State {
   teams: Record<string, Team>;
   leagues: Record<string, League>;
   matches: Record<string, Match>;
+  torneios: Record<string, Torneio>;
+  ranks: Record<string, string[]>;
   inbox: Msg[];
   patro: Patro[];
   fin: { sem: number; rec: number; desp: number; caixa: number }[];
   finSemana: { rec: Record<string, number>; desp: Record<string, number> };
-  hist: { ano: number; split: number; game: GameId; league: string; campeao: string; vice: string; org?: boolean }[];
+  hist: { ano: number; game: GameId; tor: string; nome: string; kind: TorKind; campeao: string; vice: string; org?: boolean }[];
   diretoria: { meta: string; metaId: 'subir' | 'playoffs' | 'titulo'; confianca: number };
   peneira: Partial<Record<GameId, { candidatos: Candidato[]; escolhidos: string[]; verba: number }>>;
   diaJogo?: { dia: number; ids: string[] } | null;

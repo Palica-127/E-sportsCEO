@@ -1,6 +1,7 @@
 // Estado global do jogo: o motor muda o objeto e a interface é avisada.
 import { useSyncExternalStore } from 'react';
 import type { State } from './engine/types';
+import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
 
 const KEY = 'esportsceo-v2';
 let state: State | null = load();
@@ -11,7 +12,7 @@ function load(): State | null {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
-    const s = JSON.parse(raw);
+    const s = JSON.parse(raw.startsWith('{') ? raw : decompressFromUTF16(raw) ?? 'null');
     return s?.v === 2 ? s : null;
   } catch { return null; }
 }
@@ -20,7 +21,7 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 function salvar() {
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
-    try { if (state) localStorage.setItem(KEY, JSON.stringify(state)); else localStorage.removeItem(KEY); } catch (e) { console.warn('save falhou', e); }
+    try { if (state) localStorage.setItem(KEY, compressToUTF16(JSON.stringify(state))); else localStorage.removeItem(KEY); } catch (e) { console.warn('save falhou', e); }
   }, 400);
 }
 
@@ -35,7 +36,7 @@ export function act<T>(fn: (s: State) => T): T {
 export function mudou() { versao++; salvar(); ouvintes.forEach(f => f()); }
 export function salvarAgora() {
   if (timer) clearTimeout(timer);
-  try { if (state) localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  try { if (state) localStorage.setItem(KEY, compressToUTF16(JSON.stringify(state))); } catch {}
 }
 
 export function useGame(): State | null {

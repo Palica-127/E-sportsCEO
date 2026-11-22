@@ -3,8 +3,8 @@ import { GAMES } from '../engine/games';
 import type { MapDet, Match, State } from '../engine/types';
 import { Crest } from './common';
 
-const FASE: Record<string, string> = { reg: 'Fase regular', qf: 'Quartas de final', sf: 'Semifinal', f: 'GRANDE FINAL' };
-export const nomeFase = (m: Match) => (m.fase === 'reg' ? `Rodada ${m.rodada}` : FASE[m.fase]);
+export const nomeFase = (m: Match) => m.label;
+const ehFinal = (m: Match) => m.k === 'gf' || m.k === 'f';
 
 /** resumo animado de ~30 s da série; termina mostrando o placar final e o MVP */
 export function Resumo({ s, m, onFim, auto = true }: { s: State; m: Match; onFim?: () => void; auto?: boolean }) {
@@ -45,7 +45,7 @@ export function Resumo({ s, m, onFim, auto = true }: { s: State; m: Match; onFim
   return (
     <div className="resumo" style={{ '--g': g.cor, '--ca': A.cor, '--cb': B.cor } as CSSProperties}>
       <div className="rs-top">
-        <span className="rs-comp">{s.leagues[m.league]?.nome} · {nomeFase(m)} · Bo{m.bo}</span>
+        <span className="rs-comp">{s.torneios[m.tor]?.nome} · {nomeFase(m)} · Bo{m.bo}</span>
         {!fim && <div className="rs-ctrl">{[1, 2, 4].map(v => <button key={v} className={'chip sm ' + (v === vel ? 'on' : '')} onClick={() => setVel(v)}>{v}x</button>)}<button className="chip sm" onClick={() => { cancelAnimationFrame(raf.current); setMi(maps.length); }}>Pular ⏭</button></div>}
       </div>
       <div className="rs-board">
@@ -53,7 +53,7 @@ export function Resumo({ s, m, onFim, auto = true }: { s: State; m: Match; onFim
         <div className="rs-serie">
           <div className="rs-maps"><span>{fim ? m.sa : mapasA}</span><i>–</i><span>{fim ? m.sb : mapasB}</span></div>
           {cur && <div className="rs-live"><small>Mapa {mi + 1}{cur.mapa ? ` · ${cur.mapa}` : ''}</small><div className="rs-score"><b>{sa}</b><i>{lbl}</i><b>{sb}</b></div><small className="clock">{rounds ? `Round ${Math.max(1, Math.min(cur.sa + cur.sb, sa + sb + (prog < 1 ? 1 : 0)))}` : `${Math.floor(prog * cur.dur)}'`}</small></div>}
-          {fim && <div className="rs-final">{m.fase === 'f' ? '🏆 ' : ''}Final</div>}
+          {fim && <div className="rs-final">{ehFinal(m) ? '🏆 ' : ''}Final</div>}
         </div>
         <div className={'rs-team b ' + (fim && m.sb! > m.sa! ? 'win' : '')}><Crest s={s} team={B} size={64} /><b>{B.nome}</b></div>
       </div>

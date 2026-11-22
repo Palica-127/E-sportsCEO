@@ -1,117 +1,124 @@
-import { CSSProperties, useState } from 'react';
+import { CSSProperties, useMemo, useState } from 'react';
 import { GAMES, GameId } from '../../engine/games';
-import { anoDe, splitAtual, tabela, vagasPlayoff } from '../../engine/sim';
-import type { Match } from '../../engine/types';
-import { forca } from '../../engine/world';
+import { calendario, inicioAno, nomeIntl } from '../../engine/comp';
+import { anoDe, fmtData, jogosDoTorneio, ligaDoTime, torneioDaLiga } from '../../engine/sim';
+import type { State, Torneio } from '../../engine/types';
 import { useGame } from '../../store';
-import { Crest, Ult } from '../common';
-import type { Tela } from '../Shell';
+import { Chave, Grupos, ListaJogos, Suico, TabelaLiga } from '../Bracket';
+import { Crest, GameTag } from '../common';
 
-export function Competicoes({ ir }: { ir: (t: Tela, a?: string) => void }) {
-  const s = useGame()!;
-  const [lid, setLid] = useState<string>(() => {
-    const g = s.jogos[0];
-    return Object.values(s.leagues).find(l => l.teams.includes(s.orgTeams[g]!))!.id;
-  });
-  const L = s.leagues[lid];
-  const [split, setSplit] = useState(splitAtual(s.dia));
-  const [aba, setAba] = useState<'tab' | 'jogos' | 'po' | 'hist'>('tab');
-  const g = L.game;
-  const ligas = Object.values(s.leagues).filter(l => l.game === g);
-  const ano = anoDe(s.dia);
-  const ms = Object.values(s.matches).filter(m => m.league === lid && m.split === split && anoDe(m.dia) === ano);
-  const tab = tabela(s, lid, split);
-  const vagas = vagasPlayoff(tab.length);
-  const trocaJogo = (x: GameId) => { const l = Object.values(s.leagues).find(l => l.teams.includes(s.orgTeams[x]!))!; setLid(l.id); };
+interface Item { id: string; nome: string; tor?: Torneio; dia: number; sub?: boolean; org?: boolean }
+interface Grupo { titulo: string; itens: Item[] }
 
-  return (
-    <div className="comp" style={{ '--g': GAMES[g].cor } as CSSProperties}>
-      <div className="tabs">{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} style={{ '--g': GAMES[x].cor } as CSSProperties} onClick={() => trocaJogo(x)}>{GAMES[x].nome}</button>)}</div>
-      <div className="comp-h">
-        <select value={lid} onChange={e => setLid(e.target.value)}>
-          {ligas.map(l => <option key={l.id} value={l.id}>{l.nome}{l.teams.some(id => s.teams[id].org) ? ' ★' : ''}</option>)}
-        </select>
-        <div className="chips">{[1, 2, 3].map(n => <button key={n} className={'chip sm ' + (n === split ? 'on' : '')} onClick={() => setSplit(n)}>Split {n}</button>)}</div>
-        <div className="chips">{([['tab', 'Tabela'], ['jogos', 'Jogos'], ['po', 'Playoffs'], ['hist', 'Campeões']] as const).map(([k, n]) => <button key={k} className={'chip sm ' + (aba === k ? 'on' : '')} onClick={() => setAba(k)}>{n}</button>)}</div>
-      </div>
-
-      {aba === 'tab' && (
-        <section className="panel">
-          <table className="tab">
-            <thead><tr><th>#</th><th className="tm">Time</th><th>J</th><th>V</th><th>D</th><th>Mapas</th><th className="hide-sm">Últimos</th><th className="hide-sm">Força</th></tr></thead>
-            <tbody>{tab.map(l => (
-              <tr key={l.team.id} className={(l.team.org ? 'org ' : '') + (l.pos <= vagas ? 'po' : '')}>
-                <td className="pos">{l.pos}</td>
-                <td className="tm"><Crest s={s} team={l.team} size={24} />{l.team.nome}</td>
-                <td>{l.j}</td><td><b>{l.v}</b></td><td>{l.d}</td><td>{l.mp}–{l.mc}</td>
-                <td className="hide-sm"><Ult r={l.team.ult} /></td><td className="hide-sm">{forca(s, l.team).toFixed(1)}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-          <p className="mut foot">Os {vagas} primeiros vão aos playoffs.{L.tier === 1 ? ' O pior do ano (somando os 3 splits) cai para a Challengers.' : ' O campeão do split 3 sobe para a elite.'}</p>
-        </section>
-      )}
-
-      {aba === 'jogos' && <Rodadas ms={ms.filter(m => m.fase === 'reg')} />}
-      {aba === 'po' && <Bracket ms={ms.filter(m => m.fase !== 'reg')} />}
-      {aba === 'hist' && (
-        <section className="panel">
-          <table className="tab">
-            <thead><tr><th>Ano</th><th>Split</th><th className="tm">Campeão</th><th className="tm">Vice</th></tr></thead>
-            <tbody>{s.hist.filter(h => h.league === lid).slice().reverse().map((h, i) => <tr key={i} className={h.org ? 'org' : ''}><td>{h.ano}</td><td>{h.split}</td><td className="tm">🏆 {h.campeao}</td><td className="tm">{h.vice}</td></tr>)}</tbody>
-          </table>
-          {!s.hist.some(h => h.league === lid) && <p className="mut foot">Ainda sem campeões nesta carreira.</p>}
-        </section>
-      )}
-    </div>
-  );
+function arvore(s: State, g: GameId): Grupo[] {
+  const ano = anoDe(s.dia), y0 = inicioAno(ano);
+  const tors = Object.values(s.torneios).filter(t => t.game === g && t.ano === ano);
+  const out: Grupo[] = [];
+  for (const ev of calendario(g)) {
+    if (ev.kind === 'split') {
+      const ligas = Object.values(s.leagues).filter(l => l.game === g).sort((a, b) => a.tier - b.tier);
+      const itens: Item[] = ligas.map(L => {
+        const tor = tors.find(t => t.league === L.id && t.split === ev.split && t.kind !== 'acesso');
+        return { id: tor?.id ?? `fut-${L.id}-${ev.split}`, nome: L.nome, tor, dia: y0 + ev.d, sub: L.tier === 2, org: L.teams.includes(s.orgTeams[g]!) };
+      });
+      for (const ac of tors.filter(t => t.kind === 'acesso' && t.split === ev.split && t.league === ligaDoTime(s, s.orgTeams[g]!).id.replace(/-2$/, '-1'))) itens.push({ id: ac.id, nome: `Acesso · ${s.leagues[ac.league!].nome}`, tor: ac, dia: ac.stages[0].dias[0], sub: true, org: ac.teams.includes(s.orgTeams[g]!) });
+      out.push({ titulo: `Split ${ev.split}`, itens });
+    } else {
+      const tor = tors.find(t => t.kind === ev.kind);
+      out.push({ titulo: nomeIntl(g, ev.kind), itens: [{ id: tor?.id ?? `fut-${ev.kind}`, nome: `${nomeIntl(g, ev.kind)} ${ano}`, tor, dia: y0 + ev.d, org: !!tor?.teams.includes(s.orgTeams[g]!) }] });
+    }
+  }
+  return out;
 }
 
-function Rodadas({ ms }: { ms: Match[] }) {
+export function Competicoes({ abrir }: { abrir?: string }) {
   const s = useGame()!;
-  const por: Record<number, Match[]> = {};
-  for (const m of ms) (por[m.rodada] ??= []).push(m);
-  const rods = Object.keys(por).map(Number).sort((a, b) => a - b);
-  if (!rods.length) return <p className="mut">A agenda deste split ainda não saiu.</p>;
+  const [g, setG] = useState<GameId>(() => (abrir && s.torneios[abrir]?.game) || s.jogos[0]);
+  const [sel, setSel] = useState<string>(() => {
+    if (abrir && s.torneios[abrir]) return abrir;
+    return torneioDaLiga(s, ligaDoTime(s, s.orgTeams[g]!).id)?.id ?? '';
+  });
+  const grupos = useMemo(() => arvore(s, g), [s, g, s.dia]);
+  const todos = grupos.flatMap(x => x.itens);
+  const item = todos.find(i => i.id === sel) ?? todos.find(i => i.tor && i.org) ?? todos.find(i => i.tor);
+
   return (
-    <div className="rodadas">
-      {rods.map(r => (
-        <section key={r} className="panel">
-          <header className="panel-h"><h3>Rodada {r}</h3></header>
-          <div className="panel-b">
-            {por[r].map(m => (
-              <div key={m.id} className={'ro ' + (s.teams[m.a].org || s.teams[m.b].org ? 'org' : '')}>
-                <span className={m.sa != null && m.sa > m.sb! ? 'w' : ''}>{s.teams[m.a].sigla}<Crest s={s} team={s.teams[m.a]} size={18} /></span>
-                <b>{m.sa != null ? `${m.sa}–${m.sb}` : 'vs'}</b>
-                <span className={m.sb != null && m.sb > m.sa! ? 'w' : ''}><Crest s={s} team={s.teams[m.b]} size={18} />{s.teams[m.b].sigla}</span>
-              </div>
+    <div className="comp2" style={{ '--g': GAMES[g].cor } as CSSProperties}>
+      <aside className="comp-tree">
+        <div className="seg">{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} style={{ '--g': GAMES[x].cor } as CSSProperties} onClick={() => { setG(x); setSel(torneioDaLiga(s, ligaDoTime(s, s.orgTeams[x]!).id)?.id ?? ''); }}>{GAMES[x].curto}</button>)}</div>
+        <div className="tree-ano">Temporada {anoDe(s.dia)}</div>
+        {grupos.map(gr => (
+          <div key={gr.titulo} className="tree-g">
+            <div className="tree-t">{gr.titulo}</div>
+            {gr.itens.map(i => (
+              <button key={i.id} className={'tree-i ' + (i.id === item?.id ? 'on ' : '') + (i.sub ? 'ch ' : '') + (!i.tor ? 'fut' : '')} onClick={() => setSel(i.id)}>
+                <span>{i.nome}{i.org && <i className="star">★</i>}</span>
+                <small className={i.tor && !i.tor.fim ? 'live' : ''}>{!i.tor ? fmtData(i.dia, false).replace(/ \d{4}$/, '') : i.tor.fim ? 'encerrado' : 'ao vivo'}</small>
+              </button>
             ))}
           </div>
-        </section>
-      ))}
+        ))}
+      </aside>
+      <section className="comp-main">
+        {!item ? <p className="mut pad">Nenhuma competição ainda.</p> : !item.tor ? (
+          <div className="panel"><div className="panel-b"><h2>{item.nome}</h2><p className="mut">Começa em {fmtData(item.dia)}. Os classificados saem das competições anteriores.</p></div></div>
+        ) : <Detalhe key={item.tor.id} s={s} tor={item.tor} />}
+      </section>
     </div>
   );
 }
 
-function Bracket({ ms }: { ms: Match[] }) {
-  const s = useGame()!;
-  if (!ms.length) return <p className="mut">Os playoffs começam quando a fase regular terminar.</p>;
-  const col = (f: string, nome: string) => {
-    const xs = ms.filter(m => m.fase === f).sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0));
-    if (!xs.length) return null;
-    return (
-      <div className="br-col"><h4>{nome}</h4>
-        {xs.map(m => (
-          <div key={m.id} className="br-m">
-            {(['a', 'b'] as const).map(l => {
-              const t = s.teams[l === 'a' ? m.a : m.b];
-              const sc = l === 'a' ? m.sa : m.sb, ot = l === 'a' ? m.sb : m.sa;
-              return <div key={l} className={'br-t ' + (t.org ? 'org ' : '') + (sc != null && sc > ot! ? 'w' : '')}><Crest s={s} team={t} size={20} /><span>{t.nome}</span><b>{sc ?? ''}</b></div>;
-            })}
-          </div>
-        ))}
+function Detalhe({ s, tor }: { s: State; tor: Torneio }) {
+  const ehLiga = tor.kind === 'split' || tor.kind === 'd2';
+  const abas: { k: string; n: string }[] = [];
+  tor.stages.forEach((st, i) => abas.push({ k: 'st' + i, n: st.tipo === 'rr' ? 'Tabela' : st.nome }));
+  abas.push({ k: 'jogos', n: 'Jogos' }, { k: 'times', n: ehLiga ? 'Campeões' : 'Classificados' });
+  const [aba, setAba] = useState('st' + Math.min(tor.si, tor.stages.length - 1));
+  const st = tor.stages[tor.si];
+  const ms = jogosDoTorneio(s, tor.id);
+  return (
+    <>
+      <header className="det-h">
+        <div><h2>{tor.nome}</h2><div className="det-s"><GameTag g={tor.game} /><span>{tor.stages.map(x => x.nome).join('  →  ')}</span></div></div>
+        <div className="det-st">
+          {tor.fim ? <><small>Campeão</small><b><Crest s={s} team={s.teams[tor.campeao!]} size={22} /> {s.teams[tor.campeao!].nome}</b></>
+            : <><small>Em andamento</small><b>{st.nome} · rodada {st.ri + 1}</b></>}
+        </div>
+      </header>
+      <div className="subtabs">{abas.map(a => <button key={a.k} className={a.k === aba ? 'on' : ''} onClick={() => setAba(a.k)}>{a.n}</button>)}</div>
+      <div className="panel det-b">
+        {abas.filter(a => a.k === aba).map(a => {
+          if (a.k.startsWith('st')) {
+            const i = Number(a.k.slice(2));
+            const x = tor.stages[i];
+            if (i > tor.si) return <p key={a.k} className="mut pad">Esta fase ainda não começou.</p>;
+            if (x.tipo === 'rr') return <TabelaLiga key={a.k} s={s} tor={tor} />;
+            if (x.tipo === 'swiss') return <Suico key={a.k} s={s} tor={tor} st={x} si={i} />;
+            if (x.tipo === 'gsl') return <Grupos key={a.k} s={s} st={x} />;
+            return <Chave key={a.k} s={s} st={x} seeds={x.seeds} campeao={i === tor.stages.length - 1 ? tor.campeao : undefined} />;
+          }
+          if (a.k === 'jogos') return <ListaJogos key={a.k} s={s} ms={ms} />;
+          if (ehLiga) return <Historico key={a.k} s={s} tor={tor} />;
+          return (
+            <table key={a.k} className="tab">
+              <thead><tr><th>#</th><th className="tm">Time</th><th>Região</th><th>Entrada</th><th>Resultado</th></tr></thead>
+              <tbody>{(tor.rank ?? tor.teams).map((id, i) => <tr key={id} className={s.teams[id].org ? 'org' : ''}><td className="pos">{i + 1}</td><td className="tm"><Crest s={s} team={s.teams[id]} size={20} />{s.teams[id].nome}</td><td>{s.leagues[`${tor.game}-${s.teams[id].region}-1`]?.nome ?? s.teams[id].region}</td><td>{tor.direct && !tor.direct.includes(id) ? 'Play-In' : 'Direto'}</td><td>{tor.campeao === id ? '🏆 Campeão' : tor.elim[id] ?? (tor.fim ? '' : 'Vivo')}</td></tr>)}</tbody>
+            </table>
+          );
+        })}
       </div>
-    );
-  };
-  return <div className="bracket">{col('qf', 'Quartas')}{col('sf', 'Semifinais')}{col('f', 'Final')}</div>;
+    </>
+  );
+}
+
+function Historico({ s, tor }: { s: State; tor: Torneio }) {
+  const L = s.leagues[tor.league!];
+  const h = s.hist.filter(x => x.nome.startsWith(L.nome + ' · Split')).slice().reverse();
+  if (!h.length) return <p className="mut pad">Ainda sem campeões nesta carreira.</p>;
+  return (
+    <table className="tab">
+      <thead><tr><th>Ano</th><th className="tm">Competição</th><th className="tm">Campeão</th><th className="tm">Vice</th></tr></thead>
+      <tbody>{h.map((x, i) => <tr key={i} className={x.org ? 'org' : ''}><td>{x.ano}</td><td className="tm">{x.nome}</td><td className="tm">🏆 {x.campeao}</td><td className="tm">{x.vice}</td></tr>)}</tbody>
+    </table>
+  );
 }

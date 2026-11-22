@@ -54,7 +54,7 @@ function Confronto({ m }: { m: Match }) {
   const pa = probSerie(forca(s, A), forca(s, B), m.bo);
   return (
     <div className="confronto" style={{ '--g': GAMES[m.game].cor } as CSSProperties}>
-      <div className="cf-top"><span className="gtag">{GAMES[m.game].curto}</span>{s.leagues[m.league].nome} · {nomeFase(m)} · Bo{m.bo}</div>
+      <div className="cf-top"><span className="gtag">{GAMES[m.game].curto}</span>{s.torneios[m.tor]?.nome} · {nomeFase(m)} · Bo{m.bo}</div>
       <div className="cf-row">
         <span className="cf-t"><Crest s={s} team={A} size={44} /><b>{A.nome}</b><small>Força {forca(s, A).toFixed(1)}</small></span>
         <span className="vs">VS</span>
@@ -69,8 +69,8 @@ function Resultados({ ids, onFechar }: { ids: string[]; onFechar: () => void }) 
   const s = useGame()!;
   const [rever, setRever] = useState<string | null>(null);
   const org = ids.map(id => s.matches[id]).filter(Boolean);
-  const ligas = new Set(org.map(m => m.league));
-  const outros = jogosDoDia(s, s.dia).filter(m => !ids.includes(m.id) && m.sa != null && ligas.has(m.league));
+  const ligas = new Set(org.map(m => m.tor));
+  const outros = jogosDoDia(s, s.dia).filter(m => !ids.includes(m.id) && m.sa != null && ligas.has(m.tor));
   if (rever) return <Resumo s={s} m={s.matches[rever]} onFim={() => setRever(null)} auto={false} />;
   return (
     <>

@@ -1,19 +1,18 @@
-// Calendário dia a dia, ligas, playoffs, acesso/rebaixamento e virada de ano.
+// Calendário dia a dia: abre os campeonatos de cada jogo nas datas do ano, joga as partidas e avança fases.
 import { GAMES, GameId } from './games';
-import { clamp, ri, rnd, shuffle } from './rng';
-import type { Fase, League, Match, State, Team } from './types';
+import { clamp, ri } from './rng';
+import type { Match, State, Torneio } from './types';
 import { simulaSerie } from './match';
-import { escalarAuto, forca, novoId, salario } from './world';
-import { aoFimDaSerieOrg, tickOrg } from './org';
+import { escalarAuto, salario } from './world';
+import { aoFimTorneioOrg, aoClassificarOrg, tickOrg } from './org';
+import { FIM_TEMPORADA, Ganchos, LinhaRR, anoDe, avancaTorneio, calendario, criaAcesso, criaIntl, criaSplit, iniciaTorneio, inicioAno, tabelaRR } from './comp';
 
+export { anoDe };
 export const ANO0 = 2027;
 export const DIAS_ANO = 364;
-export const SPLITS = [21, 133, 245]; // dia do ano em que cada split começa (segunda-feira)
-export const FIM_ANO = 357;
 
 const BASE = Date.UTC(2027, 0, 4); // segunda-feira
 export function dataDe(dia: number): Date { return new Date(BASE + dia * 86400000); }
-export function anoDe(dia: number): number { return ANO0 + Math.floor(dia / DIAS_ANO); }
 export function diaDoAno(dia: number): number { return dia % DIAS_ANO; }
 export function diaSemana(dia: number): number { return dia % 7; }
 const SEM = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
@@ -24,185 +23,104 @@ export function fmtData(dia: number, comSemana = true): string {
 }
 export const nomeMes = (m: number) => MES[m];
 
-export function splitAtual(dia: number): number {
-  const dy = diaDoAno(dia);
-  return dy >= SPLITS[2] ? 3 : dy >= SPLITS[1] ? 2 : 1;
-}
-
-/** próximo dia (>= de) em que o jogo tem partidas */
-function proxDiaJogo(g: GameId, de: number): number {
-  let d = de;
-  while (!GAMES[g].dias.includes(diaSemana(d))) d++;
-  return d;
-}
-
 export function isOrg(s: State, teamId: string): boolean { return !!s.teams[teamId]?.org; }
-// índices em memória (não vão para o save)
-interface Idx { dia: Map<number, Match[]>; liga: Map<string, Match[]> }
+
+// ---------- índices em memória (não vão para o save) ----------
+interface Idx { dia: Map<number, Match[]>; tor: Map<string, Match[]> }
 const cache = new WeakMap<State, Idx>();
 function idx(s: State): Idx {
   let c = cache.get(s);
-  if (!c) { c = { dia: new Map(), liga: new Map() }; for (const m of Object.values(s.matches)) indexa(c, m); cache.set(s, c); }
+  if (!c) { c = { dia: new Map(), tor: new Map() }; for (const m of Object.values(s.matches)) indexa(c, m); cache.set(s, c); }
   return c;
 }
 function indexa(c: Idx, m: Match) {
   (c.dia.get(m.dia) ?? c.dia.set(m.dia, []).get(m.dia)!).push(m);
-  (c.liga.get(m.league) ?? c.liga.set(m.league, []).get(m.league)!).push(m);
+  (c.tor.get(m.tor) ?? c.tor.set(m.tor, []).get(m.tor)!).push(m);
 }
-export function jogosDoDia(s: State, dia: number): Match[] {
-  return idx(s).dia.get(dia) ?? [];
-}
-export function jogosDaLiga(s: State, leagueId: string): Match[] {
-  return idx(s).liga.get(leagueId) ?? [];
+export function jogosDoDia(s: State, dia: number): Match[] { return idx(s).dia.get(dia) ?? []; }
+export function jogosDoTorneio(s: State, torId: string): Match[] { return idx(s).tor.get(torId) ?? []; }
+
+function ganchos(s: State): Ganchos {
+  return {
+    onAdd: m => indexa(idx(s), m),
+    byId: id => s.matches[id],
+    doTorneio: id => jogosDoTorneio(s, id),
+    fimTorneio: tor => fimTorneio(s, tor),
+  };
 }
 
-// ---------- tabela ----------
-export interface Linha { team: Team; j: number; v: number; d: number; mp: number; mc: number; pos: number }
-export function tabela(s: State, leagueId: string, split: number): Linha[] {
-  const L = s.leagues[leagueId];
-  const ano = anoDe(s.dia);
-  const ls: Record<string, Linha> = {};
-  for (const id of L.teams) ls[id] = { team: s.teams[id], j: 0, v: 0, d: 0, mp: 0, mc: 0, pos: 0 };
-  for (const m of jogosDaLiga(s, leagueId)) {
-    if (m.league !== leagueId || m.split !== split || m.fase !== 'reg' || m.sa == null || anoDe(m.dia) !== ano) continue;
-    const a = ls[m.a], b = ls[m.b];
-    if (!a || !b) continue;
-    a.j++; b.j++;
-    a.mp += m.sa; a.mc += m.sb!; b.mp += m.sb!; b.mc += m.sa;
-    if (m.sa > m.sb!) { a.v++; b.d++; } else { b.v++; a.d++; }
-  }
-  const arr = Object.values(ls).sort((x, y) => y.v - x.v || (y.mp - y.mc) - (x.mp - x.mc) || forca(s, y.team) - forca(s, x.team));
-  arr.forEach((l, i) => (l.pos = i + 1));
-  return arr;
+/** torneio em andamento (ou o último) de uma liga */
+export function torneioDaLiga(s: State, leagueId: string): Torneio | undefined {
+  const ts = Object.values(s.torneios).filter(t => t.league === leagueId && (t.kind === 'split' || t.kind === 'd2'));
+  return ts.sort((a, b) => b.ano - a.ano || (b.split ?? 0) - (a.split ?? 0))[0];
+}
+export function tabelaTorneio(s: State, tor: Torneio): LinhaRR[] {
+  return tabelaRR(s, tor, tor.stages[0], jogosDoTorneio(s, tor.id));
+}
+export function ligaDoTime(s: State, teamId: string) {
+  return Object.values(s.leagues).find(l => l.teams.includes(teamId))!;
 }
 
-// ---------- agenda do split ----------
-function roundRobin(ids: string[], duplo: boolean): [string, string][][] {
-  const t = ids.slice();
-  if (t.length % 2) t.push('BYE');
-  const n = t.length;
-  const rodadas: [string, string][][] = [];
-  for (let r = 0; r < n - 1; r++) {
-    const jogos: [string, string][] = [];
-    for (let i = 0; i < n / 2; i++) {
-      const a = t[i], b = t[n - 1 - i];
-      if (a !== 'BYE' && b !== 'BYE') jogos.push(r % 2 ? [b, a] : [a, b]);
-    }
-    rodadas.push(jogos);
-    t.splice(1, 0, t.pop()!);
-  }
-  if (duplo) return [...rodadas, ...rodadas.map(r => r.map(([a, b]) => [b, a] as [string, string]))];
-  return rodadas;
-}
-
-export function criaAgendaSplit(s: State, split: number) {
-  const ano = anoDe(s.dia);
-  const inicio = (ano - ANO0) * DIAS_ANO + SPLITS[split - 1];
-  for (const L of Object.values(s.leagues)) {
-    if (!s.jogos.includes(L.game)) continue;
-    const ids = shuffle(s, L.teams);
-    const rr = roundRobin(ids, ids.length <= 8);
-    const g = GAMES[L.game];
-    let d = inicio;
-    rr.forEach((rodada, ri_) => {
-      d = proxDiaJogo(L.game, d);
-      for (const [a, b] of rodada) addMatch(s, { game: L.game, league: L.id, split, dia: d, a, b, bo: g.boReg, fase: 'reg', rodada: ri_ + 1 });
-      d++;
-    });
-  }
-}
-
-function addMatch(s: State, m: Omit<Match, 'id'>): Match {
-  const mm: Match = { id: novoId(s, 'm'), ...m };
-  s.matches[mm.id] = mm;
-  indexa(idx(s), mm);
-  return mm;
-}
-
-// ---------- playoffs ----------
-function boPlayoff(g: GameId, f: Fase): number {
-  if (f === 'f') return 5;
-  if (f === 'sf' && (g === 'lol' || g === 'wr')) return 5;
-  return 3;
-}
-function jogosDe(s: State, L: League, split: number, fase?: Fase): Match[] {
-  const ano = anoDe(s.dia);
-  return jogosDaLiga(s, L.id).filter(m => m.split === split && anoDe(m.dia) === ano && (!fase || m.fase === fase));
-}
-const venc = (m: Match) => (m.sa! > m.sb! ? m.a : m.b);
-const perd = (m: Match) => (m.sa! > m.sb! ? m.b : m.a);
-
-/** quantos times vão aos playoffs */
-export function vagasPlayoff(n: number): number { return n >= 8 ? 6 : n >= 6 ? 4 : 2; }
-
-function avancaPlayoffs(s: State, L: League, split: number, hoje: number) {
-  const reg = jogosDe(s, L, split, 'reg');
-  if (!reg.length || reg.some(m => m.sa == null)) return;
-  const tab = tabela(s, L.id, split);
-  const vagas = vagasPlayoff(tab.length);
-  const seed = tab.map(l => l.team.id);
-  const qf = jogosDe(s, L, split, 'qf'), sf = jogosDe(s, L, split, 'sf'), fi = jogosDe(s, L, split, 'f');
-  const prox = proxDiaJogo(L.game, hoje + 3);
-  const cria = (fase: Fase, a: string, b: string, slot: number) => addMatch(s, { game: L.game, league: L.id, split, dia: prox, a, b, bo: boPlayoff(L.game, fase), fase, rodada: 0, slot });
-  if (vagas === 6 && !qf.length) { cria('qf', seed[2], seed[5], 0); cria('qf', seed[3], seed[4], 1); return; }
-  if (vagas === 6 && qf.some(m => m.sa == null)) return;
-  if (!sf.length && vagas >= 4) {
-    if (vagas === 6) {
-      const w0 = venc(qf.find(m => m.slot === 0)!), w1 = venc(qf.find(m => m.slot === 1)!);
-      // o 1º pega o pior classificado restante
-      const pior = seed.indexOf(w0) > seed.indexOf(w1) ? w0 : w1, melhor = pior === w0 ? w1 : w0;
-      cria('sf', seed[0], pior, 0); cria('sf', seed[1], melhor, 1);
-    } else { cria('sf', seed[0], seed[3], 0); cria('sf', seed[1], seed[2], 1); }
-    return;
-  }
-  if (sf.some(m => m.sa == null)) return;
-  if (!fi.length) {
-    if (vagas === 2) cria('f', seed[0], seed[1], 0);
-    else cria('f', venc(sf.find(m => m.slot === 0)!), venc(sf.find(m => m.slot === 1)!), 0);
-    return;
-  }
-  const f = fi[0];
-  if (f.sa == null) return;
-  if (s.hist.some(h => h.league === L.id && h.split === split && h.ano === anoDe(f.dia))) return;
-  const camp = venc(f), vice = perd(f);
-  s.hist.push({ ano: anoDe(f.dia), split, game: L.game, league: L.id, campeao: s.teams[camp].nome, vice: s.teams[vice].nome, org: isOrg(s, camp) || isOrg(s, vice) });
-  premiacao(s, L, split, camp, vice, sf, qf, tab);
-}
-
-function premiacao(s: State, L: League, split: number, camp: string, vice: string, sf: Match[], qf: Match[], tab: { team: Team }[]) {
-  const orgId = s.orgTeams[L.game];
-  if (!orgId || !L.teams.includes(orgId)) return;
-  const base = L.tier === 1 ? 500000 : 100000;
-  let fase = 'fora dos playoffs', valor = 0, rep = 0;
-  if (orgId === camp) { fase = 'CAMPEÃ'; valor = base; rep = L.tier === 1 ? 8 : 4; }
-  else if (orgId === vice) { fase = 'vice-campeã'; valor = base * 0.5; rep = L.tier === 1 ? 4 : 2; }
-  else if (sf.some(m => perd(m) === orgId)) { fase = 'semifinalista'; valor = base * 0.25; rep = 2; }
-  else if (qf.some(m => perd(m) === orgId)) { fase = 'eliminada nas quartas'; valor = base * 0.12; rep = 1; }
-  else { const pos = tab.findIndex(l => l.team.id === orgId) + 1; fase = `${pos}º lugar, fora dos playoffs`; rep = -2; }
-  aoFimDaSerieOrg(s, L, split, fase, Math.round(valor), rep);
-}
-
-// ---------- virada de ano: acesso, rebaixamento, idade e evolução ----------
-function viradaAno(s: State) {
-  const ano = anoDe(s.dia);
-  const pontos = (L: League, id: string) => SPLITS.reduce((a, _, i) => a + (tabela(s, L.id, i + 1).find(l => l.team.id === id)?.v ?? 0), 0);
+// ---------- abertura de campeonatos pelo calendário ----------
+function abreEventos(s: State) {
+  const ano = anoDe(s.dia), dy = diaDoAno(s.dia);
+  const h = ganchos(s);
   for (const g of s.jogos) {
-    const regs = new Set(Object.values(s.leagues).filter(l => l.game === g).map(l => l.region));
-    for (const r of regs) {
-      const T1 = s.leagues[`${g}-${r}-1`], T2 = s.leagues[`${g}-${r}-2`];
-      if (!T1 || !T2) continue;
-      const cai = T1.teams.slice().sort((a, b) => pontos(T1, a) - pontos(T1, b))[0];
-      const campT2 = s.hist.filter(h => h.league === T2.id && h.ano === ano && h.split === SPLITS.length)[0];
-      const sobe = T2.teams.find(id => s.teams[id].nome === campT2?.campeao) ?? T2.teams.slice().sort((a, b) => pontos(T2, b) - pontos(T2, a))[0];
-      T1.teams = T1.teams.filter(x => x !== cai).concat(sobe);
-      T2.teams = T2.teams.filter(x => x !== sobe).concat(cai);
-      s.teams[cai].tier = 2; s.teams[sobe].tier = 1;
-      if (isOrg(s, sobe)) require_msg(s, g, `Acesso! Sua equipe sobe para a ${T1.nome}`, `Título da Challengers garantido e vaga na elite. A diretoria está em festa: o projeto deu o primeiro grande passo.`, 'diretoria');
-      if (isOrg(s, cai)) require_msg(s, g, `Rebaixamento para a ${T2.nome}`, `A pior campanha do ano custou a vaga na elite. Vamos precisar reconstruir para voltar.`, 'diretoria');
-      noticia(s, `${GAMES[g].curto}: ${s.teams[sobe].nome} sobe para a ${T1.nome}; ${s.teams[cai].nome} cai.`);
+    for (const ev of calendario(g)) {
+      if (ev.d !== dy) continue;
+      if (ev.kind === 'split') {
+        for (const L of Object.values(s.leagues).filter(l => l.game === g)) {
+          const tor = criaSplit(s, g, L.id, ev.split!, s.dia, ev.W!);
+          iniciaTorneio(s, tor, h);
+        }
+        continue;
+      }
+      const tor = criaIntl(s, g, ev.kind, ano);
+      if (!tor) continue;
+      iniciaTorneio(s, tor, h);
+      const org = s.orgTeams[g];
+      if (org && tor.teams.includes(org)) aoClassificarOrg(s, tor);
+      noticia(s, `${GAMES[g].curto}: começa o ${tor.nome} com ${tor.teams.length} times.`);
     }
   }
-  // idade e evolução
+}
+
+function fimTorneio(s: State, tor: Torneio) {
+  const g = tor.game;
+  const campeao = s.teams[tor.campeao!], vice = s.teams[tor.vice!];
+  if (tor.kind !== 'acesso') {
+    s.hist.push({ ano: tor.ano, game: g, tor: tor.id, nome: tor.nome, kind: tor.kind, campeao: campeao.nome, vice: vice.nome, org: !!(campeao.org || vice.org) });
+    noticia(s, `${GAMES[g].curto}: ${campeao.nome} é campeã do ${tor.nome}!`);
+  }
+  if (tor.kind === 'split' || tor.kind === 'd2') {
+    const L = s.leagues[tor.league!];
+    s.ranks[`${tor.ano}-${g}-${L.region}-${L.tier}-${tor.split}`] = tor.rank!;
+    // os dois splits (elite e Challengers) terminaram: marca a série de acesso
+    const outra = Object.values(s.torneios).find(t => t.ano === tor.ano && t.split === tor.split && t.game === g && t.league === `${g}-${L.region}-${L.tier === 1 ? 2 : 1}`);
+    if (outra?.fim) {
+      const t1 = L.tier === 1 ? tor : outra, t2 = L.tier === 1 ? outra : tor;
+      const ultimo = t1.rank![t1.rank!.length - 1];
+      const ultimoDia = Math.max(...[t1, t2].flatMap(t => jogosDoTorneio(s, t.id).map(m => m.dia)));
+      const ac = criaAcesso(s, g, L.region, tor.split!, Math.max(s.dia + 2, ultimoDia + 2), ultimo, t2.campeao!);
+      iniciaTorneio(s, ac, ganchos(s));
+    }
+  }
+  if (tor.kind === 'acesso') {
+    const [ultimo, desafiante] = tor.teams;
+    if (tor.campeao === desafiante) {
+      const T1 = s.leagues[tor.league!], T2 = s.leagues[tor.league!.replace(/-1$/, '-2')];
+      T1.teams = T1.teams.filter(x => x !== ultimo).concat(desafiante);
+      T2.teams = T2.teams.filter(x => x !== desafiante).concat(ultimo);
+      s.teams[ultimo].tier = 2; s.teams[desafiante].tier = 1;
+      noticia(s, `${GAMES[g].curto}: ${s.teams[desafiante].nome} vence a série de acesso e sobe para a ${T1.nome}; ${s.teams[ultimo].nome} cai.`);
+    } else noticia(s, `${GAMES[g].curto}: ${s.teams[ultimo].nome} vence a série de acesso e segue na elite.`);
+  }
+  const org = s.orgTeams[g];
+  if (org && tor.teams.includes(org)) aoFimTorneioOrg(s, tor);
+}
+
+// ---------- fim de temporada: idade, evolução e limpeza ----------
+function fimDeTemporada(s: State) {
   for (const p of Object.values(s.players)) {
     if (!s.jogos.includes(p.game)) continue;
     p.idade++;
@@ -214,66 +132,60 @@ function viradaAno(s: State) {
     if (!s.teams[p.teamId ?? '']?.org) p.sal = salario(p.ovr);
   }
   for (const t of Object.values(s.teams)) if (!t.org || !t.manual) escalarAuto(s, t);
-  // limpa jogos antigos de outros times (mantém os da org)
-  for (const m of Object.values(s.matches)) {
-    if (anoDe(m.dia) < ano && !isOrg(s, m.a) && !isOrg(s, m.b)) delete s.matches[m.id];
-  }
+  const ano = anoDe(s.dia);
+  // apaga torneios de 2 anos atrás e partidas antigas que não são da org
+  for (const t of Object.values(s.torneios)) if (t.ano < ano) delete s.torneios[t.id];
+  for (const m of Object.values(s.matches)) if (!s.torneios[m.tor] && !isOrg(s, m.a) && !isOrg(s, m.b)) delete s.matches[m.id];
   cache.delete(s);
-  const orgMs = Object.values(s.matches).filter(m => m.det).sort((a, b) => b.dia - a.dia);
-  orgMs.slice(40).forEach(m => delete m.det);
+  Object.values(s.matches).filter(m => m.det).sort((a, b) => b.dia - a.dia).slice(40).forEach(m => delete m.det);
 }
 
-// mensagens (definidas aqui para evitar import circular com org.ts)
-function require_msg(s: State, g: GameId, titulo: string, corpo: string, cat: 'diretoria' | 'tecnico') {
-  s.inbox.unshift({ id: novoId(s, 'i'), dia: s.dia, de: cat === 'diretoria' ? 'Conselho da diretoria' : s.tecnicos[g]?.nome ?? 'Técnico', cargo: cat === 'diretoria' ? 'Diretoria' : `Técnico · ${GAMES[g].curto}`, titulo, corpo, cat, lida: false, game: g });
-}
 export function noticia(s: State, txt: string) {
-  s.noticiasDia = [...(s.noticiasDia ?? []), txt].slice(-30);
+  s.noticiasDia = [...(s.noticiasDia ?? []), txt].slice(-40);
 }
 
 // ---------- avanço de dia ----------
-function simulaPendentes(s: State, dia: number, comDetalhe: boolean) {
-  for (const m of jogosDoDia(s, dia)) {
+function simulaDia(s: State, dia: number, comDetalhe: boolean) {
+  const hoje = jogosDoDia(s, dia).slice();
+  for (const m of hoje) {
     if (m.sa != null) continue;
     const daOrg = isOrg(s, m.a) || isOrg(s, m.b);
     if (daOrg && !comDetalhe) continue;
     for (const id of [m.a, m.b]) { const t = s.teams[id]; if (!t.org || !t.manual) escalarAuto(s, t); }
     simulaSerie(s, m, daOrg);
   }
-}
-function posDia(s: State, dia: number) {
-  const ligas = new Set(jogosDoDia(s, dia).map(m => m.league + '|' + m.split));
-  for (const k of ligas) {
-    const [lid, sp] = k.split('|');
-    avancaPlayoffs(s, s.leagues[lid], Number(sp), dia);
-  }
+  const h = ganchos(s);
+  const tors = new Set(hoje.map(m => m.tor));
+  for (const id of tors) { const t = s.torneios[id]; if (t) avancaTorneio(s, t, h, jogosDoTorneio(s, id)); }
 }
 
-/** um passo do botão Continuar. Retorna o motivo da parada, se houver. */
+/** existe partida da org hoje ainda não jogada? */
+export function temJogoOrgHoje(s: State): boolean {
+  return jogosDoDia(s, s.dia).some(m => m.sa == null && (isOrg(s, m.a) || isOrg(s, m.b)));
+}
+
+/** passa um dia. Retorna o motivo para parar, se houver. */
 export function passo(s: State): 'jogo' | 'decisao' | null {
   if (s.fase !== 'jogo') return null;
-  const pendOrg = jogosDoDia(s, s.dia).filter(m => m.sa == null && (isOrg(s, m.a) || isOrg(s, m.b)));
-  if (pendOrg.length) return 'jogo';
-  simulaPendentes(s, s.dia, false);
-  posDia(s, s.dia);
+  if (temJogoOrgHoje(s)) return 'jogo';
+  simulaDia(s, s.dia, false);
   const antes = s.inbox.filter(m => m.acoes && !m.resolvida).length;
   s.dia++;
   s.diaJogo = null;
   const dy = diaDoAno(s.dia);
-  if (dy === 0 && s.dia > 0) { /* novo ano */ }
-  if (SPLITS.includes(dy)) criaAgendaSplit(s, SPLITS.indexOf(dy) + 1);
-  if (dy === FIM_ANO) viradaAno(s);
+  abreEventos(s);
+  if (dy === FIM_TEMPORADA) fimDeTemporada(s);
   tickOrg(s);
   const depois = s.inbox.filter(m => m.acoes && !m.resolvida).length;
   if (depois > antes) return 'decisao';
+  if (temJogoOrgHoje(s)) return 'jogo';
   return null;
 }
 
 /** joga as partidas da org do dia (com resumo detalhado) e o resto da rodada */
 export function jogarDia(s: State): Match[] {
   const ms = jogosDoDia(s, s.dia).filter(m => m.sa == null && (isOrg(s, m.a) || isOrg(s, m.b)));
-  simulaPendentes(s, s.dia, true);
-  posDia(s, s.dia);
+  simulaDia(s, s.dia, true);
   s.diaJogo = { dia: s.dia, ids: ms.map(m => m.id) };
   return ms;
 }
@@ -284,4 +196,21 @@ export function proximosJogosOrg(s: State, n = 5): Match[] {
 export function ultimosJogosOrg(s: State, n = 5): Match[] {
   return Object.values(s.matches).filter(m => m.sa != null && (isOrg(s, m.a) || isOrg(s, m.b))).sort((a, b) => b.dia - a.dia).slice(0, n);
 }
-export const rndExport = rnd;
+/** próximo compromisso (para o botão "avançar até") */
+export function proximoEvento(s: State): { dia: number; txt: string } | null {
+  const j = proximosJogosOrg(s, 1)[0];
+  const ano = anoDe(s.dia);
+  let ev: { dia: number; txt: string } | null = j ? { dia: j.dia, txt: 'Próxima partida' } : null;
+  for (const g of s.jogos) for (const e of calendario(g)) {
+    for (const a of [ano, ano + 1]) {
+      const d = inicioAno(a) + e.d;
+      if (d > s.dia && (!ev || d < ev.dia)) ev = { dia: d, txt: e.kind === 'split' ? `${GAMES[g].curto} · Split ${e.split}` : `${GAMES[g].curto} · internacional` };
+    }
+  }
+  return ev;
+}
+export function splitAtual(s: State, g: GameId): number {
+  const dy = diaDoAno(s.dia);
+  const sp = calendario(g).filter(e => e.kind === 'split' && e.d <= dy).pop();
+  return sp?.split ?? 1;
+}

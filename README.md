@@ -17,9 +17,13 @@ No Vercel: Framework Preset **Vite** (build `npm run build`, saída `dist`).
 - **Cenários de início:** Org nova (compra vaga na Challengers e monta o time na peneira), Org em crise (time da elite endividado) e Investidor (time forte, diretoria exigente). Rebrand do time assumido.
 - **Dois jogos desde o início:** LoL + 1 à escolha (CS2, VALORANT, Dota 2, Free Fire, R6, EA FC ou Wild Rift).
 - **Peneira:** agentes livres, talentos da solo queue e jogadores com contrato interessados no projeto, com notas aproximadas, custo de assinatura e comentário do técnico.
-- **Tempo dia a dia** com o botão **Continuar** (ou barra de espaço). Ele para em dia de jogo e quando chega uma decisão.
+- **Ritmo:** **Continuar** avança 1 dia (barra de espaço). O botão **▶▶** (Shift+Enter) avança dia a dia até o próximo compromisso, parando em jogos e decisões.
 - **Dia de jogo:** chance de vitória, resumo animado de ~30 s por série (placar ao vivo, eventos, gráfico de ouro no LoL/Dota/WR, MVP, estatísticas por mapa) e painel com todos os resultados do dia.
-- **Temporada:** 3 splits por ano, fase regular, playoffs (quartas, semis, final), premiação, acesso e rebaixamento entre elite e Challengers, histórico de campeões.
+- **Campeonatos no formato do BrasLOL** (`src/engine/comp.ts`), iguais para todas as modalidades. Só muda o calendário, os nomes e as vagas:
+  - Ligas: 3 splits por ano com pontos corridos (ida e volta) e playoffs de 6 com chave superior e inferior. A Challengers tem semis e final. Ao fim de cada split, série de acesso (MD5): o último da elite enfrenta o campeão da Challengers.
+  - LoL: First Stand (dupla eliminação de 8), MSI (Play-In e chave de 8), Esports World Cup (grupos GSL e mata-mata) e Mundial (Play-In, fase suíça de 16 e mata-mata).
+  - Outros jogos: internacional de 8 (dupla eliminação) após o split 2 e mundial de 16 (suíço e mata-mata) após o split 3, com os nomes reais (IEM Major, Masters, Champions, The International...).
+  - Telas: tabela, chave com conectores, fase suíça, grupos e lista de jogos.
 - **Caixa de entrada** com decisões: patrocínios, reservas insatisfeitos, pedidos do técnico.
 - **Elenco:** nota, forma, moral, perfil, salário e contrato. O técnico escala sozinho, mas o CEO pode intervir trocando jogadores.
 - **Finanças:** receitas e despesas semanais, patrocinadores, gráfico do caixa. **Diretoria** com meta e confiança.
