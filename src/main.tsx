@@ -1,5 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@fontsource/saira/300.css';
+import '@fontsource/saira/400.css';
+import '@fontsource/saira/500.css';
+import '@fontsource/saira/600.css';
+import '@fontsource/saira/700.css';
+import '@fontsource/saira/800.css';
 import './styles.css';
 import { useGame } from './store';
 import { Setup } from './ui/Setup';

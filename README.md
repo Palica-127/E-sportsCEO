@@ -41,7 +41,17 @@ No Vercel: Framework Preset **Vite** (build `npm run build`, saída `dist`).
 
 Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa um avatar com as iniciais.
 
+## Fase 2 (feita)
+- Visual de jogo de PC (inspirado no Esports Manager 2026): barra lateral fixa, CONTINUAR no topo, painéis com cantos, retratos ilustrados.
+- Jogadores vivos: forma, moral, humor, evolução mensal, histórico, biografia, atributos em radar.
+- Notas escondidas: famosos aparecem com faixa; olheiros geram relatórios.
+- Negociação em 2 etapas (clube, depois jogador) com rivais disputando; vendas e renovações.
+- Rosto da Org com exigências visíveis.
+- Sede visível (casa mediana → casa grande → mansão → prédio), alugar ou comprar, cômodos com obra.
+- Comissão técnica e staff como pessoas; cada cômodo libera um cargo.
+- Periféricos por time (4 níveis, desgaste, patrocinador).
+- Saves da versão anterior não abrem: comece uma carreira nova.
+
 ## Próximas fases
-2. Jogadores vivos e técnicos como pessoas, negociação em 2 etapas, olheiros (notas escondidas), mercado vivo com rivais, Rosto da Org. Sede visível (casa → mansão → prédio), cômodos, equipe técnica e periféricos.
 3. Expansão até 8 jogos (do zero, comprando uma org ou como investidor), Academies jogando, finanças e patrocínios completos, torneios internacionais.
 4. Históricos e prêmios (Golden Crown etc.), Hall da Fama, versão .exe.

@@ -29,7 +29,51 @@ export interface Player {
   real: boolean;
   jogos: number;
   mvps: number;
+  hist?: { d: number; t: string }[]; // carreira: transferências, títulos, marcos
+  evo?: number[]; // nota no fim de cada mês (gráfico de evolução)
+  venda?: boolean; // colocado à venda
+  prometido?: number; // dia até quando o CEO prometeu chances
 }
+
+export type Cargo = 'tecnico' | 'auxiliar' | 'analista' | 'psicologo' | 'nutricionista' | 'chef' | 'preparador' | 'social' | 'olheiro';
+export interface Staff {
+  id: string;
+  nome: string;
+  nat: string;
+  cargo: Cargo;
+  nota: number; // 50..95
+  sal: number; // semanal
+  estilo: string;
+  game?: GameId; // técnico, auxiliar e analista são de um jogo
+  contrato: number; // ano
+  tarefa?: { pid: string; fim: number }; // olheiro observando alguém
+}
+
+export interface Neg {
+  id: string;
+  pid: string;
+  game: GameId;
+  etapa: 'clube' | 'jogador' | 'fechada' | 'cancelada';
+  fee: number; // proposta ao clube
+  sal: number; // salário semanal oferecido
+  anos: number;
+  papel: 'titular' | 'reserva';
+  resp: number; // dia da resposta
+  pedido?: number; // contraproposta do clube (taxa) ou do jogador (salário)
+  rival?: string; // time rival na disputa
+  rosto?: boolean;
+  msg?: string;
+}
+
+export type ComodoId = 'treino' | 'quartos' | 'academia' | 'cozinha' | 'consultorio' | 'analise' | 'estudio' | 'lazer';
+export interface Sede {
+  nivel: number; // 0 casa mediana, 1 casa grande, 2 mansão, 3 prédio
+  posse: 'aluguel' | 'compra';
+  comodos: Partial<Record<ComodoId, { nivel: number; obraAte?: number }>>;
+  mudancaAte?: number;
+}
+export interface Kit { nivel: number; desgaste: number; patro?: string }
+export interface Post { dia: number; autor: string; txt: string; tom: 'bom' | 'ruim' | 'neutro'; likes: number }
 
 export interface Team {
   id: string;
@@ -168,7 +212,7 @@ export interface Candidato {
 export interface Tecnico { nome: string; nat: string; estilo: string }
 
 export interface State {
-  v: 2;
+  v: 3;
   seed: number;
   nextId: number;
   dia: number;
@@ -176,7 +220,6 @@ export interface State {
   org: Org;
   jogos: GameId[];
   orgTeams: Partial<Record<GameId, string>>;
-  tecnicos: Partial<Record<GameId, Tecnico>>;
   players: Record<string, Player>;
   teams: Record<string, Team>;
   leagues: Record<string, League>;
@@ -190,6 +233,15 @@ export interface State {
   hist: { ano: number; game: GameId; tor: string; nome: string; kind: TorKind; campeao: string; vice: string; org?: boolean }[];
   diretoria: { meta: string; metaId: 'subir' | 'playoffs' | 'titulo'; confianca: number };
   peneira: Partial<Record<GameId, { candidatos: Candidato[]; escolhidos: string[]; verba: number }>>;
+  staff: Record<string, Staff>;
+  staffPool: Staff[];
+  conhecido: Record<string, { n: 1 | 2; a: number; b: number; int?: number }>;
+  alvos: string[];
+  negs: Neg[];
+  sede: Sede;
+  kits: Partial<Record<GameId, Kit>>;
+  rosto: Partial<Record<GameId, string>>;
+  redes: Post[];
   diaJogo?: { dia: number; ids: string[] } | null;
   noticiasDia?: string[];
 }

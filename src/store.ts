@@ -4,6 +4,7 @@ import type { State } from './engine/types';
 import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
 
 const KEY = 'esportsceo-v2';
+export let antigo = false;
 let state: State | null = load();
 let versao = 0;
 const ouvintes = new Set<() => void>();
@@ -13,7 +14,9 @@ function load(): State | null {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const s = JSON.parse(raw.startsWith('{') ? raw : decompressFromUTF16(raw) ?? 'null');
-    return s?.v === 2 ? s : null;
+    if (s?.v === 3) return s;
+    if (s) antigo = true;
+    return null;
   } catch { return null; }
 }
 

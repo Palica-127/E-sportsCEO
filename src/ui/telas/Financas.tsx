@@ -1,7 +1,7 @@
 import { custosFixos, folhaSemanal, moeda, receitasFixas } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
 import { useGame } from '../../store';
-import { Panel } from '../common';
+import { Linha, Panel } from '../common';
 
 export function Financas() {
   const s = useGame()!;
@@ -9,7 +9,7 @@ export function Financas() {
   const desp = { 'Salários': folhaSemanal(s), ...custosFixos(s) };
   const tr = Object.values(rec).reduce((a, b) => a + b, 0), td = Object.values(desp).reduce((a, b) => a + b, 0);
   const hist = s.fin.slice(-26);
-  const max = Math.max(1, ...hist.map(h => Math.abs(h.caixa)));
+  
   return (
     <div className="fin">
       <div className="fin-top">
@@ -26,9 +26,10 @@ export function Financas() {
       </Panel>
       <Panel title="Caixa nas últimas semanas">
         {hist.length < 2 ? <p className="mut">O gráfico aparece depois de algumas semanas.</p> : (
-          <div className="chart-bars">
-            {hist.map(h => <span key={h.sem} title={moeda(h.caixa)} className={h.caixa < 0 ? 'neg' : ''} style={{ height: Math.max(2, (Math.abs(h.caixa) / max) * 100) + '%' }} />)}
-          </div>
+          <>
+            <Linha vals={hist.map(h => Math.round(h.caixa / 1000))} w={1300} h={140} />
+            <p className="mut" style={{ marginTop: 6 }}>Valores em R$ mil · de {moeda(hist[0].caixa)} para {moeda(hist[hist.length - 1].caixa)}</p>
+          </>
         )}
       </Panel>
     </div>

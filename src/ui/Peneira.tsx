@@ -96,7 +96,7 @@ export function Peneira() {
           </section>
           {ultimo && s.players[ultimo] && P.escolhidos.includes(ultimo) && (
             <section className="panel coach">
-              <header className="panel-h"><h3>{s.tecnicos[g]?.nome}</h3><small>técnico</small></header>
+              <header className="panel-h"><h3>Técnico</h3><small>comenta suas escolhas</small></header>
               <div className="panel-b"><p>“Sobre o <b>{s.players[ultimo].nick}</b>: {comentarioTecnico(s, g, ultimo)}”</p></div>
             </section>
           )}

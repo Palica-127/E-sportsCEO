@@ -1,89 +1,88 @@
 import { CSSProperties, useState } from 'react';
+import { ArrowLeftRight } from 'lucide-react';
 import { GAMES, GameId } from '../../engine/games';
-import { moeda, trocar, voltarAuto } from '../../engine/org';
-import { TRACOS } from '../../engine/types';
+import { trocar, voltarAuto } from '../../engine/org';
+import { ligaDoTime } from '../../engine/sim';
 import type { Player } from '../../engine/types';
-import { forca, valorMercado } from '../../engine/world';
+import { estrelas, forca } from '../../engine/world';
+import { maxElenco } from '../../engine/mercado';
+import { tecnicoDe } from '../../engine/staff';
 import { act, useGame } from '../../store';
-import { Avatar, Bar, Crest, Flag, Forma, Ovr } from '../common';
+import { Bar, Chips, Crest, Estrelas, Flag, Forma, RetratoJogador } from '../common';
+import type { Tela } from '../Shell';
 
-export function Elenco({ jogo }: { jogo?: string }) {
+export function Elenco({ jogo, ir }: { jogo?: string; ir: (t: Tela, a?: string) => void }) {
   const s = useGame()!;
-  const [g, setG] = useState<GameId>((jogo as GameId) ?? s.jogos[0]);
+  const [g, setG] = useState<GameId>((jogo as GameId) && s.jogos.includes(jogo as GameId) ? (jogo as GameId) : s.jogos[0]);
+  const [modo, setModo] = useState(false);
   const [sel, setSel] = useState<string | null>(null);
-  const [ficha, setFicha] = useState<string | null>(null);
   const t = s.teams[s.orgTeams[g]!];
   const def = GAMES[g];
   const nR = def.roles.length;
-  const L = Object.values(s.leagues).find(l => l.teams.includes(t.id))!;
+  const L = ligaDoTime(s, t.id);
   const ps = t.elenco.map(id => s.players[id]);
+  const tit = ps.slice(0, nR), res = ps.slice(nR);
+  const f = forca(s, t);
+  const fisico = Math.round(Math.min(100, Math.max(0, 70 + tit.reduce((a, p) => a + p.forma, 0) / Math.max(1, tit.length) * 10)));
+  const moral = Math.round(tit.reduce((a, p) => a + p.moral, 0) / Math.max(1, tit.length));
+  const entros = Math.round(Math.max(40, 100 - tit.filter(p => (p.hist ?? []).some(h => h.d > s.dia - 120 && h.t.startsWith('Contratado'))).length * 12));
+  const rank = Object.values(s.teams).filter(x => x.game === g && (x.tier === 1 || x.org)).sort((a, b) => forca(s, b) - forca(s, a)).findIndex(x => x.id === t.id) + 1;
 
   function clicar(p: Player) {
+    if (!modo) { ir('perfil', p.id); return; }
     if (!sel) { setSel(p.id); return; }
-    if (sel === p.id) { setSel(null); return; }
-    act(st => trocar(st, t.id, sel, p.id));
+    if (sel !== p.id) act(st => trocar(st, t.id, sel, p.id));
     setSel(null);
   }
-
-  return (
-    <div className="elenco" style={{ '--g': def.cor } as CSSProperties}>
-      <div className="tabs">{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} style={{ '--g': GAMES[x].cor } as CSSProperties} onClick={() => { setG(x); setSel(null); }}>{GAMES[x].nome}</button>)}</div>
-      <div className="el-h">
-        <Crest s={s} team={t} size={56} />
-        <div><h2>{t.nome} <span className="gtag">{def.curto}</span></h2><small>{L.nome} · Técnico: {s.tecnicos[g]?.nome}</small></div>
-        <div className="el-f"><small>Força do time</small><b>{forca(s, t).toFixed(1)}</b></div>
-        <div className="el-modo">
-          <small>Escalação</small>
-          {t.manual ? <><b>Manual (você)</b><button className="btn ghost sm" onClick={() => act(st => voltarAuto(st, t.id))}>Devolver ao técnico</button></> : <><b>Técnico decide</b><small className="mut">Clique em dois jogadores para trocar</small></>}
-        </div>
-      </div>
-      <section className="panel">
-        <table className="tab elenco-tab">
-          <thead><tr><th></th><th>Função</th><th className="tm">Jogador</th><th>Idade</th><th>Nota</th><th>Forma</th><th className="hide-sm">Moral</th><th className="hide-sm">Perfil</th><th className="hide-sm">Salário</th><th className="hide-sm">Contrato</th></tr></thead>
-          <tbody>
-            {ps.map((p, i) => (
-              <tr key={p.id} className={(i < nR ? 'tit ' : 'res ') + (sel === p.id ? 'sel ' : '') + (i === nR ? 'sep' : '')} onClick={() => clicar(p)}>
-                <td className="st">{i < nR ? def.roles[i] : 'RES'}</td>
-                <td><span className="role">{def.roles[p.role]}</span></td>
-                <td className="tm"><Avatar p={p} size={28} /><Flag nat={p.nat} /><button className="link nick" onClick={e => { e.stopPropagation(); setFicha(p.id); }}>{p.nick}</button></td>
-                <td>{p.idade}</td>
-                <td><Ovr v={p.ovr} /></td>
-                <td><Forma v={p.forma} /></td>
-                <td className="hide-sm"><Bar v={p.moral} /></td>
-                <td className="hide-sm"><span className="traco" title={TRACOS[p.traco].desc}>{TRACOS[p.traco].nome}</span></td>
-                <td className="hide-sm">{moeda(p.sal)}/sem</td>
-                <td className="hide-sm">até {p.contrato}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-      {sel && <p className="mut">Selecionado: <b>{s.players[sel].nick}</b>. Clique em outro jogador para trocar de posição (isso coloca a escalação no manual).</p>}
-      {ficha && <Ficha p={s.players[ficha]} onFechar={() => setFicha(null)} />}
-    </div>
+  const Card = ({ p, i }: { p: Player; i: number }) => (
+    <button className={'pcard ' + (i >= nR ? 'mini ' : '') + (sel === p.id ? 'sel' : '')} onClick={() => clicar(p)}>
+      <div className="pc-top"><span className="pc-role">{i < nR ? def.roles[i] : 'Reserva'}<span>{def.roleNomes[p.role]}</span></span></div>
+      <div className="pc-top"><Flag nat={p.nat} />{s.rosto[g] === p.id && <span className="chip2 meh">Rosto da Org</span>}</div>
+      <div className="pc-img"><RetratoJogador s={s} p={p} size={i < nR ? 150 : 110} /></div>
+      <div className="pc-n"><b>{p.nick}</b></div>
+      <div className="pc-c"><Chips p={p} titular={i < nR} /></div>
+      <div className="pc-f"><span><Estrelas v={estrelas(p.ovr)} size={13} /><b>{p.ovr}</b></span><span>{p.idade} anos</span><Forma v={p.forma} /></div>
+    </button>
   );
-}
 
-function Ficha({ p, onFechar }: { p: Player; onFechar: () => void }) {
-  const s = useGame()!;
-  const def = GAMES[p.game];
   return (
-    <div className="overlay" onClick={e => e.target === e.currentTarget && onFechar()}>
-      <div className="modal ficha" style={{ '--g': def.cor } as CSSProperties}>
-        <div className="fi-h"><Avatar p={p} size={72} /><div><h2><Flag nat={p.nat} /> {p.nick}</h2><small>{def.roleNomes[p.role]} · {p.idade} anos · {s.teams[p.teamId ?? '']?.nome ?? 'Agente livre'}</small></div><Ovr v={p.ovr} /></div>
-        <div className="fi-grid">
-          <div className="kv"><span>Potencial</span><b>{'★'.repeat(Math.max(1, Math.min(5, Math.round((p.pot - 60) / 7))))}</b></div>
-          <div className="kv"><span>Perfil</span><b>{TRACOS[p.traco].nome}</b></div>
-          <div className="kv"><span>Forma</span><Forma v={p.forma} /></div>
-          <div className="kv"><span>Moral</span><Bar v={p.moral} /></div>
-          <div className="kv"><span>Jogos pela carreira</span><b>{p.jogos}</b></div>
-          <div className="kv"><span>MVPs</span><b>{p.mvps}</b></div>
-          <div className="kv"><span>Salário</span><b>{moeda(p.sal)}/sem</b></div>
-          <div className="kv"><span>Valor de mercado</span><b>{moeda(valorMercado(p))}</b></div>
+    <div style={{ '--g': def.cor } as CSSProperties}>
+      <div className="tabs">{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} onClick={() => { setG(x); setSel(null); }}>{GAMES[x].nome}</button>)}</div>
+      <section className="sec">
+        <header className="sec-h"><h3><span className="chev">»</span>Informações do time</h3></header>
+        <div className="team-info">
+          <div className="ti-logo"><Crest s={s} team={t} size={92} /></div>
+          <div>
+            <h2>{t.nome} <small>#{rank} no ranking mundial · {L.nome}</small></h2>
+            <Estrelas v={Math.max(0.5, Math.min(5, (f - 62) / 5))} size={22} />
+            <div className="mut" style={{ marginTop: 6 }}>Técnico: <b style={{ color: '#fff' }}>{tecnicoDe(s, g)?.nome ?? 'sem técnico'}</b> · Força {f.toFixed(1)}</div>
+          </div>
+          <div className="ti-bars">
+            <div>Estado físico: <b>{fisico}%</b><Bar v={fisico} /></div>
+            <div>Moral: <b>{moral}%</b><Bar v={moral} /></div>
+            <div>Entrosamento: <b>{entros}%</b><Bar v={entros} /></div>
+          </div>
         </div>
-        <p className="mut">{TRACOS[p.traco].desc}</p>
-        <div className="modal-f"><span /><button className="btn primary" onClick={onFechar}>Fechar</button></div>
-      </div>
+      </section>
+      <section className="sec" style={{ marginTop: 22 }}>
+        <header className="sec-h">
+          <h3><span className="chev">»</span>Titulares</h3>
+          <div className="squad-tools">
+            <span className="mut">{t.manual ? 'Escalação manual (você)' : 'O técnico escala'}</span>
+            {t.manual && <button className="btn ghost sm" onClick={() => act(st => voltarAuto(st, t.id))}>Devolver ao técnico</button>}
+            <button className={'btn sm ' + (modo ? 'primary' : '')} onClick={() => { setModo(!modo); setSel(null); }}><ArrowLeftRight size={15} /> {modo ? 'Concluir trocas' : 'Trocar posições'}</button>
+          </div>
+        </header>
+        {modo && <p className="mut">Clique em dois jogadores para trocar de lugar. Isso coloca a escalação no manual.</p>}
+        <div className="cards">{tit.map((p, i) => <Card key={p.id} p={p} i={i} />)}</div>
+      </section>
+      <section className="sec" style={{ marginTop: 22 }}>
+        <header className="sec-h"><h3><span className="chev">»</span>Reservas</h3><button className="link" onClick={() => ir('mercado')}>Contratar ›</button></header>
+        <div className="cards">
+          {res.map((p, i) => <Card key={p.id} p={p} i={i + nR} />)}
+          {Array.from({ length: Math.max(0, maxElenco(g) - ps.length) }, (_, i) => <div key={i} className="pcard mini vazio">vaga</div>)}
+        </div>
+      </section>
     </div>
   );
 }

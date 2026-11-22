@@ -4,7 +4,10 @@ import { chance, clamp, pick, ri, rnd, shuffle } from './rng';
 import type { Candidato, Cenario, Msg, Player, State, Team, Torneio } from './types';
 import { TRACOS } from './types';
 import { criaJogador, criaJogo, escalarAuto, forca, geraNick, novoId, salario, titulares, valorMercado } from './world';
-import { DIAS_ANO, anoDe, diaDoAno, diaSemana } from './sim';
+import { DIAS_ANO, anoDe, diaDoAno, diaSemana, noticia } from './sim';
+import { CARGOS, cobertura, doCargo, moralSemanal, renovaPool, staffInicial, tecnicoDe, treinoMensal } from './staff';
+import { custoSede, obrasProntas, sedeInicial, tickSede } from './sede';
+import { contratosFimDeAno, post, respostaNeg, respostaVenda, tickMercado } from './mercado';
 
 export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: number; meta: string; metaId: 'subir' | 'playoffs' | 'titulo'; detalhes: string[] }> = {
   nova: {
@@ -26,11 +29,12 @@ export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: nu
 
 export function novoEstado(seed: number, jogos: GameId[]): State {
   const s: State = {
-    v: 2, seed, nextId: 1, dia: 0, fase: 'peneira',
+    v: 3, seed, nextId: 1, dia: 0, fase: 'peneira',
     org: { nome: '', sigla: '', cor: '#d4af37', cenario: 'nova', caixa: 0, rep: 20, fas: 5000 },
-    jogos, orgTeams: {}, tecnicos: {}, players: {}, teams: {}, leagues: {}, matches: {},
+    jogos, orgTeams: {}, players: {}, teams: {}, leagues: {}, matches: {},
     torneios: {}, ranks: {}, inbox: [], patro: [], fin: [], finSemana: { rec: {}, desp: {} }, hist: [],
     diretoria: { meta: '', metaId: 'subir', confianca: 60 }, peneira: {},
+    staff: {}, staffPool: [], conhecido: {}, alvos: [], negs: [], sede: { nivel: 0, posse: 'aluguel', comodos: {} }, kits: {}, rosto: {}, redes: [],
   };
   for (const g of jogos) criaJogo(s, g);
   for (const t of Object.values(s.teams)) escalarAuto(s, t);
@@ -46,14 +50,6 @@ export function opcoesDeTime(s: State, g: GameId, region: string, cen: Cenario):
   return cen === 'investidor' ? ts.slice(0, meio) : ts.slice(meio - 1);
 }
 
-const TEC_NOMES: Record<string, string[]> = {
-  br: ['Rodrigo "Peixoto" Lima', 'Carlos "Tockers" Alves', 'Fábio "Fabinho" Souza', 'Marcelo "Mylon" Dias'],
-  kr: ['Kim "Hwang" Jin', 'Lee "Daeny" Soo', 'Park "Cain" Min'],
-  us: ['Mark "Zikz" Ryan', 'Chris "Reapered" Bae'],
-  eu: ['Dylan "Falco" Petit', 'Tomás "Melzhet" Ruiz'],
-};
-const ESTILOS = ['Agressivo, gosta de lutas cedo', 'Metódico, joga por objetivos', 'Formador, aposta em jovens', 'Disciplinador, cobra treino', 'Motivador, cuida do vestiário'];
-
 export interface CarreiraCfg {
   nome: string; sigla: string; cor: string; logo?: string;
   cenario: Cenario;
@@ -65,6 +61,7 @@ export function assumirCarreira(s: State, cfg: CarreiraCfg) {
   const C = CENARIOS[cfg.cenario];
   s.org = { nome: cfg.nome, sigla: cfg.sigla.toUpperCase().slice(0, 4), cor: cfg.cor, logo: cfg.logo, cenario: cfg.cenario, caixa: C.caixa, rep: cfg.cenario === 'investidor' ? 55 : cfg.cenario === 'crise' ? 35 : 15, fas: cfg.cenario === 'investidor' ? 400000 : cfg.cenario === 'crise' ? 120000 : 8000 };
   s.diretoria = { meta: C.meta, metaId: C.metaId, confianca: cfg.cenario === 'investidor' ? 55 : 65 };
+  const antigos: Partial<Record<GameId, string>> = {};
   for (const g of s.jogos) {
     const region = cfg.regioes[g]!;
     let t: Team;
@@ -86,12 +83,16 @@ export function assumirCarreira(s: State, cfg: CarreiraCfg) {
     s.orgTeams[g] = t.id;
     if (cfg.cenario === 'crise') for (const p of titulares(s, t)) p.moral = clamp(p.moral - 18, 25, 90);
     if (cfg.cenario !== 'nova') for (const pid of t.elenco) s.players[pid].contrato = Math.max(s.players[pid].contrato, 2028);
-    const reg = region.toLowerCase();
-    const pool = TEC_NOMES[reg === 'cblol' || reg === 'br' || reg === 'sa' ? 'br' : reg === 'lck' ? 'kr' : reg === 'lcs' || reg === 'am' ? 'us' : 'eu'] ?? TEC_NOMES.br;
-    s.tecnicos[g] = { nome: pick(s, pool), nat: 'br', estilo: pick(s, ESTILOS) };
-    msg(s, { de: s.tecnicos[g]!.nome, cargo: `Técnico · ${GAMES[g].curto}`, cat: 'tecnico', game: g,
+    antigos[g] = antigo;
+  }
+  staffInicial(s);
+  sedeInicial(s);
+  for (const g of s.jogos) {
+    const t = s.teams[s.orgTeams[g]!], antigo = antigos[g];
+    const tec = tecnicoDe(s, g);
+    msg(s, { de: tec.nome, cargo: `Técnico · ${GAMES[g].curto}`, cat: 'tecnico', game: g,
       titulo: `Apresentação: técnico de ${GAMES[g].nome}`,
-      corpo: `Prazer, CEO. Sou o novo técnico do ${GAMES[g].curto}. Meu estilo: ${s.tecnicos[g]!.estilo.toLowerCase()}.\n\nEu cuido de treino, escalação e tática. Você cuida do resto. Se quiser mexer na escalação, é só ir em Elenco e tirar do automático.${cfg.cenario !== 'nova' ? `\n\nAssumimos o elenco da antiga ${antigo}. Força atual do time: ${forca(s, t).toFixed(1)}.` : ''}` });
+      corpo: `Prazer, CEO. Sou o novo técnico do ${GAMES[g].curto} (nota ${tec.nota}). Meu estilo: ${tec.estilo.toLowerCase()}.\n\nEu cuido de treino, escalação e tática. Você cuida do resto. Se quiser mexer na escalação, é só ir em Elenco e tirar do automático.${cfg.cenario !== 'nova' ? `\n\nAssumimos o elenco da antiga ${antigo}. Força atual do time: ${forca(s, t).toFixed(1)}.` : ''}` });
   }
   msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria',
     titulo: `Bem-vindo à ${s.org.nome}`,
@@ -198,6 +199,7 @@ export function confirmarPeneira(s: State): string | null {
         noticia2(s, g, `${p.nick} deixa a ${antigo.nome} e assina com a ${s.org.nome}`);
       }
       p.teamId = t.id; p.contrato = anoDe(s.dia) + 2; p.sal = salario(p.ovr);
+      (p.hist ??= []).push({ d: s.dia, t: `Aprovado na peneira da ${s.org.nome}` });
       t.elenco.push(pid);
       s.org.caixa -= custoCandidato(s, c);
       lanca(s, 'desp', 'Luvas e multas', custoCandidato(s, c));
@@ -233,7 +235,7 @@ export function folhaSemanal(s: State): number {
   return t;
 }
 export function custosFixos(s: State): Record<string, number> {
-  const c: Record<string, number> = { 'Comissão técnica': s.jogos.length * 4000, 'Sede (aluguel)': 4000 };
+  const c: Record<string, number> = { 'Comissão técnica e staff': Object.values(s.staff ?? {}).reduce((a, x) => a + x.sal, 0), 'Sede e cômodos': custoSede(s) };
   if (s.org.cenario === 'crise' && s.dia < DIAS_ANO * 2) c['Parcela da dívida'] = 20000;
   return c;
 }
@@ -241,7 +243,8 @@ export function receitasFixas(s: State): Record<string, number> {
   const r: Record<string, number> = {};
   const p = s.patro.reduce((a, x) => a + x.semanal, 0);
   if (p) r['Patrocínios'] = p;
-  r['Conteúdo e streams'] = Math.round(s.org.fas * 0.012 / 100) * 100;
+  const est = s.sede?.comodos?.estudio?.nivel ?? 0;
+  r['Conteúdo e streams'] = Math.round(s.org.fas * 0.012 * (1 + est * 0.25 + cobertura(s, 'social') * 0.5) / 100) * 100;
   r['Repasse da liga'] = s.jogos.reduce((a, g) => a + (s.teams[s.orgTeams[g]!]?.tier === 1 ? 14000 : 6000), 0);
   return r;
 }
@@ -259,7 +262,7 @@ function fechaSemana(s: State) {
   s.fin = s.fin.slice(-60);
   s.finSemana = { rec: {}, desp: {} };
   // seguidores crescem com reputação
-  s.org.fas = Math.round(s.org.fas * (1.002 + s.org.rep / 30000));
+  s.org.fas = Math.round(s.org.fas * (1.002 + s.org.rep / 30000 + cobertura(s, 'social') * 0.002 + (Object.keys(s.rosto ?? {}).length * 0.002)));
   if (s.org.caixa < 0 && Math.floor(s.dia / 7) % 4 === 0) {
     msg(s, { de: 'Gerente financeiro', cargo: 'Finanças', cat: 'financas', titulo: 'Caixa no vermelho', corpo: `Estamos com ${moeda(s.org.caixa)} em caixa. A diretoria não vai tolerar isso por muito tempo. Corte custos ou traga patrocínio.` });
     s.diretoria.confianca = clamp(s.diretoria.confianca - 3, 0, 100);
@@ -305,7 +308,7 @@ function eventoReserva(s: State) {
 function eventoBootcamp(s: State) {
   const g = pick(s, s.jogos);
   const custo = 40000 + s.org.rep * 800;
-  msg(s, { de: s.tecnicos[g]!.nome, cargo: `Técnico · ${GAMES[g].curto}`, cat: 'tecnico', game: g, titulo: 'Pedido: bootcamp de uma semana',
+  msg(s, { de: tecnicoDe(s, g)?.nome ?? 'Técnico', cargo: `Técnico · ${GAMES[g].curto}`, cat: 'tecnico', game: g, titulo: 'Pedido: bootcamp de uma semana',
     corpo: `CEO, quero levar o time do ${GAMES[g].curto} para um bootcamp com scrims contra times fortes. Custa ${moeda(custo)}. Acho que melhora a forma e a moral do grupo.`,
     acoes: [{ id: 'aprovar', txt: `Aprovar (${moeda(custo)})`, tipo: 'bom' }, { id: 'negar', txt: 'Negar', tipo: 'ruim' }],
     dados: { custo } });
@@ -316,9 +319,25 @@ export function resolver(s: State, msgId: string, acao: string): string {
   if (!m || m.resolvida) return '';
   m.resolvida = acao; m.lida = true;
   const g = m.game;
+  if (m.dados?.neg) return respostaNeg(s, m.dados.neg, acao, mm => msg(s, mm));
+  if (m.dados?.venda) return respostaVenda(s, m.dados.venda, acao);
+  if (m.dados?.conflito) {
+    const [a, b] = m.dados.conflito.map((id: string) => s.players[id]);
+    if (acao === 'multar') { a.moral = clamp(a.moral - 8, 0, 98); b.moral = clamp(b.moral - 8, 0, 98); return 'Os dois foram multados. O clima pesou, mas a disciplina ficou clara.'; }
+    const psi = doCargo(s, 'psicologo')[0];
+    if (psi) { a.moral = clamp(a.moral + 6, 0, 98); b.moral = clamp(b.moral + 6, 0, 98); return `${psi.nome} mediou a conversa e eles se acertaram.`; }
+    a.moral = clamp(a.moral - 3, 0, 98); return 'Sem psicólogo, a conversa não resolveu muito.';
+  }
+  if (m.dados?.sair) {
+    const p = s.players[m.dados.sair];
+    if (acao === 'vender') { p.venda = true; return `${p.nick} foi colocado à venda.`; }
+    if (chance(s, 0.5)) { p.moral = clamp(p.moral + 15, 0, 98); return `${p.nick} topou ficar e dar a volta por cima.`; }
+    p.venda = true; return `${p.nick} não mudou de ideia. Ele está à venda.`;
+  }
   if (m.cat === 'patrocinio') {
     if (acao === 'aceitar') {
       s.patro.push({ id: novoId(s, 's'), marca: m.dados.marca, semanal: m.dados.semanal, ate: s.dia + m.dados.semanas * 7 });
+      if (m.dados.marca.includes('Periféricos')) for (const k of Object.values(s.kits)) if (k) k.patro = m.dados.marca;
       s.org.rep = clamp(s.org.rep + 1, 0, 100);
       return `Contrato assinado com a ${m.dados.marca}.`;
     }
@@ -357,6 +376,40 @@ export function tickOrg(s: State) {
   if (dy % 35 === 17 && chance(s, 0.7)) eventoReserva(s);
   if (dy % 56 === 30 && chance(s, 0.6)) eventoBootcamp(s);
   if (dy === 0 && s.dia > 0) novaTemporada(s);
+  // Fase 2: mercado, sede, staff, vestiário
+  tickMercado(s, mm => msg(s, mm), t => noticia(s, t));
+  for (const o of obrasProntas(s)) msg(s, { de: 'Gerente da sede', cargo: 'Sede', cat: 'financas', titulo: `Obra concluída: ${o}`, corpo: `A obra terminou e o cômodo já está funcionando.` });
+  if (diaSemana(s.dia) === 0) { tickSede(s); moralSemanal(s); }
+  if (dy % 28 === 14) { treinoMensal(s); evolucaoMensal(s); vestiario(s); }
+  if (dy % 28 === 0) renovaPool(s);
+}
+
+function evolucaoMensal(s: State) {
+  for (const g of s.jogos) for (const id of s.teams[s.orgTeams[g]!]?.elenco ?? []) { const p = s.players[id]; if (p) p.evo = [...(p.evo ?? []), p.ovr].slice(-36); }
+}
+
+function vestiario(s: State) {
+  for (const g of s.jogos) {
+    const t = s.teams[s.orgTeams[g]!];
+    if (!t) continue;
+    const ps = t.elenco.map(id => s.players[id]).filter(Boolean);
+    const quente = ps.filter(p => p.traco === 'esquentado');
+    if (quente.length && chance(s, 0.35)) {
+      const a = pick(s, quente), b = pick(s, ps.filter(p => p !== a));
+      if (b) msg(s, { de: tecnicoDe(s, g)?.nome ?? 'Técnico', cargo: `Técnico · ${GAMES[g].curto}`, cat: 'tecnico', game: g, titulo: `Briga no treino: ${a.nick} x ${b.nick}`,
+        corpo: `O ${a.nick} perdeu a cabeça com o ${b.nick} depois de uma scrim ruim. O clima ficou pesado na gaming house. Como resolvemos?`,
+        acoes: [{ id: 'multar', txt: 'Multar os dois' }, { id: 'conversar', txt: doCargo(s, 'psicologo').length ? 'Psicólogo media a conversa' : 'Conversar com eles', tipo: 'bom' }], dados: { conflito: [a.id, b.id] } });
+    }
+    const triste = ps.find(p => p.moral < 32 && !p.venda);
+    if (triste) msg(s, { de: triste.nick, cargo: `Jogador · ${GAMES[g].curto}`, cat: 'jogo', game: g, titulo: `${triste.nick} quer sair`,
+      corpo: `CEO, não estou feliz aqui. ${triste.traco === 'ambicioso' ? 'Quero um projeto que brigue por título.' : 'Preciso jogar e me sentir importante.'} Prefiro ser negociado.`,
+      acoes: [{ id: 'conversar', txt: 'Tentar convencer a ficar', tipo: 'bom' }, { id: 'vender', txt: 'Colocar à venda' }], dados: { sair: triste.id } });
+    const rosto = s.rosto[g] ? s.players[s.rosto[g]!] : null;
+    if (rosto && s.diretoria.confianca < 35) {
+      rosto.moral = clamp(rosto.moral - 10, 0, 98);
+      msg(s, { de: rosto.nick, cargo: `Rosto da Org · ${GAMES[g].curto}`, cat: 'jogo', game: g, titulo: `${rosto.nick} cobra resultados`, corpo: `Vim para a ${s.org.nome} para ganhar. Do jeito que está, não dá. Quero ver investimento e títulos.` });
+    }
+  }
 }
 
 function novaTemporada(s: State) {

@@ -105,7 +105,7 @@ function Final({ s, m, onFim }: { s: State; m: Match; onFim?: () => void }) {
       {mvp && <div className="mvp"><span className="mvp-l">MVP da série</span><b>{mvp.nick}</b><small>{s.teams[mvp.teamId ?? '']?.nome} · {g.roles[mvp.role]}</small></div>}
       {m.det && m.det.length > 1 && <div className="chips">{m.det.map((d, i) => <button key={i} className={'chip sm ' + (i === sel ? 'on' : '')} onClick={() => setSel(i)}>Mapa {i + 1}{d.mapa ? ` · ${d.mapa}` : ''}: {d.sa}–{d.sb}</button>)}</div>}
       {det && (
-        <div className="box">
+        <div className="box2">
           {(['a', 'b'] as const).map(lado => (
             <table key={lado}>
               <thead><tr><th>{s.teams[lado === 'a' ? m.a : m.b].sigla}</th><th>{moba ? 'K/D/A' : g.placar === 'gols' ? 'Placar' : 'K–D'}</th><th>{moba ? 'Nota' : g.placar === 'gols' ? '' : 'Rating'}</th></tr></thead>

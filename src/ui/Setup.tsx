@@ -3,7 +3,7 @@ import { GAMES, GAME_IDS, GameId, regioes } from '../engine/games';
 import { CENARIOS, assumirCarreira, novoEstado, opcoesDeTime } from '../engine/org';
 import type { Cenario, State } from '../engine/types';
 import { forca, titulares } from '../engine/world';
-import { setState } from '../store';
+import { antigo, setState } from '../store';
 import { Crest, Escudo, Flag, Ovr } from './common';
 
 const CORES = ['#d4af37', '#e5484d', '#3d8bff', '#19c37d', '#a855f7', '#f08c2e', '#14b8c4', '#ec4899', '#e6ebf5'];
@@ -43,6 +43,7 @@ export function Setup() {
         <div className="brand"><span className="brand-mark">e</span>Sports <b>CEO</b></div>
         <ol className="steps">{['Organização', 'Cenário', 'Jogos', 'Times'].map((t, i) => <li key={t} className={i === etapa ? 'on' : i < etapa ? 'ok' : ''}>{t}</li>)}</ol>
       </div>
+      {antigo && etapa === 0 && <div className="aviso-antigo">O save antigo é de uma versão anterior do jogo e não abre mais nesta. Comece uma carreira nova.</div>}
 
       {etapa === 0 && (
         <div className="setup-card">

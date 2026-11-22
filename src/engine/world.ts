@@ -154,7 +154,20 @@ export function forca(s: State, t: Team): number {
   const ts = titulares(s, t);
   if (!ts.length) return 50;
   const m = ts.reduce((a, p) => a + p.ovr + p.forma * 0.8 + (p.moral - 65) / 15, 0) / ts.length;
-  return Math.round(m * 10) / 10;
+  return Math.round((m + bonusEstrutura(s, t)) * 10) / 10;
+}
+/** comissão técnica, sala de treino e periféricos. Times da IA têm uma estrutura padrão pela divisão */
+export function bonusEstrutura(s: State, t: Team): number {
+  if (!t.org) return t.tier === 1 ? 2 : 1;
+  if (!s.staff) return 1.5;
+  const doJogo = (c: string) => Object.values(s.staff).find(x => x.cargo === c && x.game === t.game);
+  const tec = doJogo('tecnico'), an = doJogo('analista');
+  const sede = s.sede?.comodos ?? {};
+  const kit = s.kits?.[t.game];
+  let b = (tec ? (tec.nota - 60) / 10 : -0.5) + (an ? ((an.nota - 60) / 12) * (sede.analise?.nivel ? 1 : 0.5) : 0) + (sede.treino?.nivel ?? 0) * 0.5;
+  if (kit) b += kit.nivel * 0.45 * (1 - kit.desgaste / 160);
+  if (s.sede?.mudancaAte && s.sede.mudancaAte > s.dia) b -= 1;
+  return Math.round(b * 10) / 10;
 }
 
 /** escalação automática do técnico: melhor jogador de cada função */
@@ -170,3 +183,18 @@ export function escalarAuto(s: State, t: Team) {
   }
   t.elenco = [...tit, ...todos.filter(p => !usados.has(p.id)).sort((a, b) => b.ovr - a.ovr).map(p => p.id)];
 }
+
+/** atributos derivados da nota (radar da ficha): variam por jogador de forma estável */
+export const ATRIBUTOS = ['Mecânica', 'Tática', 'Clutch', 'Liderança', 'Consistência'];
+export function atributos(p: Player): number[] {
+  const h = hashStr(p.nick + p.game);
+  const ajuste: Record<string, number[]> = {
+    lider: [0, 2, 0, 8, 1], profissional: [0, 3, 0, 1, 5], ambicioso: [2, 0, 3, 0, -1], esquentado: [3, -2, 2, -4, -4],
+    tranquilo: [0, 1, 4, 1, 3], irregular: [3, -1, 1, 0, -8], talentoso: [6, -2, 2, -2, -3],
+  };
+  return ATRIBUTOS.map((_, i) => clamp(Math.round(p.ovr + (((h >> (i * 5)) % 11) - 5) + (ajuste[p.traco]?.[i] ?? 0)), 35, 99));
+}
+export function humor(p: Player): { txt: string; cls: 'ok' | 'meh' | 'bad' } {
+  return p.moral >= 75 ? { txt: 'Feliz', cls: 'ok' } : p.moral >= 55 ? { txt: 'Contente', cls: 'ok' } : p.moral >= 40 ? { txt: 'Insatisfeito', cls: 'meh' } : { txt: 'Irritado', cls: 'bad' };
+}
+export const estrelas = (ovr: number) => clamp((ovr - 58) / 8, 0.5, 5);

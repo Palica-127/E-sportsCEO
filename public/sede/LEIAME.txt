@@ -1,0 +1,3 @@
+Fotos opcionais das sedes (capa do desenho). Coloque arquivos .webp com estes nomes:
+  casa-mediana.webp, casa-grande.webp, mansao.webp, predio.webp
+Se não existir, o jogo mostra só o desenho.

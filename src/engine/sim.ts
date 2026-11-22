@@ -4,7 +4,8 @@ import { clamp, ri } from './rng';
 import type { Match, State, Torneio } from './types';
 import { simulaSerie } from './match';
 import { escalarAuto, salario } from './world';
-import { aoFimTorneioOrg, aoClassificarOrg, tickOrg } from './org';
+import { aoFimTorneioOrg, aoClassificarOrg, tickOrg, msg } from './org';
+import { contratosFimDeAno, post } from './mercado';
 import { FIM_TEMPORADA, Ganchos, LinhaRR, anoDe, avancaTorneio, calendario, criaAcesso, criaIntl, criaSplit, iniciaTorneio, inicioAno, tabelaRR } from './comp';
 
 export { anoDe };
@@ -91,6 +92,8 @@ function fimTorneio(s: State, tor: Torneio) {
   if (tor.kind !== 'acesso') {
     s.hist.push({ ano: tor.ano, game: g, tor: tor.id, nome: tor.nome, kind: tor.kind, campeao: campeao.nome, vice: vice.nome, org: !!(campeao.org || vice.org) });
     noticia(s, `${GAMES[g].curto}: ${campeao.nome} é campeã do ${tor.nome}!`);
+    for (const id of campeao.elenco) { const p = s.players[id]; if (p) (p.hist ??= []).push({ d: s.dia, t: `🏆 Campeão do ${tor.nome} pela ${campeao.nome}` }); }
+    if (campeao.org) post(s, `É CAMPEÃ! 🏆 ${tor.nome} é da ${campeao.sigla}!!!`, 'bom');
   }
   if (tor.kind === 'split' || tor.kind === 'd2') {
     const L = s.leagues[tor.league!];
@@ -131,6 +134,7 @@ function fimDeTemporada(s: State) {
     p.ovr = clamp(p.ovr + delta, 45, 97);
     if (!s.teams[p.teamId ?? '']?.org) p.sal = salario(p.ovr);
   }
+  contratosFimDeAno(s, m => msg(s, m));
   for (const t of Object.values(s.teams)) if (!t.org || !t.manual) escalarAuto(s, t);
   const ano = anoDe(s.dia);
   // apaga torneios de 2 anos atrás e partidas antigas que não são da org
@@ -140,6 +144,7 @@ function fimDeTemporada(s: State) {
   Object.values(s.matches).filter(m => m.det).sort((a, b) => b.dia - a.dia).slice(40).forEach(m => delete m.det);
 }
 
+const pick2 = (s: State, xs: string[]) => xs[Math.floor((s.dia * 7 + s.nextId) % xs.length)];
 export function noticia(s: State, txt: string) {
   s.noticiasDia = [...(s.noticiasDia ?? []), txt].slice(-40);
 }
@@ -187,6 +192,12 @@ export function jogarDia(s: State): Match[] {
   const ms = jogosDoDia(s, s.dia).filter(m => m.sa == null && (isOrg(s, m.a) || isOrg(s, m.b)));
   simulaDia(s, s.dia, true);
   s.diaJogo = { dia: s.dia, ids: ms.map(m => m.id) };
+  for (const m of ms) {
+    const meuA = isOrg(s, m.a), venceu = meuA === (m.sa! > m.sb!);
+    const adv = s.teams[meuA ? m.b : m.a], mvp = m.mvp ? s.players[m.mvp] : null;
+    const placar = meuA ? `${m.sa}-${m.sb}` : `${m.sb}-${m.sa}`;
+    post(s, venceu ? `VITÓRIA! ${placar} na ${adv.sigla}${mvp && isOrg(s, mvp.teamId ?? '') ? `. ${mvp.nick} jogou demais 🔥` : ''}` : `Derrota ${placar} pra ${adv.sigla}... ${pick2(s, ['bora reagir', 'cadê o técnico?', 'próximo jogo é outro', 'tá difícil'])}`, venceu ? 'bom' : 'ruim');
+  }
   return ms;
 }
 
