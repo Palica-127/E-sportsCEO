@@ -36,7 +36,7 @@ export function corDe(nome: string): string {
 }
 
 export function salario(ovr: number): number {
-  return Math.round((600 * Math.pow(1.12, ovr - 60)) / 100) * 100;
+  return Math.round((450 * Math.pow(1.125, ovr - 60)) / 100) * 100;
 }
 export function valorMercado(p: Player): number {
   const idadeF = p.idade <= 21 ? 1.4 : p.idade <= 25 ? 1.15 : p.idade <= 28 ? 1 : 0.7;

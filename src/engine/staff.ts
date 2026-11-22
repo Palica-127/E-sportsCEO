@@ -6,15 +6,15 @@ import type { Cargo, ComodoId, Staff, State } from './types';
 import { novoId } from './world';
 
 export const CARGOS: Record<Cargo, { nome: string; porJogo?: boolean; comodo?: ComodoId; desc: string; base: number; cap?: number }> = {
-  tecnico: { nome: 'Técnico', porJogo: true, desc: 'Treino, escalação e tática. Aumenta a força do time e a evolução dos jogadores.', base: 5000 },
-  auxiliar: { nome: 'Auxiliar técnico', porJogo: true, desc: 'Cuida dos treinos individuais. Acelera a evolução dos jovens.', base: 2200 },
-  analista: { nome: 'Analista de desempenho', porJogo: true, comodo: 'analise', desc: 'Estuda os adversários. Aumenta a força em partida (rende mais com a sala de análise).', base: 2800 },
-  psicologo: { nome: 'Psicólogo', comodo: 'consultorio', desc: 'Segura a moral do elenco e a pressão em jogos grandes.', base: 3000, cap: 14 },
-  nutricionista: { nome: 'Nutricionista', comodo: 'cozinha', desc: 'Dieta e rotina: a forma oscila menos.', base: 2200, cap: 16 },
-  chef: { nome: 'Chef', comodo: 'cozinha', desc: 'Comida boa na gaming house. Moral do dia a dia.', base: 1800, cap: 18 },
-  preparador: { nome: 'Preparador físico', comodo: 'academia', desc: 'Condicionamento físico: evolução mais rápida e menos queda de forma.', base: 2400, cap: 16 },
-  social: { nome: 'Social media', comodo: 'estudio', desc: 'Redes sociais e streams: mais seguidores e renda de conteúdo.', base: 2000 },
-  olheiro: { nome: 'Olheiro', desc: 'Observa jogadores e revela a nota real, o potencial e o interesse em vir.', base: 1600 },
+  tecnico: { nome: 'Técnico', porJogo: true, desc: 'Treino, escalação e tática. Aumenta a força do time e a evolução dos jogadores.', base: 3500 },
+  auxiliar: { nome: 'Auxiliar técnico', porJogo: true, desc: 'Cuida dos treinos individuais. Acelera a evolução dos jovens.', base: 1600 },
+  analista: { nome: 'Analista de desempenho', porJogo: true, comodo: 'analise', desc: 'Estuda os adversários. Aumenta a força em partida (rende mais com a sala de análise).', base: 2000 },
+  psicologo: { nome: 'Psicólogo', comodo: 'consultorio', desc: 'Segura a moral do elenco e a pressão em jogos grandes.', base: 2200, cap: 14 },
+  nutricionista: { nome: 'Nutricionista', comodo: 'cozinha', desc: 'Dieta e rotina: a forma oscila menos.', base: 1600, cap: 16 },
+  chef: { nome: 'Chef', comodo: 'cozinha', desc: 'Comida boa na gaming house. Moral do dia a dia.', base: 1200, cap: 18 },
+  preparador: { nome: 'Preparador físico', comodo: 'academia', desc: 'Condicionamento físico: evolução mais rápida e menos queda de forma.', base: 1700, cap: 16 },
+  social: { nome: 'Social media', comodo: 'estudio', desc: 'Redes sociais e streams: mais seguidores e renda de conteúdo.', base: 1400 },
+  olheiro: { nome: 'Olheiro', desc: 'Observa jogadores e revela a nota real, o potencial e o interesse em vir.', base: 1200 },
 };
 export const CARGOS_ORG: Cargo[] = ['psicologo', 'nutricionista', 'chef', 'preparador', 'social', 'olheiro'];
 export const CARGOS_JOGO: Cargo[] = ['tecnico', 'auxiliar', 'analista'];

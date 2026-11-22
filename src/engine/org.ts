@@ -126,21 +126,21 @@ function montaPeneira(s: State, g: GameId, region: string, slotTeam: string) {
   // agentes livres: os melhores de cada função
   for (let r = 0; r < nR; r++) {
     const daFuncao = livres.filter(p => p.role === r).sort((a, b) => b.ovr - a.ovr).slice(0, 4);
-    for (const p of daFuncao) cand.push({ pid: p.id, luvas: Math.round(salario(p.ovr) * 10 / 1000) * 1000, multa: 0, faixa: faixa(p) });
+    for (const p of daFuncao) cand.push({ pid: p.id, luvas: Math.round(salario(p.ovr) * 2 / 1000) * 1000, multa: 0, faixa: faixa(p) });
   }
   // talentos da solo queue (jovens com potencial)
   for (let k = 0; k < Math.max(4, nR * 2); k++) {
     const cc = pick(s, ['BR', 'BR', 'AR', 'KR', 'US', 'FR', 'CN']);
     const p = criaJogador(s, { game: g, role: k % nR, ovr: ri(s, 62, 69), nick: geraNick(s, cc), nat: cc.toLowerCase(), idade: ri(s, 16, 19), traco: chance(s, 0.4) ? 'talentoso' : undefined });
     p.pot = clamp(p.ovr + ri(s, 8, 20), p.ovr, 92);
-    cand.push({ pid: p.id, luvas: Math.round(salario(p.ovr) * 6 / 1000) * 1000, multa: 0, faixa: faixa(p), motivo: 'Destaque da solo queue' });
+    cand.push({ pid: p.id, luvas: Math.round(salario(p.ovr) * 1 / 1000) * 1000, multa: 0, faixa: faixa(p), motivo: 'Destaque da solo queue' });
   }
   // poucos jogadores com contrato que se interessaram pelo projeto
   const comTime = [...T2.teams, ...T1.teams.slice(-3)].filter(id => id !== slotTeam).flatMap(id => titulares(s, s.teams[id]))
     .filter(p => p.ovr <= media + 6 && p.ovr >= media - 1);
   const motivos = ['Gostou do projeto da org', 'Quer ser protagonista', 'Busca um novo desafio', 'Quer jogar com a estrutura nova'];
   for (const p of shuffle(s, comTime).slice(0, 5)) {
-    cand.push({ pid: p.id, luvas: Math.round(salario(p.ovr) * 10 / 1000) * 1000, multa: Math.round(valorMercado(p) * 0.8 / 1000) * 1000, faixa: faixa(p), motivo: motivos[ri(s, 0, motivos.length - 1)] });
+    cand.push({ pid: p.id, luvas: Math.round(salario(p.ovr) * 3 / 1000) * 1000, multa: Math.round(valorMercado(p) * 0.6 / 1000) * 1000, faixa: faixa(p), motivo: motivos[ri(s, 0, motivos.length - 1)] });
   }
   return { candidatos: cand, escolhidos: [] as string[], verba: s.org.caixa };
 }
@@ -237,6 +237,8 @@ export function folhaSemanal(s: State): number {
 export function custosFixos(s: State): Record<string, number> {
   const c: Record<string, number> = { 'Comissão técnica e staff': Object.values(s.staff ?? {}).reduce((a, x) => a + x.sal, 0), 'Sede e cômodos': custoSede(s) };
   if (s.org.cenario === 'crise' && s.dia < DIAS_ANO * 2) c['Parcela da dívida'] = 20000;
+  const emp = (s.emprestimos ?? []).filter(e => e.ate > s.dia).reduce((a, e) => a + e.parcela, 0);
+  if (emp) c['Empréstimo'] = emp;
   return c;
 }
 export function receitasFixas(s: State): Record<string, number> {
@@ -244,8 +246,8 @@ export function receitasFixas(s: State): Record<string, number> {
   const p = s.patro.reduce((a, x) => a + x.semanal, 0);
   if (p) r['Patrocínios'] = p;
   const est = s.sede?.comodos?.estudio?.nivel ?? 0;
-  r['Conteúdo e streams'] = Math.round(s.org.fas * 0.012 * (1 + est * 0.25 + cobertura(s, 'social') * 0.5) / 100) * 100;
-  r['Repasse da liga'] = s.jogos.reduce((a, g) => a + (s.teams[s.orgTeams[g]!]?.tier === 1 ? 14000 : 6000), 0);
+  r['Conteúdo e streams'] = Math.round((s.jogos.length * 1000 + s.org.fas * 0.012) * (1 + est * 0.25 + cobertura(s, 'social') * 0.5) / 100) * 100;
+  r['Repasse da liga'] = s.jogos.reduce((a, g) => a + (s.teams[s.orgTeams[g]!]?.tier === 1 ? 16000 : 6000), 0);
   return r;
 }
 
@@ -278,13 +280,29 @@ export function moeda(v: number): string {
 // ---------- patrocínios e eventos ----------
 const MARCAS = ['VoltCola', 'NexaBank', 'Hyperion Energy', 'KeyForge Periféricos', 'PixelFood', 'Órbita Telecom', 'Zênite Seguros', 'Nimbus Cloud', 'Pulse Fitness', 'Aurora Motors', 'Vértice Imóveis', 'Cometa Delivery'];
 
+/** quantos patrocinadores a org consegue manter (cresce com a reputação) */
+export const maxPatro = (s: State) => Math.min(5, 2 + Math.floor(s.org.rep / 25));
+
+/** banco oferece crédito quando o caixa aperta */
+function ofertaEmprestimo(s: State) {
+  if (s.inbox.some(m => m.dados?.emprestimo && !m.resolvida)) return;
+  if ((s.emprestimos ?? []).filter(e => e.ate > s.dia).length >= 2) return;
+  const valor = Math.round(Math.max(200_000, s.org.rep * 12_000) / 50_000) * 50_000;
+  const semanas = 52, total = Math.round(valor * 1.18), parcela = Math.round(total / semanas / 100) * 100;
+  const banco = pick(s, ['NexaBank', 'Banco Órbita', 'Crédito Vértice']);
+  msg(s, { de: banco, cargo: 'Crédito empresarial', cat: 'financas', titulo: `${banco} oferece ${moeda(valor)} de crédito`,
+    corpo: `Vimos que o caixa da ${s.org.nome} está apertado. Oferecemos ${moeda(valor)} agora, pagos em ${semanas} parcelas semanais de ${moeda(parcela)} (${moeda(total)} no total, juros de 18%).\n\nA proposta vale por 10 dias.`,
+    acoes: [{ id: 'aceitar', txt: 'Pegar o crédito', tipo: 'bom' }, { id: 'recusar', txt: 'Recusar', tipo: 'ruim' }],
+    dados: { emprestimo: { banco, valor, parcela, semanas }, expira: s.dia + 10 } });
+}
+
 function ofertaPatrocinio(s: State) {
-  if (s.patro.length >= 3) return;
+  if (s.patro.length >= maxPatro(s)) return;
   if (s.inbox.some(m => m.cat === 'patrocinio' && !m.resolvida && m.acoes)) return;
   const usadas = new Set(s.patro.map(p => p.marca));
   const marca = pick(s, MARCAS.filter(m => !usadas.has(m)));
   const tier1 = s.jogos.filter(g => s.teams[s.orgTeams[g]!]?.tier === 1).length;
-  const semanal = Math.round((3000 + s.org.rep * 150 + tier1 * 4000) * (0.75 + rnd(s) * 0.6) / 500) * 500;
+  const semanal = Math.round((4000 + s.org.rep * 50 + tier1 * 3000 + Math.sqrt(s.org.fas) * 2) * (0.75 + rnd(s) * 0.6) / 500) * 500;
   const semanas = pick(s, [26, 39, 52]);
   msg(s, { de: `${marca}`, cargo: 'Proposta de patrocínio', cat: 'patrocinio', titulo: `${marca} quer patrocinar a ${s.org.nome}`,
     corpo: `A ${marca} oferece ${moeda(semanal)} por semana durante ${semanas} semanas (${moeda(semanal * semanas)} no total) para estampar a marca na camisa e nas lives.\n\nA proposta vale por 10 dias.`,
@@ -334,6 +352,13 @@ export function resolver(s: State, msgId: string, acao: string): string {
     if (chance(s, 0.5)) { p.moral = clamp(p.moral + 15, 0, 98); return `${p.nick} topou ficar e dar a volta por cima.`; }
     p.venda = true; return `${p.nick} não mudou de ideia. Ele está à venda.`;
   }
+  if (m.dados?.emprestimo) {
+    if (acao !== 'aceitar') return 'Crédito recusado.';
+    const e = m.dados.emprestimo;
+    s.org.caixa += e.valor;
+    (s.emprestimos ??= []).push({ id: novoId(s, 'e'), banco: e.banco, parcela: e.parcela, ate: s.dia + e.semanas * 7 });
+    return `${moeda(e.valor)} entraram no caixa. Parcela de ${moeda(e.parcela)} por semana.`;
+  }
   if (m.cat === 'patrocinio') {
     if (acao === 'aceitar') {
       s.patro.push({ id: novoId(s, 's'), marca: m.dados.marca, semanal: m.dados.semanal, ate: s.dia + m.dados.semanas * 7 });
@@ -372,7 +397,8 @@ export function tickOrg(s: State) {
   // propostas expiradas
   for (const m of s.inbox) if (m.acoes && !m.resolvida && m.dados?.expira && m.dados.expira < s.dia) { m.resolvida = 'expirou'; }
   // eventos
-  if (s.dia === 3 || (dy % 42 === 10)) ofertaPatrocinio(s);
+  if (s.dia === 3 || s.dia === 12 || (dy % 21 === 10)) ofertaPatrocinio(s);
+  if (diaSemana(s.dia) === 1 && s.org.caixa < 60_000 && s.fase === 'jogo') ofertaEmprestimo(s);
   if (dy % 35 === 17 && chance(s, 0.7)) eventoReserva(s);
   if (dy % 56 === 30 && chance(s, 0.6)) eventoBootcamp(s);
   if (dy === 0 && s.dia > 0) novaTemporada(s);
@@ -417,7 +443,7 @@ function novaTemporada(s: State) {
   msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', titulo: `Temporada ${ano}`, corpo: `Começa a temporada ${ano}. Meta: ${s.diretoria.meta.toLowerCase()}. Confiança atual da diretoria: ${Math.round(s.diretoria.confianca)}%.` });
 }
 
-const PREMIO: Record<string, number> = { split: 500000, d2: 100000, acesso: 0, fs: 400000, msi: 1000000, ewc: 1000000, worlds: 2500000, intlA: 600000, intlB: 1500000 };
+const PREMIO: Record<string, number> = { split: 200000, d2: 50000, acesso: 0, fs: 500000, msi: 2000000, ewc: 1500000, worlds: 4000000, intlA: 800000, intlB: 2000000 };
 const INTL = new Set(['fs', 'msi', 'ewc', 'worlds', 'intlA', 'intlB']);
 
 /** a org se classificou para um internacional */

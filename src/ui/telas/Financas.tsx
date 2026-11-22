@@ -1,4 +1,4 @@
-import { custosFixos, folhaSemanal, moeda, receitasFixas } from '../../engine/org';
+import { custosFixos, folhaSemanal, maxPatro, moeda, receitasFixas } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
 import { useGame } from '../../store';
 import { Linha, Panel } from '../common';
@@ -20,7 +20,7 @@ export function Financas() {
         <Panel title="Receitas semanais">{Object.entries(rec).map(([k, v]) => <div key={k} className="kv"><span>{k}</span><b className="pos">{moeda(v)}</b></div>)}<div className="kv tot"><span>Total</span><b>{moeda(tr)}</b></div></Panel>
         <Panel title="Despesas semanais">{Object.entries(desp).map(([k, v]) => <div key={k} className="kv"><span>{k}</span><b className="neg">{moeda(v)}</b></div>)}<div className="kv tot"><span>Total</span><b>{moeda(td)}</b></div></Panel>
       </div>
-      <Panel title="Patrocinadores">
+      <Panel title="Patrocinadores" right={<span className="mut">{s.patro.length}/{maxPatro(s)} vagas · mais reputação, mais vagas</span>}>
         {s.patro.length === 0 ? <p className="mut">Nenhum patrocinador ainda. As propostas chegam pela caixa de entrada.</p> :
           s.patro.map(p => <div key={p.id} className="kv"><span>{p.marca}</span><b>{moeda(p.semanal)}/sem · até {fmtData(p.ate, false)}</b></div>)}
       </Panel>
