@@ -1,7 +1,8 @@
 import { custosFixos, folhaSemanal, maxPatro, moeda, receitasFixas } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
 import { useGame } from '../../store';
-import { Linha, Panel } from '../common';
+import { Ico3D, Linha, Panel } from '../common';
+import { icoFin } from '../icones';
 
 export function Financas() {
   const s = useGame()!;
@@ -14,16 +15,16 @@ export function Financas() {
   return (
     <div className="fin">
       <div className="fin-top">
-        <Panel title="Caixa"><b className={'big-n ' + (s.org.caixa < 0 ? 'neg' : '')}>{moeda(s.org.caixa)}</b></Panel>
-        <Panel title="Saldo por semana"><b className={'big-n ' + (tr - td < 0 ? 'neg' : 'pos')}>{tr - td >= 0 ? '+' : ''}{moeda(tr - td)}</b><small className="mut">sem contar premiações</small></Panel>
+        <Panel title="Caixa"><div className="fin-k"><Ico3D n="banco" size={64} /><b className={'big-n ' + (s.org.caixa < 0 ? 'neg' : '')}>{moeda(s.org.caixa)}</b></div></Panel>
+        <Panel title="Saldo por semana"><div className="fin-k"><Ico3D n={tr - td < 0 ? 'grafico-desce' : 'grafico-sobe'} size={64} /><div><b className={'big-n ' + (tr - td < 0 ? 'neg' : 'pos')}>{tr - td >= 0 ? '+' : ''}{moeda(tr - td)}</b><small className="mut">sem contar premiações</small></div></div></Panel>
       </div>
       <div className="two">
-        <Panel title="Receitas semanais">{Object.entries(rec).map(([k, v]) => <div key={k} className="kv"><span>{k}</span><b className="pos">{moeda(v)}</b></div>)}<div className="kv tot"><span>Total</span><b>{moeda(tr)}</b></div></Panel>
-        <Panel title="Despesas semanais">{Object.entries(desp).map(([k, v]) => <div key={k} className="kv"><span>{k}</span><b className="neg">{moeda(v)}</b></div>)}<div className="kv tot"><span>Total</span><b>{moeda(td)}</b></div></Panel>
+        <Panel ico="grafico-sobe" title="Receitas semanais">{Object.entries(rec).map(([k, v]) => <div key={k} className="kv"><span className="kv-i"><Ico3D n={icoFin(k)} size={26} />{k}</span><b className="pos">{moeda(v)}</b></div>)}<div className="kv tot"><span>Total</span><b>{moeda(tr)}</b></div></Panel>
+        <Panel ico="recibo" title="Despesas semanais">{Object.entries(desp).map(([k, v]) => <div key={k} className="kv"><span className="kv-i"><Ico3D n={icoFin(k)} size={26} />{k}</span><b className="neg">{moeda(v)}</b></div>)}<div className="kv tot"><span>Total</span><b>{moeda(td)}</b></div></Panel>
       </div>
-      <Panel title="Patrocinadores" right={<span className="mut">{s.patro.length}/{maxPatro(s)} vagas · mais reputação, mais vagas</span>}>
+      <Panel ico="aperto" title="Patrocinadores" right={<span className="mut">{s.patro.length}/{maxPatro(s)} vagas · mais reputação, mais vagas</span>}>
         {s.patro.length === 0 ? <p className="mut">Nenhum patrocinador ainda. As propostas chegam pela caixa de entrada.</p> :
-          s.patro.map(p => <div key={p.id} className="kv"><span>{p.marca}</span><b>{moeda(p.semanal)}/sem · até {fmtData(p.ate, false)}</b></div>)}
+          s.patro.map(p => <div key={p.id} className="kv"><span className="kv-i"><Ico3D n="aperto" size={26} />{p.marca}</span><b>{moeda(p.semanal)}/sem · até {fmtData(p.ate, false)}</b></div>)}
       </Panel>
       <Panel title="Caixa nas últimas semanas">
         {hist.length < 2 ? <p className="mut">O gráfico aparece depois de algumas semanas.</p> : (

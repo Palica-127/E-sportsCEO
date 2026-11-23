@@ -112,7 +112,7 @@ export function Mercado({ ir, aba: aba0 }: { ir: (t: Tela, a?: string) => void; 
       )}
 
       {aba === 'negs' && (
-        <Panel title="Negociações">
+        <Panel ico="aperto" title="Negociações">
           {!negs.length && <p className="mut">Nenhuma negociação ainda. Faça propostas na aba Buscar ou no perfil do jogador.</p>}
           {negs.map(n => {
             const p = s.players[n.pid];
@@ -148,19 +148,19 @@ export function Mercado({ ir, aba: aba0 }: { ir: (t: Tela, a?: string) => void; 
         <>
           <div className="seg" style={{ marginBottom: 14 }}>{s.jogos.map(x => <button key={x} className={x === g ? 'on' : ''} onClick={() => { setG(x); setRostoSel(null); }}>{GAMES[x].nome}</button>)}</div>
           {s.rosto[g] && s.players[s.rosto[g]!] ? (
-            <Panel title={`Rosto da Org · ${GAMES[g].curto}`}>
+            <Panel ico="estrela" title={`Rosto da Org · ${GAMES[g].curto}`}>
               <div className="row"><RetratoJogador s={s} p={s.players[s.rosto[g]!]} size={120} /><div><h2>{s.players[s.rosto[g]!].nick}</h2><p className="mut">É a cara da {s.org.nome} no {GAMES[g].nome}: atrai seguidores e patrocínio, mas cobra resultado. Se a confiança da diretoria cair muito, ele vai reclamar.</p><button className="btn sm" onClick={() => ir('perfil', s.rosto[g]!)}>Ver perfil</button></div></div>
             </Panel>
           ) : (
             <div className="rosto-c">
-              <Panel title="Estrelas possíveis">
+              <Panel ico="coroa" title="Estrelas possíveis">
                 {candidatosRosto(s, g).map(p => (
                   <button key={p.id} className={'team-row ' + (rostoSel === p.id ? 'on' : '')} style={{ width: '100%', marginBottom: 4 }} onClick={() => setRostoSel(p.id)}>
                     <RetratoJogador s={s} p={p} size={40} /><span className="tn">{p.nick}<br /><small>{s.teams[p.teamId!]?.nome}</small></span><EstrelasNota ovr={p.ovr} size={12} />
                   </button>
                 ))}
               </Panel>
-              <Panel title="Exigências">
+              <Panel ico="contrato" title="Exigências">
                 {!rostoSel ? <p className="mut">Escolha uma estrela para ver o que ela exige para assinar com a {s.org.nome}. Cumpra a lista ao longo da carreira e faça o convite.</p> : (() => {
                   const p = s.players[rostoSel];
                   const req = exigenciasRosto(s, g, p);

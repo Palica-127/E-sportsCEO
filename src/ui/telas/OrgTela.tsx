@@ -23,7 +23,7 @@ export function OrgTela() {
   return (
     <div className="orgtela">
       <Modalidades />
-      <Panel title="Identidade">
+      <Panel ico="escudo" title="Identidade">
         <div className="org-form">
           <div className="org-preview">{s.org.logo ? <img src={s.org.logo} width={110} height={110} className="crest-img" /> : <Escudo sigla={s.org.sigla} cor={s.org.cor} size={110} />}<strong>{s.org.nome}</strong></div>
           <div className="fields">
@@ -33,7 +33,7 @@ export function OrgTela() {
           </div>
         </div>
       </Panel>
-      <Panel title="Carreira">
+      <Panel ico="maleta" title="Carreira">
         <p className="mut">O jogo salva sozinho neste navegador.</p>
         {!conf ? <button className="btn ghost" onClick={() => setConf(true)}>Apagar carreira e começar de novo</button> :
           <div className="row"><span>Tem certeza? Não dá para desfazer.</span><button className="btn danger" onClick={() => { localStorage.removeItem('esportsceo-v2'); setState(null); }}>Apagar</button><button className="btn ghost" onClick={() => setConf(false)}>Cancelar</button></div>}

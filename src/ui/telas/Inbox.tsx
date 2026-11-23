@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Contexto } from '../Contexto';
 import { ArrowDown, CheckCheck, Gamepad2 } from 'lucide-react';
 import { moeda, resolver } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
@@ -85,6 +86,7 @@ export function Inbox({ abrir, ir }: { abrir?: string; ir: (t: Tela, a?: string)
               {m.corpo.split('\n').map((p, i) => (p ? <p key={i}>{p}</p> : <br key={i} />))}
             </div>
             <Termos s={s} m={m} />
+            <Contexto s={s} m={m} ir={ir} />
             {quem(m) && <button className="btn sm" onClick={() => ir('perfil', quem(m)!)}><Gamepad2 size={16} /> Ver perfil</button>}
             {m.dados?.tela && <button className="btn sm" onClick={() => ir(m.dados.tela)}>Abrir {m.dados.tela === 'historia' ? 'História' : m.dados.tela}</button>}
             {m.acoes && (

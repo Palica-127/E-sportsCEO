@@ -5,7 +5,8 @@ import { moeda } from '../../engine/org';
 import { CARGOS, CARGOS_JOGO, CARGOS_ORG, NOME_COMODO, cobertura, contratarStaff, demitirStaff, doCargo, multaStaff } from '../../engine/staff';
 import type { Cargo, Staff } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Estrelas, Flag, Panel, RetratoStaff } from '../common';
+import { Estrelas, Flag, Panel, RetratoStaff, Ico3D } from '../common';
+import { ICO_CARGO } from '../icones';
 
 export function StaffTela() {
   const s = useGame()!;
@@ -17,7 +18,7 @@ export function StaffTela() {
     const travado = info.comodo && !(s.sede.comodos[info.comodo]?.nivel);
     if (!x) return (
       <div className="scard vazio">
-        <span className="sc-cargo">{info.nome}</span>
+        <span className="sc-cargo"><Ico3D n={ICO_CARGO[cargo]} size={22} />{info.nome}</span>
         <span className="sc-ic">{travado ? <Lock /> : <UserPlus />}</span>
         <p>{info.desc}</p>
         {travado ? <span className="lock">Precisa do cômodo “{NOME_COMODO[info.comodo!]}” na sede</span> : <button className="btn sm" onClick={() => setPool({ cargo, game })}>Contratar</button>}
@@ -25,7 +26,7 @@ export function StaffTela() {
     );
     return (
       <div className="scard">
-        <span className="sc-cargo">{info.nome}</span>
+        <span className="sc-cargo"><Ico3D n={ICO_CARGO[cargo]} size={22} />{info.nome}</span>
         <RetratoStaff s={s} x={x} size={110} />
         <b>{x.nome}</b>
         <Estrelas v={Math.max(0.5, Math.min(5, (x.nota - 50) / 9))} size={16} />

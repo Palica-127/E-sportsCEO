@@ -83,7 +83,7 @@ function Socio({ faz }: { faz: (f: () => string | null | void, ok?: string) => v
   const so = s.marca?.socio;
   return (
     <div className="grid2">
-      <Panel title="Programa de sócio-torcedor">
+      <Panel ico="bilhete" title="Programa de sócio-torcedor">
         <p>Fãs pagam uma mensalidade e ganham conteúdo exclusivo, desconto na loja e prioridade nos eventos. É receita que entra toda semana. Cerca de 25% vai para os benefícios.</p>
         <div className="socio-planos">
           {PRECOS_SOCIO.map(p => (
@@ -96,7 +96,7 @@ function Socio({ faz }: { faz: (f: () => string | null | void, ok?: string) => v
         </div>
         {!so && <p className="mut">Montar o programa custa R$ 20 mil. O estúdio de conteúdo na sede aumenta a adesão em 25%.</p>}
       </Panel>
-      <Panel title="Situação">
+      <Panel ico="grafico-sobe" title="Situação">
         {so ? (
           <>
             <div className="kv"><span>Sócios</span><b>{so.membros.toLocaleString('pt-BR')}</b></div>
@@ -121,7 +121,7 @@ function Eventos({ faz }: { faz: (f: () => string | null | void, ok?: string) =>
   const prev = mid ? publicoPrevisto(s, mid, local, preco) : 0;
   return (
     <div className="grid2">
-      <Panel title="Organizar evento">
+      <Panel ico="ingresso" title="Organizar evento">
         <p className="mut">Watch party ou fan fest num jogo da org: você aluga o local, vende ingresso e fatura com consumo e loja. Final e internacional enchem mais. Vitória no dia aumenta o consumo.</p>
         <label className="lbl">Partida</label>
         {jogos.length === 0 ? <p className="mut">Nenhuma partida da org nos próximos 70 dias.</p> : (
@@ -147,7 +147,7 @@ function Eventos({ faz }: { faz: (f: () => string | null | void, ok?: string) =>
         </div>
         <button className="btn primary" disabled={!mid} onClick={() => faz(() => agendarEvento(s, mid, local, preco), 'Evento marcado! O resultado chega na caixa de entrada no dia do jogo.')}>Marcar evento · {moeda(L.custo)}</button>
       </Panel>
-      <Panel title="Agenda e histórico">
+      <Panel ico="calendario" title="Agenda e histórico">
         {m.eventos.length === 0 ? <p className="mut">Nenhum evento ainda.</p> : m.eventos.slice().reverse().map(e => {
           const j = s.matches[e.mid];
           return (

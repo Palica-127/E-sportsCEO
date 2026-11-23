@@ -80,7 +80,7 @@ export function SedeTela() {
         {s.sede.mudancaAte && s.sede.mudancaAte > s.dia && <div className="alerta meh" style={{ marginTop: 10 }}><b>!</b>Mudança em andamento até {fmtData(s.sede.mudancaAte, false)}: treino atrapalhado.</div>}
         {nJog > QUARTOS[s.sede.nivel] && <div className="alerta bad" style={{ marginTop: 10 }}><b>!</b>Casa lotada: {nJog} jogadores para {QUARTOS[s.sede.nivel]} camas. A moral cai.</div>}
         <div style={{ height: 20 }} />
-        <Panel title="Periféricos">
+        <Panel ico="teclado" title="Periféricos">
           {s.jogos.map(g => {
             const k = s.kits[g] ?? { nivel: 0, desgaste: 0 };
             const reforma = k.desgaste >= 60;
@@ -96,7 +96,7 @@ export function SedeTela() {
         </Panel>
       </div>
       <div>
-        <Panel title="Cômodos" right={<span className="mut">Custo semanal da sede: {moeda(custoSede(s))}</span>}>
+        <Panel ico="obra" title="Cômodos" right={<span className="mut">Custo semanal da sede: {moeda(custoSede(s))}</span>}>
           {ORDEM_COMODOS.map(id => {
             const c = s.sede.comodos[id as ComodoId];
             const info = COMODOS[id];
@@ -112,7 +112,7 @@ export function SedeTela() {
           })}
         </Panel>
         <div style={{ height: 20 }} />
-        <Panel title="Mudar de sede">
+        <Panel ico="casa-grande" title="Mudar de sede">
           <div className="sedes-op">
             {SEDES.map((x, i) => (
               <div key={x.nome} className={'sop ' + (i === s.sede.nivel ? 'on' : '')}>

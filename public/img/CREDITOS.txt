@@ -3,3 +3,5 @@ Créditos das imagens livres usadas no jogo
 - public/sede/*.webp e public/locais/*.webp: fotos da Unsplash, Licença Unsplash (uso livre, sem atribuição obrigatória) — https://unsplash.com/license
   casa-mediana: Jeff James · casa-grande: Stephan Bechert · mansao: Virender Singh · predio: Linus Belanger
   bar: Amit Lahav · teatro: Richard Heinen · ginasio: Karsten Winegeart · arena: Adrià Sánchez Roqué
+- public/img/fundos/*.webp: fotos da Unsplash (Licença Unsplash)
+escritorio: paws and prints · estadio: Jason Leung · pc: sdl sanjaya · arena/ginasio/teatro: ver locais

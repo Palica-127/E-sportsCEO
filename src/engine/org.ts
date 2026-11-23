@@ -460,7 +460,7 @@ export function aoClassificarOrg(s: State, tor: Torneio) {
   s.org.rep = clamp(s.org.rep + 2, 0, 100);
   s.diretoria.confianca = clamp(s.diretoria.confianca + 4, 0, 100);
   msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', game: g, titulo: `Classificados para o ${tor.nome}!`,
-    corpo: `O time de ${GAMES[g].nome} garantiu vaga no ${tor.nome}. É a chance de colocar a ${s.org.nome} no mapa do mundo.\n\nFormato: ${tor.stages.map(x => x.nome).join(' → ')}.` });
+    corpo: `O time de ${GAMES[g].nome} garantiu vaga no ${tor.nome}. É a chance de colocar a ${s.org.nome} no mapa do mundo.\n\nFormato: ${tor.stages.map(x => x.nome).join(' → ')}.`, dados: { tor: tor.id, tipo: 'classificado' } });
 }
 
 /** chamado quando termina um torneio em que a org jogou */
@@ -474,6 +474,7 @@ export function aoFimTorneioOrg(s: State, tor: Torneio) {
     if (caiu) { s.diretoria.confianca = clamp(s.diretoria.confianca - 18, 0, 100); s.org.rep = clamp(s.org.rep - 6, 0, 100); }
     msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', game: g,
       titulo: subiu ? `ACESSO! ${s.org.nome} sobe para a elite` : caiu ? 'Rebaixados para a Challengers' : ficou ? 'Vaga na elite mantida' : 'Acesso adiado',
+      dados: { tor: tor.id, fase: subiu ? 'Subiu' : caiu ? 'Caiu' : ficou ? 'Ficou' : 'Não subiu' },
       corpo: subiu ? 'Vitória na série de acesso. No próximo split o time joga a liga principal. Projeto no caminho certo.' : caiu ? 'Perdemos a série de acesso e vamos jogar a Challengers no próximo split.' : ficou ? 'Sofremos, mas vencemos a série de acesso e seguimos na elite.' : 'Batemos na trave na série de acesso. Fica para o próximo split.' });
     return;
   }
@@ -498,7 +499,7 @@ export function aoFimTorneioOrg(s: State, tor: Torneio) {
   s.diretoria.confianca = clamp(s.diretoria.confianca + dc, 0, 100);
   msg(s, { de: 'Conselho da diretoria', cargo: 'Diretoria', cat: 'diretoria', game: g,
     titulo: fase === 'CAMPEÃ' ? `🏆 ${s.org.nome} CAMPEÃ do ${tor.nome}!` : `${GAMES[g].curto}: ${tor.nome} encerrado`,
-    corpo: `${tor.nome}: ${fase === 'CAMPEÃ' ? 'campeã' : fase.toLowerCase()}.${premio ? `\nPremiação: ${moeda(premio)}.` : ''}\n\nConfiança da diretoria: ${Math.round(s.diretoria.confianca)}% (${dc >= 0 ? '+' : ''}${dc}).` });
+    corpo: `${tor.nome}: ${fase === 'CAMPEÃ' ? 'campeã' : fase.toLowerCase()}.${premio ? `\nPremiação: ${moeda(premio)}.` : ''}\n\nConfiança da diretoria: ${Math.round(s.diretoria.confianca)}% (${dc >= 0 ? '+' : ''}${dc}).`, dados: { tor: tor.id, fase, premio, rep, dc } });
 }
 
 /** CEO intervém: troca titular e reserva */

@@ -13,7 +13,7 @@ export function Olheiros({ ir }: { ir: (t: Tela, a?: string) => void }) {
   const rels = Object.entries(s.conhecido).filter(([, k]) => k.n === 2).map(([id]) => s.players[id]).filter(p => p && !s.teams[p.teamId ?? '']?.org).slice(-40).reverse();
   return (
     <div>
-      <Panel title="Seus olheiros" right={<button className="link" onClick={() => ir('staff')}>Contratar mais ›</button>}>
+      <Panel ico="lupa" title="Seus olheiros" right={<button className="link" onClick={() => ir('staff')}>Contratar mais ›</button>}>
         <div className="staff-grid">
           {os.map(o => (
             <div key={o.id} className="scard">
@@ -28,7 +28,7 @@ export function Olheiros({ ir }: { ir: (t: Tela, a?: string) => void }) {
         <p className="mut" style={{ marginTop: 10 }}>Quanto maior a nota do olheiro, mais rápido e mais preciso é o relatório (nota real, potencial, perfil e interesse em vir).</p>
       </Panel>
       <div style={{ height: 22 }} />
-      <Panel title="Relatórios" solto>
+      <Panel ico="jornal" title="Relatórios" solto>
         <div className="box" style={{ padding: 0 }}>
           <table className="tab">
             <thead><tr><th className="tm">Jogador</th><th>Jogo</th><th>Função</th><th>Idade</th><th className="tm">Time</th><th>Nota</th><th>Potencial</th><th>Interesse</th><th>Salário atual</th></tr></thead>

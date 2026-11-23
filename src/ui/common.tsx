@@ -89,10 +89,10 @@ export function GameTag({ g, full }: { g: GameId; full?: boolean }) {
   return <span className="gtag" style={{ '--g': GAMES[g].cor } as CSSProperties}>{full ? GAMES[g].nome : GAMES[g].curto}</span>;
 }
 /** seção no estilo "» Título" com caixa de cantos em colchete */
-export function Panel({ title, right, children, className, g, solto }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; g?: GameId; solto?: boolean }) {
+export function Panel({ title, right, children, className, g, solto, ico }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string; g?: GameId; solto?: boolean; ico?: string }) {
   return (
     <section className={'sec ' + (className ?? '')} style={g ? ({ '--g': GAMES[g].cor } as CSSProperties) : undefined}>
-      {title && <header className="sec-h"><h3><span className="chev">»</span>{title}</h3>{right}</header>}
+      {title && <header className="sec-h"><h3>{ico ? <Ico3D n={ico} size={26} className="h-ico" /> : <span className="chev">»</span>}{title}</h3>{right}</header>}
       <div className={solto ? 'sec-b solto' : 'box sec-b'}>{children}</div>
     </section>
   );

@@ -45,3 +45,17 @@ export function remetente(s: State, m: Msg): Remetente {
   if (Object.values(s.staff).some(x => x.nome === m.de) || (m.cat === 'tecnico' && /^[A-ZÁÉÍÓÚ][a-zà-ú]+ [A-ZÁÉÍÓÚ]/.test(m.de) && !/Departamento|Conselho|Gerente/.test(m.de))) return { tipo: 'pessoa', nome: m.de };
   return { tipo: '3d', n: ico3dMsg(m) };
 }
+
+/** ícone 3D de cada linha de receita/despesa */
+const ICO_FIN: Record<string, string> = {
+  'Salários': 'nota', 'Folha salarial': 'nota', 'Comissão técnica e staff': 'prancheta', 'Sede e cômodos': 'casa', 'Parcela da dívida': 'alerta',
+  'Empréstimo': 'banco', 'Patrocínios': 'aperto', 'Conteúdo e streams': 'microfone', 'Repasse da liga': 'predio-classico', 'Loja da marca': 'sacolas',
+  'Sócio-torcedor': 'bilhete', 'Ingressos': 'ingresso', 'Premiações': 'trofeu', 'Periféricos': 'teclado', 'Expansão': 'foguete',
+  'Produção da loja': 'pacote', 'Eventos': 'festa', 'Luvas e multas': 'contrato', 'Bootcamp': 'foguete', 'Obras': 'obra', 'Vendas': 'dinheiro-voando',
+};
+export const icoFin = (k: string) => ICO_FIN[k] ?? (/obra|cômodo/i.test(k) ? 'obra' : /venda|transfer/i.test(k) ? 'dinheiro-voando' : 'dinheiro');
+/** ícone 3D de cada cargo */
+export const ICO_CARGO: Record<string, string> = {
+  tecnico: 'prancheta', auxiliar: 'contrato', analista: 'analise', psicologo: 'cerebro', nutricionista: 'cozinha', chef: 'cozinha',
+  preparador: 'academia', social: 'celular', olheiro: 'lupa',
+};

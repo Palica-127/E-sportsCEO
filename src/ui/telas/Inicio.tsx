@@ -93,7 +93,7 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
 
       <div className="home-grid">
         <div className="hc">
-          <Panel title="Organização">
+          <Panel ico="predio" title="Organização">
             {alertas.slice(0, 4).map((a, i) => <Alerta key={i} tipo={a.tipo}>{a.el}</Alerta>)}
             <div className="sub-t">Titulares · {GAMES[g0].curto}</div>
             <div className="squad-row">
@@ -105,7 +105,7 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
               : <Alerta tipo="meh">Alguns titulares estão com <strong>forma ou moral</strong> baixa.</Alerta>}
             <div className="kv"><span>Elenco</span><b>{s.jogos.map(g => `${GAMES[g].curto} ${s.teams[s.orgTeams[g]!].elenco.length}/${maxElenco(g)}`).join(' · ')}</b></div>
           </Panel>
-          <Panel title="Eventos importantes" right={<button className="link" onClick={() => ir('inbox')}>Todos ›</button>}>
+          <Panel ico="sino" title="Eventos importantes" right={<button className="link" onClick={() => ir('inbox')}>Todos ›</button>}>
             {s.inbox.slice(0, 4).map(m => (
               <div key={m.id} className="evento" onClick={() => ir('inbox', m.id)}>
                 <span className="ev-ico"><AvatarMsg s={s} m={m} size={38} /></span>
@@ -116,7 +116,7 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
         </div>
 
         <div className="hc">
-          <Panel title={diaJ === s.dia ? 'Jogos de hoje' : `Próxima rodada · ${fmtData(diaJ, true).replace(/ \d{4}$/, '')}`}>
+          <Panel ico="calendario" title={diaJ === s.dia ? 'Jogos de hoje' : `Próxima rodada · ${fmtData(diaJ, true).replace(/ \d{4}$/, '')}`}>
             {jogosDia.length === 0 && <p className="mut">Sem jogos marcados por enquanto.</p>}
             {jogosDia.map(m => (
               <div key={m.id} className={'jogo-l ' + (isOrg(s, m.a) || isOrg(s, m.b) ? 'org' : '')} style={{ '--g': GAMES[m.game].cor } as CSSProperties} onClick={() => ir('competicoes', m.tor)}>
@@ -146,15 +146,15 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
         </div>
 
         <div className="hc">
-          <Panel title="Ranking mundial" right={<div className="seg sm">{s.jogos.map(g => <button key={g} className={g === gR ? 'on' : ''} style={{ '--g': GAMES[g].cor } as CSSProperties} onClick={() => setGR(g)}>{GAMES[g].curto}</button>)}</div>}>
+          <Panel ico="globo" title="Ranking mundial" right={<div className="seg sm">{s.jogos.map(g => <button key={g} className={g === gR ? 'on' : ''} style={{ '--g': GAMES[g].cor } as CSSProperties} onClick={() => setGR(g)}>{GAMES[g].curto}</button>)}</div>}>
             {rank.slice(0, 7).map((t, i) => <div key={t.id} className={'rank-l ' + (t.org ? 'org' : '')}><span className="rp"># {i + 1}</span><Crest s={s} team={t} size={26} /><b>{t.nome}</b><span>{Math.round(forca(s, t) * 20)}</span><span className="mut">-</span></div>)}
             {posOrg >= 7 && <div className="rank-l org"><span className="rp"># {posOrg + 1}</span><Crest s={s} team={rank[posOrg]} size={26} /><b>{rank[posOrg].nome}</b><span>{Math.round(forca(s, rank[posOrg]) * 20)}</span><span className="mut">-</span></div>}
           </Panel>
-          <Panel title="Redes sociais">
+          <Panel ico="celular" title="Redes sociais">
             {(s.redes ?? []).slice(-5).reverse().map((p, i) => <div key={i} className={'post ' + p.tom}><div style={{ flex: 1 }}><span className="pa">{p.autor}</span><p>{p.txt}</p></div><small>♥ {p.likes.toLocaleString('pt-BR')}</small></div>)}
             {!(s.redes ?? []).length && <p className="mut">A torcida ainda está esperando o primeiro jogo.</p>}
           </Panel>
-          <Panel title="Diretoria">
+          <Panel ico="predio-classico" title="Diretoria">
             <div className="dir">
               <small>Meta da temporada {anoDe(s.dia)}</small>
               <b>{s.diretoria.meta}</b>

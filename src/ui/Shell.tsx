@@ -44,6 +44,12 @@ const TITULO: Record<Tela, string> = { inicio: 'Início', inbox: 'Mensagens', el
 const SEM = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+/** foto de fundo de cada tela (Unsplash, uso livre) */
+const FUNDO: Partial<Record<Tela, string>> = {
+  inicio: 'ginasio', inbox: 'escritorio', elenco: 'pc', perfil: 'pc', staff: 'pc', olheiros: 'escritorio', mercado: 'escritorio',
+  competicoes: 'estadio', calendario: 'estadio', financas: 'escritorio', marca: 'arena', historia: 'teatro', org: 'escritorio',
+};
+
 export function Shell() {
   const s = useGame()!;
   const [hist, setHist] = useState<{ t: Tela; a?: string }[]>([{ t: 'inicio' }]);
@@ -128,6 +134,7 @@ export function Shell() {
         <div className="side-f"><kbd>Espaço</kbd> 1 dia · <kbd>Shift+Enter</kbd> avançar</div>
       </aside>
       <div className="main">
+        {FUNDO[tela] && <div className="fundo" key={FUNDO[tela]} style={{ backgroundImage: `url(/img/fundos/${FUNDO[tela]}.webp)` }} />}
         <main className="content" key={tela + (arg ?? '')}>
           {tela === 'inicio' && <Inicio ir={ir} abrirDia={() => setDiaJogo(true)} />}
           {tela === 'inbox' && <Inbox abrir={arg} ir={ir} />}

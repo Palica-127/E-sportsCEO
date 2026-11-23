@@ -47,7 +47,7 @@ function Trofeus() {
         <div className="sala-kpi"><b>{premiosOrg}</b><span>prêmios individuais</span></div>
         <div className="sala-kpi"><b>{(s.hall ?? []).filter(h => h.lendaOrg).length}</b><span>lendas</span></div>
       </div>
-      <Panel title="Estante">
+      <Panel ico="trofeu" title="Estante">
         {titulos.length === 0 ? <p className="mut">A estante ainda está vazia. O primeiro troféu vai ficar bem aqui.</p> : (
           <div className="estante">
             {titulos.map(h => (
@@ -60,7 +60,7 @@ function Trofeus() {
           </div>
         )}
       </Panel>
-      <Panel title="Temporadas da org">
+      <Panel ico="livro" title="Temporadas da org">
         {temps.length === 0 ? <p className="mut">O resumo de cada temporada aparece aqui no fim do ano (dia 6 de dezembro).</p> : (
           <table className="tbl temps">
             <thead><tr><th>Ano</th>{s.jogos.map(g => <th key={g}>{GAMES[g].curto}</th>)}<th>Caixa</th><th>Reputação</th><th>Fãs</th></tr></thead>
