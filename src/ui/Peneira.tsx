@@ -17,7 +17,7 @@ export function Peneira() {
   const nR = def.roles.length;
   const v = verbaPeneira(s);
   const lista = P.candidatos.filter(c => role == null || s.players[c.pid].role === role)
-    .sort((a, b) => s.players[a.pid].role - s.players[b.pid].role || (b.faixa[0] + b.faixa[1]) - (a.faixa[0] + a.faixa[1]));
+    .sort((a, b) => s.players[a.pid].role - s.players[b.pid].role || s.players[b.pid].ovr - s.players[a.pid].ovr);
   const escolhidos = P.escolhidos.map(id => s.players[id]);
 
   function toggle(pid: string) {
@@ -74,7 +74,7 @@ export function Peneira() {
                     <span className="c-sub">{p.idade} anos · {TRACOS[p.traco].nome}{c.motivo ? ` · ${c.motivo}` : ''}</span>
                     {time && <span className="c-team"><Crest s={s} team={time} size={16} /> {time.nome} · multa {moeda(c.multa)}</span>}
                   </span>
-                  <span className="c-faixa"><small>Nota</small><b>{c.faixa[0]}–{c.faixa[1]}</b></span>
+                  <span className="c-faixa"><small>Nota</small><b>{s.players[c.pid].ovr}</b></span>
                   <span className="c-custo"><small>Assinatura</small><b>{moeda(custoCandidato(s, c))}</b><small>{moeda(p.sal)}/sem</small></span>
                   <span className="c-check">{on ? '✓' : '+'}</span>
                 </button>

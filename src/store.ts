@@ -14,7 +14,11 @@ function load(): State | null {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const s = JSON.parse(raw.startsWith('{') ? raw : decompressFromUTF16(raw) ?? 'null');
-    if (s?.v === 3) return s;
+    if (s?.v === 3) {
+      // sem sistema de olheiro: olheiros contratados em saves antigos saem da folha
+      for (const [id, x] of Object.entries(s.staff ?? {}) as [string, { cargo: string }][]) if (x.cargo === 'olheiro') delete s.staff[id];
+      return s;
+    }
     if (s) antigo = true;
     return null;
   } catch { return null; }

@@ -27,7 +27,6 @@ const NAV: ({ id: Tela; nome: string; Ico: typeof Home; curto?: string } | 'gap'
   { id: 'elenco', nome: 'Elenco', Ico: Users },
   { id: 'staff', nome: 'Comissão', Ico: UserCog },
   'gap',
-  { id: 'olheiros', nome: 'Olheiros', Ico: Search },
   { id: 'mercado', nome: 'Transferências', Ico: ArrowLeftRight, curto: 'Mercado' },
   'gap',
   { id: 'competicoes', nome: 'Competições', Ico: Trophy, curto: 'Ligas' },

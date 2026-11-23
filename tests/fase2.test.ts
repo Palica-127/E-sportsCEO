@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { novoEstado, assumirCarreira, opcoesDeTime, resolver } from '../src/engine/org';
 import { passo, jogarDia } from '../src/engine/sim';
-import { abrirNeg, observar, notaVista, pedidoSalario, valorClube, candidatosRosto, exigenciasRosto, dispensar } from '../src/engine/mercado';
+import { abrirNeg, notaVista, pedidoSalario, valorClube, candidatosRosto, exigenciasRosto, dispensar } from '../src/engine/mercado';
 import { construir, mudarSede } from '../src/engine/sede';
 import { contratarStaff, doCargo } from '../src/engine/staff';
 
@@ -17,13 +17,10 @@ describe('fase 2', () => {
     assumirCarreira(s, { nome: 'Teste', sigla: 'TST', cor: '#f00', cenario: 'crise', regioes: { lol: 'CBLOL', cs2: 'AM' }, times: { lol: tl.id, cs2: tc.id } });
     expect(Object.values(s.staff).filter(x => x.cargo === 'tecnico').length).toBe(2);
     expect(s.sede.nivel).toBe(1);
-    // olheiro revela nota
+    // todas as notas são visíveis
     const alvo = Object.values(s.players).find(p => p.game === 'lol' && p.teamId && !s.teams[p.teamId].org && p.ovr < 78)!;
-    expect(notaVista(s, alvo).txt).toBe('?');
-    expect(observar(s, alvo.id)).toBeNull();
-    dias(s, 12, false);
-    expect(notaVista(s, alvo).txt).not.toBe('?');
-    expect(s.inbox.some(m => m.titulo.startsWith('Relatório'))).toBe(true);
+    expect(notaVista(s, alvo).txt).toBe(String(alvo.ovr));
+    expect(Object.values(s.staff).some(x => x.cargo === 'olheiro')).toBe(false);
     // contratar agente livre com salário acima do pedido
     s.org.caixa = 3_000_000;
     const livre = Object.values(s.players).filter(p => p.game === 'lol' && !p.teamId).sort((a, b) => b.ovr - a.ovr)[0];

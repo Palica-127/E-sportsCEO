@@ -25,7 +25,7 @@ export const maxElenco = (g: GameId) => GAMES[g].roles.length + 3;
 export function famoso(p: Player): boolean { return p.real && p.ovr >= 80; }
 /** o que a org sabe da nota do jogador */
 export function notaVista(s: State, p: Player): { a: number; b: number; exata: boolean; txt: string } {
-  if (s.teams[p.teamId ?? '']?.org) return { a: p.ovr, b: p.ovr, exata: true, txt: String(p.ovr) };
+  return { a: p.ovr, b: p.ovr, exata: true, txt: String(p.ovr) }; // todas as notas são visíveis (sem sistema de olheiro)
   const k = s.conhecido[p.id];
   if (k?.n === 2) return { a: k.a, b: k.b, exata: k.a === k.b, txt: k.a === k.b ? String(k.a) : `${k.a}-${k.b}` };
   if (k) return { a: k.a, b: k.b, exata: false, txt: `${k.a}-${k.b}` };

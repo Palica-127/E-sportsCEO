@@ -5,7 +5,7 @@ import { GAMES } from '../../engine/games';
 import { moeda } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
 import { ATRIBUTOS, atributos, valorMercado } from '../../engine/world';
-import { custoRescisao, dispensar, interesse, notaVista, observar, pedidoSalario, renovar } from '../../engine/mercado';
+import { custoRescisao, dispensar, interesse, notaVista, pedidoSalario, renovar } from '../../engine/mercado';
 import { TRACOS } from '../../engine/types';
 import { act, useGame } from '../../store';
 import { Chips, Crest, Estrelas, Flag, Gauge, Linha, Radar, RetratoJogador } from '../common';
@@ -34,7 +34,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
   const meu = !!t?.org;
   const g = p.game, def = GAMES[g];
   const nv = notaVista(s, p);
-  const conhece = meu || s.conhecido[p.id]?.n === 2;
+  const conhece = true;
   const attrs = atributos(p);
   const titular = t ? t.elenco.indexOf(p.id) < def.roles.length : false;
   const potE = Math.max(1, Math.min(5, (p.pot - 58) / 8));
@@ -80,7 +80,6 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
                 <header className="sec-h"><h3><span className="chev">»</span>Atributos</h3></header>
                 <div className="box" style={{ display: 'grid', placeItems: 'center', position: 'relative' }}>
                   <Radar labels={ATRIBUTOS} vals={conhece ? attrs : attrs.map(() => 60)} size={330} />
-                  {!conhece && <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(14,19,29,.6)' }}><button className="btn" onClick={() => setMsg(act(st => observar(st, p.id)) ?? 'Olheiro enviado. O relatório chega em alguns dias.')}><Search size={16} /> Mandar olheiro</button></div>}
                 </div>
               </section>
               <section className="sec" style={{ marginTop: 20 }}>
@@ -100,7 +99,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
                   <div className="kv"><span>Salário (mês)</span><b>{meu || conhece ? moeda(p.sal * 4) : '?'}</b></div>
                   <div className="kv"><span>Fim</span><b>{t ? `dez/${p.contrato}` : '-'}</b></div>
                   <div className="kv"><span>Valor de mercado</span><b>{conhece || meu ? moeda(valorMercado(p)) : '?'}</b></div>
-                  {!meu && <div className="kv"><span>Interesse em vir</span><b>{s.conhecido[p.id]?.int != null ? `${s.conhecido[p.id].int}%` : conhece ? `${interesse(s, p, g)}%` : '?'}</b></div>}
+                  {!meu && <div className="kv"><span>Interesse em vir</span><b>{`${s.conhecido[p.id]?.int ?? interesse(s, p, g)}%`}</b></div>}
                 </div>
               </section>
               <section className="sec" style={{ marginTop: 20 }}>
@@ -125,8 +124,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
                   ) : (
                     <>
                       <div className="box"><div className="acao-box"><span className="ldot" /><p>Fazer proposta de contratação.</p><button className="btn sm" onClick={() => setProp(true)}>Proposta</button></div></div>
-                      <div className="box"><div className="acao-box"><span className={'ldot ' + (s.alvos.includes(p.id) ? '' : 'off')} /><p>{s.alvos.includes(p.id) ? 'Está na sua lista de alvos.' : 'Acompanhar na lista de alvos.'}</p><button className="btn sm" onClick={() => act(st => { st.alvos = st.alvos.includes(p.id) ? st.alvos.filter(x => x !== p.id) : [...st.alvos, p.id]; })}><Star size={14} /> {s.alvos.includes(p.id) ? 'Remover' : 'Seguir'}</button></div>
-                        <div className="acao-box" style={{ marginTop: 10 }}><span className="ldot" /><p>Relatório de olheiro.</p><button className="btn sm" onClick={() => setMsg(act(st => observar(st, p.id)) ?? 'Olheiro enviado.')}><Search size={14} /> Observar</button></div></div>
+                      <div className="box"><div className="acao-box"><span className={'ldot ' + (s.alvos.includes(p.id) ? '' : 'off')} /><p>{s.alvos.includes(p.id) ? 'Está na sua lista de alvos.' : 'Acompanhar na lista de alvos.'}</p><button className="btn sm" onClick={() => act(st => { st.alvos = st.alvos.includes(p.id) ? st.alvos.filter(x => x !== p.id) : [...st.alvos, p.id]; })}><Star size={14} /> {s.alvos.includes(p.id) ? 'Remover' : 'Seguir'}</button></div></div>
                     </>
                   )}
                 </div>

@@ -17,7 +17,7 @@ export const CARGOS: Record<Cargo, { nome: string; porJogo?: boolean; comodo?: C
   social: { nome: 'Social media', comodo: 'estudio', desc: 'Redes sociais e streams: mais seguidores e renda de conteúdo.', base: 1400 },
   olheiro: { nome: 'Olheiro', desc: 'Observa jogadores e revela a nota real, o potencial e o interesse em vir.', base: 1200 },
 };
-export const CARGOS_ORG: Cargo[] = ['psicologo', 'nutricionista', 'chef', 'preparador', 'social', 'olheiro'];
+export const CARGOS_ORG: Cargo[] = ['psicologo', 'nutricionista', 'chef', 'preparador', 'social'];
 export const CARGOS_JOGO: Cargo[] = ['tecnico', 'auxiliar', 'analista'];
 
 const PRIMEIROS: Record<string, string[]> = {
@@ -109,7 +109,6 @@ export function cobertura(s: State, c: Cargo): number {
 export function staffInicial(s: State) {
   const faixa = s.org.cenario === 'investidor' ? [74, 82] : s.org.cenario === 'crise' ? [66, 74] : [60, 68];
   for (const g of s.jogos) { const t = geraStaff(s, 'tecnico', ri(s, faixa[0], faixa[1]), g); t.contrato = 2029; s.staff[t.id] = t; }
-  const o = geraStaff(s, 'olheiro', ri(s, 60, 68)); o.contrato = 2029; s.staff[o.id] = o;
   if (s.org.cenario === 'investidor') {
     for (const g of s.jogos) { const a = geraStaff(s, 'analista', ri(s, 68, 76), g); a.contrato = 2029; s.staff[a.id] = a; }
     const p = geraStaff(s, 'psicologo', ri(s, 66, 74)); p.contrato = 2029; s.staff[p.id] = p;

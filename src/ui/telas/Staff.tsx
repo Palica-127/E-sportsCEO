@@ -46,7 +46,7 @@ export function StaffTela() {
         </section>
       ))}
       <section className="sec">
-        <header className="sec-h"><h3><span className="chev">»</span>Staff da organização</h3><span className="mut">Atendem todos os elencos · olheiros: até 3</span></header>
+        <header className="sec-h"><h3><span className="chev">»</span>Staff da organização</h3><span className="mut">Atendem todos os elencos</span></header>
         <div className="staff-grid">
           {CARGOS_ORG.flatMap(c => (c === 'olheiro' ? [...doCargo(s, c).map(x => <Card key={x.id} cargo={c} x={x} />), ...(doCargo(s, c).length < 3 ? [<Card key="o-novo" cargo={c} />] : [])] : [<Card key={c} cargo={c} x={doCargo(s, c)[0]} />]))}
         </div>

@@ -4,7 +4,7 @@ import { GAMES, GameId, regioes } from '../../engine/games';
 import { moeda } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
 import { valorMercado } from '../../engine/world';
-import { abrirNeg, candidatosRosto, convidarRosto, exigenciasRosto, interesse, janelaAberta, maxElenco, notaVista, observar, pedidoSalario, proximaJanela, valorClube } from '../../engine/mercado';
+import { abrirNeg, candidatosRosto, convidarRosto, exigenciasRosto, interesse, janelaAberta, maxElenco, notaVista, pedidoSalario, proximaJanela, valorClube } from '../../engine/mercado';
 import { act, useGame } from '../../store';
 import { Crest, EstrelasNota, Flag, Ovr, Panel, RetratoJogador } from '../common';
 import type { Tela } from '../Shell';
@@ -12,7 +12,7 @@ import type { Tela } from '../Shell';
 export function Proposta({ pid, onFechar }: { pid: string; onFechar: () => void }) {
   const s = useGame()!;
   const p = s.players[pid];
-  const conhece = s.conhecido[pid]?.n === 2;
+  const conhece = true;
   const sugFee = p.teamId ? Math.round(valorClube(s, p) * (conhece ? 1 : 0.9) / 1000) * 1000 : 0;
   const [fee, setFee] = useState(sugFee);
   const [sal, setSal] = useState(pedidoSalario(s, p) * 4);
@@ -62,7 +62,7 @@ export function Mercado({ ir, aba: aba0 }: { ir: (t: Tela, a?: string) => void; 
       && (!reg || s.teams[p.teamId ?? '']?.region === reg) && (status === 'todos' || (status === 'livres' ? !p.teamId : !!p.teamId))
       && (!busca || p.nick.toLowerCase().includes(busca.toLowerCase())));
     return ps.map(p => ({ p, nv: notaVista(s, p) })).sort((a, b) => (b.nv.b + b.nv.a) - (a.nv.b + a.nv.a) || b.p.ovr - a.p.ovr).slice(0, 80);
-  }, [s, g, role, reg, status, busca, s.dia, s.conhecido]);
+  }, [s, g, role, reg, status, busca, s.dia]);
   const negs = s.negs.slice().reverse();
   const abertas = negs.filter(n => n.etapa === 'clube' || n.etapa === 'jogador').length;
 
@@ -76,10 +76,9 @@ export function Mercado({ ir, aba: aba0 }: { ir: (t: Tela, a?: string) => void; 
         <td>{p.idade}</td>
         <td className="tm">{t ? <><Crest s={s} team={t} size={20} />{t.nome}</> : <span className="mut">Livre</span>}</td>
         <td><Ovr v={nv.txt} /></td>
-        <td>{k?.int != null ? <span className={'int ' + (k.int >= 65 ? 'hi' : k.int >= 40 ? 'md' : 'lo')}>{k.int}%</span> : <span className="mut">?</span>}</td>
-        <td>{k ? moeda(valorMercado(p)) : <span className="mut">?</span>}</td>
+        <td>{(() => { const i = k?.int ?? interesse(s, p, p.game); return <span className={'int ' + (i >= 65 ? 'hi' : i >= 40 ? 'md' : 'lo')}>{i}%</span>; })()}</td>
+        <td>{moeda(valorMercado(p))}</td>
         <td onClick={e => e.stopPropagation()}><div className="acts">
-          <button className="btn ghost sm" title="Mandar olheiro" onClick={() => setMsg(act(st => observar(st, pid)) ?? `Olheiro a caminho para observar ${p.nick}.`)}><Search size={14} /></button>
           <button className="btn ghost sm" title="Lista de alvos" onClick={() => act(st => { st.alvos = st.alvos.includes(pid) ? st.alvos.filter(x => x !== pid) : [...st.alvos, pid]; })}><Star size={14} fill={s.alvos.includes(pid) ? '#f2c037' : 'none'} /></button>
           <button className="btn sm" onClick={() => setProp(pid)}>Proposta</button>
         </div></td>
@@ -107,7 +106,6 @@ export function Mercado({ ir, aba: aba0 }: { ir: (t: Tela, a?: string) => void; 
             <span className="mut">Elenco: {s.teams[s.orgTeams[g]!].elenco.length}/{maxElenco(g)}</span>
           </div>
           <Panel solto><div className="box" style={{ padding: 0 }}><table className="tab merc-tab">{cabec}<tbody>{lista.map(x => <Linha key={x.p.id} pid={x.p.id} />)}</tbody></table></div></Panel>
-          <p className="mut">Notas com “?” são desconhecidas: mande um olheiro. Jogadores famosos aparecem com uma faixa aproximada.</p>
         </>
       )}
 
