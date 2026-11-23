@@ -4,18 +4,17 @@ import { moeda, resolver } from '../../engine/org';
 import { fmtData } from '../../engine/sim';
 import type { Msg, State } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Crest, GameTag, Retrato, RetratoJogador } from '../common';
-import { CAT, IcoCat } from '../icones';
+import { Crest, GameTag, Ico3D, Retrato, RetratoJogador } from '../common';
+import { CAT, ico3dMsg, remetente } from '../icones';
 import type { Tela } from '../Shell';
 
-function Avatar({ s, m }: { s: State; m: Msg }) {
-  if (m.dados?.venda) return <Crest s={s} team={s.teams[m.dados.venda.comprador]} size={96} />;
-  if (m.dados?.neg) { const n = s.negs.find(x => x.id === m.dados.neg); const p = n && s.players[n.pid]; if (p) return <RetratoJogador s={s} p={p} size={106} />; }
-  if (m.dados?.pid && s.players[m.dados.pid]) return <RetratoJogador s={s} p={s.players[m.dados.pid]} size={106} />;
-  if (m.dados?.sair && s.players[m.dados.sair]) return <RetratoJogador s={s} p={s.players[m.dados.sair]} size={106} />;
-  if (m.cat === 'tecnico' || m.cargo.includes('Olheiro')) return <Retrato nome={m.de} cor={s.org.cor} size={106} fone={false} sigla={s.org.sigla} />;
-  const C = CAT[m.cat];
-  return <C.Ico className="lucide" color={C.cor} />;
+/** avatar do remetente (lista e detalhe) */
+export function AvatarMsg({ s, m, size }: { s: State; m: Msg; size: number }) {
+  const r = remetente(s, m);
+  if (r.tipo === 'time') return <span className="av av-time"><Crest s={s} team={s.teams[r.id]} size={size * 0.8} /></span>;
+  if (r.tipo === 'jogador') return <span className="av av-p"><RetratoJogador s={s} p={s.players[r.id]} size={size} /></span>;
+  if (r.tipo === 'pessoa') return <span className="av av-p"><Retrato nome={r.nome} cor={s.org.cor} size={size} fone={false} sigla={s.org.sigla} /></span>;
+  return <span className="av av-3d" style={{ ['--c' as string]: CAT[m.cat].cor }}><Ico3D n={r.n} size={size * 0.72} /></span>;
 }
 
 function Termos({ s, m }: { s: State; m: Msg }) {
@@ -55,8 +54,8 @@ export function Inbox({ abrir, ir }: { abrir?: string; ir: (t: Tela, a?: string)
         </div>
         <div className="mail-list">
           {lista.map(x => (
-            <button key={x.id} className={'mail-it ' + (x.id === sel ? 'on ' : '') + (x.lida ? '' : 'nova ') + (x.acoes && !x.resolvida ? 'acao' : '')} onClick={() => { setSel(x.id); setRetorno(''); }}>
-              <span className="mi-cat" style={{ background: CAT[x.cat].cor + '33' }}><IcoCat cat={x.cat} size={30} /><span className="dot" /></span>
+            <button key={x.id} style={{ ['--c' as string]: CAT[x.cat].cor }} className={'mail-it ' + (x.id === sel ? 'on ' : '') + (x.lida ? '' : 'nova ') + (x.acoes && !x.resolvida ? 'acao' : '')} onClick={() => { setSel(x.id); setRetorno(''); }}>
+              <span className="mi-cat" style={{ ['--c' as string]: CAT[x.cat].cor }}><AvatarMsg s={s} m={x} size={46} /><span className="dot" /></span>
               <span style={{ minWidth: 0 }}>
                 <span className="mi-t"><b>{x.de}</b><small>{x.dia === s.dia ? 'Hoje' : fmtData(x.dia, false)}</small></span>
                 <span className="mi-s" style={{ display: 'block' }}>{x.titulo}</span>
@@ -71,8 +70,9 @@ export function Inbox({ abrir, ir }: { abrir?: string; ir: (t: Tela, a?: string)
         {m ? (
           <>
             <button className="link voltar" onClick={() => setSel(undefined)}>← Mensagens</button>
-            <header className="md-h">
-              <div className="md-av"><Avatar s={s} m={m} /></div>
+            <img className="md-hero" src={`/img/3d/${ico3dMsg(m)}.webp`} alt="" />
+            <header className="md-h" style={{ ['--c' as string]: CAT[m.cat].cor }}>
+              <div className="md-av"><AvatarMsg s={s} m={m} size={106} /></div>
               <div>
                 <h2>{m.de}</h2>
                 <div className="mut">{m.cargo}{m.game && <> · <GameTag g={m.game} /></>}</div>

@@ -4,7 +4,7 @@ import { moeda } from '../../engine/org';
 import { fmtData, proximosJogosOrg } from '../../engine/sim';
 import type { FaixaPreco } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Crest, Escudo, Gauge, Linha, Panel } from '../common';
+import { Crest, Escudo, Gauge, Ico3D, Linha, Panel } from '../common';
 
 export function MarcaTela() {
   const s = useGame()!;
@@ -50,7 +50,7 @@ function Produto({ id, faz }: { id: string; faz: (f: () => string | null | void,
   const margem = precoVenda(id, faixa) - P.custo;
   return (
     <div className={'produto ' + (bloq ? 'bloq' : '')}>
-      <div className="pr-ico">{P.ico}</div>
+      <div className="pr-ico"><Ico3D n={P.ico} size={56} /></div>
       <div className="pr-info">
         <b>{P.nome}</b>
         <small>{P.desc}</small>
@@ -132,7 +132,7 @@ function Eventos({ faz }: { faz: (f: () => string | null | void, ok?: string) =>
         <label className="lbl">Local</label>
         <div className="locais">
           {Object.entries(LOCAIS).map(([k, x]) => (
-            <button key={k} className={'local ' + (local === k ? 'on' : '') + (s.org.rep < x.rep ? ' bloq' : '')} onClick={() => { setLocal(k); setPreco(x.preco); }}>
+            <button key={k} className={'local ' + (local === k ? 'on' : '') + (s.org.rep < x.rep ? ' bloq' : '')} style={{ backgroundImage: `linear-gradient(180deg, rgba(10,14,22,.15), rgba(10,14,22,.92) 70%), url(/locais/${k}.webp)` }} onClick={() => { setLocal(k); setPreco(x.preco); }}>
               <b>{x.nome}</b><span>{x.cap.toLocaleString('pt-BR')} lugares</span><small>{moeda(x.custo)}{x.rep ? ` · rep ${x.rep}` : ''}</small>
             </button>
           ))}

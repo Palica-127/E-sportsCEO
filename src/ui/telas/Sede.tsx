@@ -7,7 +7,7 @@ import { COMODOS, KITS, ORDEM_COMODOS, QUARTOS, SEDES, construir, custoComodo, c
 import { NOME_COMODO } from '../../engine/staff';
 import type { ComodoId, State } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Bar, Panel } from '../common';
+import { Bar, Ico3D, Panel } from '../common';
 
 const FOTO = ['casa-mediana', 'casa-grande', 'mansao', 'predio'];
 const GRADE: [number, number][] = [[2, 2], [3, 2], [4, 2], [3, 3]];
@@ -17,7 +17,7 @@ function Planta({ s }: { s: State }) {
   const [cols, rows] = GRADE[s.sede.nivel];
   const TW = 150, TH = 76, H = 30;
   type Cel = { id: string; nome: string; ico: string; cor: string; nivel: number; obra: boolean; vazio: boolean };
-  const cels: Cel[] = [{ id: 'quartos', nome: 'Quartos', ico: '🛏', cor: '#94a3b8', nivel: 1, obra: false, vazio: false }];
+  const cels: Cel[] = [{ id: 'quartos', nome: 'Quartos', ico: 'cama', cor: '#94a3b8', nivel: 1, obra: false, vazio: false }];
   for (const id of ORDEM_COMODOS) {
     const c = s.sede.comodos[id];
     if (!c) continue;
@@ -53,7 +53,8 @@ function Planta({ s }: { s: State }) {
               <polygon points={`${l[0]},${l[1] - H} ${t[0]},${t[1] - H} ${r[0]},${r[1] - H} ${t[0]},${t[1] - H + 6} `} fill="rgba(255,255,255,.25)" />
             </>}
             {c.obra && <polygon points={dia(x, y)} fill="url(#obra)" opacity=".85" />}
-            <text x={x} y={y + 10} textAnchor="middle" fontSize={c.vazio ? 30 : 32} fill={c.vazio ? 'rgba(255,255,255,.4)' : '#fff'}>{c.ico}</text>
+            {c.vazio ? <text x={x} y={y + 10} textAnchor="middle" fontSize={30} fill="rgba(255,255,255,.4)">+</text>
+              : <image href={`/img/3d/${c.ico}.webp`} x={x - 24} y={y - 34} width={48} height={48} style={{ filter: 'drop-shadow(0 4px 4px rgba(0,0,0,.45))' }} />}
             <text x={x} y={y + 30} textAnchor="middle" fontSize="11" fontFamily="Saira" fontWeight="700" fill="#fff" style={{ paintOrder: 'stroke', stroke: 'rgba(0,0,0,.7)', strokeWidth: 3 }}>{c.obra ? 'EM OBRA' : c.nome.toUpperCase()}{!c.vazio && c.id !== 'quartos' && !c.obra ? ` · ${c.nivel}` : ''}</text>
           </g>
         );
@@ -103,7 +104,7 @@ export function SedeTela() {
             const nivel = c?.nivel ?? 0;
             return (
               <div key={id} className={'comodo ' + (c ? '' : 'off')} style={{ ['--c' as string]: info.cor }}>
-                <span className="cm-ic">{info.ico}</span>
+                <span className="cm-ic"><Ico3D n={info.ico} size={44} /></span>
                 <div><b>{NOME_COMODO[id]}</b><span className="niveis">{[1, 2, 3].map(n => <i key={n} className={n <= nivel ? 'on' : ''} />)}</span><p>{obra ? `Em obra até ${fmtData(c!.obraAte!, false)}` : info.desc}</p></div>
                 {nivel < 3 && !obra ? <button className="btn sm" onClick={() => faz(() => construir(s, id), `Obra iniciada: ${NOME_COMODO[id]}. Fica pronta em ${diasObra(nivel + 1)} dias.`)}>{nivel ? 'Melhorar' : 'Construir'} · {moeda(custoComodo(id, nivel + 1))}</button> : <span className="mut sm">{obra ? 'em obra' : 'máximo'}</span>}
               </div>
@@ -115,6 +116,7 @@ export function SedeTela() {
           <div className="sedes-op">
             {SEDES.map((x, i) => (
               <div key={x.nome} className={'sop ' + (i === s.sede.nivel ? 'on' : '')}>
+                <img className="sop-foto" src={`/sede/${FOTO[i]}.webp`} alt="" loading="lazy" />
                 <b>{x.nome}</b><p>{x.desc}</p>
                 <small>{x.vagas} cômodos · {QUARTOS[i]} camas</small>
                 {i !== s.sede.nivel || s.sede.posse === 'aluguel' ? <>

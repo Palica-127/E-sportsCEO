@@ -11,15 +11,15 @@ export interface ProdutoDef { nome: string; desc: string; ico: string; custo: nu
 const temTituloRecente = (s: State) => s.hist.some(h => h.org && h.campeao === s.org.nome && h.ano === anoDe(s.dia));
 
 export const PRODUTOS: Record<string, ProdutoDef> = {
-  camisa: { nome: 'Camisa oficial', desc: 'O uniforme da temporada. O produto que mais vende.', ico: '👕', custo: 45, preco: 189, design: 15_000, peso: 1 },
-  moletom: { nome: 'Moletom', desc: 'Vende bem no inverno e para quem já tem a camisa.', ico: '🧥', custo: 85, preco: 299, design: 10_000, peso: 0.35 },
-  bone: { nome: 'Boné', desc: 'Barato, margem boa, vende o ano todo.', ico: '🧢', custo: 18, preco: 89, design: 5_000, peso: 0.5 },
-  mousepad: { nome: 'Mousepad gamer', desc: 'Para o fã que joga. Vende mais com kit de patrocinador de periféricos.', ico: '🖱', custo: 28, preco: 129, design: 8_000, peso: 0.4 },
-  assinada: { nome: 'Camisa assinada pelo Rosto', desc: 'Edição limitada autografada pela estrela da org.', ico: '✍', custo: 60, preco: 499, design: 5_000, peso: 0.6, lote: 1000,
+  camisa: { nome: 'Camisa oficial', desc: 'O uniforme da temporada. O produto que mais vende.', ico: 'camisa', custo: 45, preco: 189, design: 15_000, peso: 1 },
+  moletom: { nome: 'Moletom', desc: 'Vende bem no inverno e para quem já tem a camisa.', ico: 'moletom', custo: 85, preco: 299, design: 10_000, peso: 0.35 },
+  bone: { nome: 'Boné', desc: 'Barato, margem boa, vende o ano todo.', ico: 'bone', custo: 18, preco: 89, design: 5_000, peso: 0.5 },
+  mousepad: { nome: 'Mousepad gamer', desc: 'Para o fã que joga. Vende mais com kit de patrocinador de periféricos.', ico: 'mouse', custo: 28, preco: 129, design: 8_000, peso: 0.4 },
+  assinada: { nome: 'Camisa assinada pelo Rosto', desc: 'Edição limitada autografada pela estrela da org.', ico: 'assinatura', custo: 60, preco: 499, design: 5_000, peso: 0.6, lote: 1000,
     req: s => (Object.keys(s.rosto ?? {}).length ? null : 'Precisa de um Rosto da Org.') },
-  campeoes: { nome: 'Coleção "Campeões"', desc: 'Camisa comemorativa de título. Esgota rápido enquanto a festa dura.', ico: '🏆', custo: 50, preco: 229, design: 10_000, peso: 1.6,
+  campeoes: { nome: 'Coleção "Campeões"', desc: 'Camisa comemorativa de título. Esgota rápido enquanto a festa dura.', ico: 'trofeu', custo: 50, preco: 229, design: 10_000, peso: 1.6,
     req: s => (temTituloRecente(s) ? null : 'Só depois de um título nesta temporada.') },
-  colab: { nome: 'Collab streetwear', desc: 'Coleção com uma marca de rua. Cara de fazer, vira assunto nas redes.', ico: '🔥', custo: 95, preco: 399, design: 60_000, peso: 0.8,
+  colab: { nome: 'Collab streetwear', desc: 'Coleção com uma marca de rua. Cara de fazer, vira assunto nas redes.', ico: 'fogo', custo: 95, preco: 399, design: 60_000, peso: 0.8,
     req: s => (s.org.rep >= 50 ? null : 'Reputação 50.') },
 };
 export const FAIXAS: Record<FaixaPreco, { nome: string; mp: number; md: number }> = {
@@ -151,7 +151,7 @@ export function tickMarcaDia(s: State) {
   for (const [id, st] of Object.entries(m.produtos)) if (st.chegando && st.chegando.dia <= s.dia) {
     st.estoque += st.chegando.qtd; delete st.chegando;
     msg(s, { de: 'Loja da marca', cargo: 'Loja', cat: 'financas', titulo: `${PRODUTOS[id].nome} chegou à loja`, corpo: `${st.estoque} unidades disponíveis. As vendas entram toda semana.` });
-    post(s, `${PRODUTOS[id].ico} saiu ${PRODUTOS[id].nome.toLowerCase()} nova da ${s.org.sigla}! já garanti a minha`, 'bom');
+    post(s, `saiu ${PRODUTOS[id].nome.toLowerCase()} nova da ${s.org.sigla}! já garanti a minha`, 'bom');
   }
   for (const e of m.eventos) {
     if (e.res) continue;

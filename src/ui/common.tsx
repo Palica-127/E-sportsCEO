@@ -177,3 +177,8 @@ export function Avatar({ p, size = 34, s }: { p: Player; size?: number; s?: Stat
   return <Retrato nome={p.nick + p.id} cor="#4a5568" size={size} />;
 }
 export const pct = (v: number) => `${Math.round(v * 100)}%`;
+
+/** ícone 3D (Fluent Emoji, Microsoft, licença MIT) — arquivos em public/img/3d */
+export function Ico3D({ n, size = 40, className }: { n: string; size?: number; className?: string }) {
+  return <img className={'ico3d ' + (className ?? '')} src={`/img/3d/${n}.webp`} width={size} height={size} alt="" draggable={false} />;
+}

@@ -9,7 +9,7 @@ import { forca, titulares } from '../../engine/world';
 import { janelaAberta, maxElenco } from '../../engine/mercado';
 import { useGame } from '../../store';
 import { Alerta, Bar, Crest, Panel, RetratoJogador, pct } from '../common';
-import { IcoCat } from '../icones';
+import { AvatarMsg } from './Inbox';
 import type { Tela } from '../Shell';
 import type { State } from '../../engine/types';
 
@@ -108,7 +108,7 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
           <Panel title="Eventos importantes" right={<button className="link" onClick={() => ir('inbox')}>Todos ›</button>}>
             {s.inbox.slice(0, 4).map(m => (
               <div key={m.id} className="evento" onClick={() => ir('inbox', m.id)}>
-                <span className="ev-ico"><IcoCat cat={m.cat} size={30} /></span>
+                <span className="ev-ico"><AvatarMsg s={s} m={m} size={38} /></span>
                 <div><b>{m.titulo}</b><span>{m.corpo.split('\n')[0]}</span></div>
               </div>
             ))}

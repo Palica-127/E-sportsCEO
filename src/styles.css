@@ -257,10 +257,10 @@ kbd { font: 600 10px var(--f); padding: 1px 5px; border: 1px solid var(--line2);
 .mail-tools .sep { width: 1px; height: 22px; background: var(--line2); }
 .mail-tools .acao { font-weight: 500; font-size: 16px; color: #d4dae5; display: inline-flex; gap: 8px; align-items: center; border: 0; }
 .mail-list { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 190px); overflow-y: auto; padding-right: 6px; }
-.mail-it { display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding: 12px 14px 12px 0; background: rgba(255,255,255,.04); border-radius: 3px; cursor: pointer; text-align: left; position: relative; }
+.mail-it { display: grid; grid-template-columns: 62px 1fr; gap: 12px; padding: 12px 14px 12px 0; border-left: 3px solid var(--c, transparent); background: rgba(255,255,255,.04); border-radius: 3px; cursor: pointer; text-align: left; position: relative; }
 .mail-it:hover { background: rgba(255,255,255,.07); }
 .mail-it.on { background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
-.mail-it .mi-cat { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 2px; border-radius: 3px 0 0 3px; }
+.mail-it .mi-cat { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 2px; }
 .mail-it .mi-cat svg { width: 30px; height: 30px; padding: 4px; border-radius: 3px; color: #fff; }
 .mail-it .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); }
 .mail-it.nova .dot { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
@@ -344,7 +344,7 @@ kbd { font: 600 10px var(--f); padding: 1px 5px; border: 1px solid var(--line2);
 /* sede */
 .sede { display: grid; grid-template-columns: 1.15fr 1fr; gap: 26px; align-items: start; }
 .sede-vis { position: relative; border-radius: 6px; overflow: hidden; background: radial-gradient(800px 500px at 50% 40%, #3b4a66, #1a2232 70%); box-shadow: inset 0 0 0 1px var(--line); }
-.sede-vis .sv-capa { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .35; }
+.sede-vis .sv-capa { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .28; filter: saturate(.8); }
 .sede-vis svg { display: block; width: 100%; height: auto; position: relative; }
 .sede-vis .sv-t { position: absolute; left: 18px; top: 14px; }
 .sede-vis .sv-t b { font-size: 24px; display: block; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
@@ -870,3 +870,24 @@ input[type=range] { width: 100%; padding: 0; accent-color: var(--cyan); }
 .cer-lado { grid-template-columns: repeat(3, 1fr); } .cer-top { grid-template-columns: 1fr 1.6fr; }
 .tbl.temps { width: 100%; border-collapse: collapse; } .tbl.temps th, .tbl.temps td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
 .tbl.temps th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--mut); }
+
+/* ===== ícones 3D e avatares de remetente ===== */
+.ico3d { display: block; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); user-select: none; }
+.av { display: grid; place-items: center; border-radius: 50%; overflow: hidden; flex: none; }
+.mail-it .av { width: 46px; height: 46px; }
+.av-3d { background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--c) 45%, #2a3347), #151b28 75%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent); }
+.av-time { background: radial-gradient(circle, #2c3548, #141a26); box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+.av-p { background: #1a2030; }
+.md-av { border-color: color-mix(in srgb, var(--c, #fff) 70%, #fff 0%); }
+.md-av .av { width: 100%; height: 100%; }
+.mail-det { position: relative; overflow: hidden; }
+.md-hero { position: absolute; right: -30px; top: -20px; width: 260px; height: 260px; opacity: .13; transform: rotate(-12deg); pointer-events: none; filter: blur(.5px); }
+.evento .ev-ico { overflow: hidden; border-radius: 50%; background: none; }
+.evento .ev-ico .av { width: 44px; height: 44px; }
+.cm-ic .ico3d { margin: auto; }
+.pr-ico .ico3d { margin: auto; }
+
+.sop-foto { width: calc(100% + 24px); margin: -12px -12px 4px; height: 120px; object-fit: cover; border-radius: 4px 4px 0 0; }
+.sop.on .sop-foto { outline: 0; }
+.local { min-height: 120px; justify-content: flex-end; background-size: cover; background-position: center; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+.local span { color: #dfe5ee; }

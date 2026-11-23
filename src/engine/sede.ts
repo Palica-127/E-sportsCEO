@@ -13,13 +13,13 @@ export const SEDES = [
 export { QUARTOS };
 
 export const COMODOS: Record<Exclude<ComodoId, 'quartos'>, { ico: string; custo: number; desc: string; cor: string }> = {
-  treino: { ico: '🖥', custo: 60000, desc: 'PCs e mesas de treino. Cada nível: força do time em partida.', cor: '#3d8bff' },
-  academia: { ico: '🏋', custo: 50000, desc: 'Libera o preparador físico. Evolução e forma.', cor: '#35c47c' },
-  cozinha: { ico: '🍳', custo: 45000, desc: 'Libera nutricionista e chef. Forma e moral.', cor: '#f0b13a' },
-  consultorio: { ico: '🧠', custo: 40000, desc: 'Libera o psicólogo. Moral sob pressão.', cor: '#a855f7' },
-  analise: { ico: '📊', custo: 55000, desc: 'Libera o máximo do analista. Força em partida.', cor: '#14b8c4' },
-  estudio: { ico: '🎥', custo: 50000, desc: 'Libera o social media. Streams, seguidores e renda.', cor: '#ec4899' },
-  lazer: { ico: '🎮', custo: 35000, desc: 'Sinuca, videogame e descanso. Moral do elenco.', cor: '#e8524f' },
+  treino: { ico: 'treino', custo: 60000, desc: 'PCs e mesas de treino. Cada nível: força do time em partida.', cor: '#3d8bff' },
+  academia: { ico: 'academia', custo: 50000, desc: 'Libera o preparador físico. Evolução e forma.', cor: '#35c47c' },
+  cozinha: { ico: 'cozinha', custo: 45000, desc: 'Libera nutricionista e chef. Forma e moral.', cor: '#f0b13a' },
+  consultorio: { ico: 'cerebro', custo: 40000, desc: 'Libera o psicólogo. Moral sob pressão.', cor: '#a855f7' },
+  analise: { ico: 'analise', custo: 55000, desc: 'Libera o máximo do analista. Força em partida.', cor: '#14b8c4' },
+  estudio: { ico: 'estudio', custo: 50000, desc: 'Libera o social media. Streams, seguidores e renda.', cor: '#ec4899' },
+  lazer: { ico: 'lazer', custo: 35000, desc: 'Sinuca, videogame e descanso. Moral do elenco.', cor: '#e8524f' },
 };
 export const ORDEM_COMODOS = Object.keys(COMODOS) as Exclude<ComodoId, 'quartos'>[];
 export { NOME_COMODO };
