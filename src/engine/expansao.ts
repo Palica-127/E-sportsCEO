@@ -42,7 +42,7 @@ export function preco(s: State, g: GameId, region: string, modo: ModoEntrada, te
   const t = teamId ? s.teams[teamId] : null;
   if (!t) return 0;
   const vaga = t.tier === 1 ? 1_200_000 : 150_000;
-  const k = modo === 'investidor' ? 0.8 : 0.5;
+  const k = modo === 'investidor' ? 0.35 : 0.25; // a compra da org sai bem mais barata que comprar os jogadores um a um
   return Math.round((vaga + valorElenco(s, t) * k + (modo === 'investidor' ? 1_500_000 : 0)) / 50_000) * 50_000;
 }
 

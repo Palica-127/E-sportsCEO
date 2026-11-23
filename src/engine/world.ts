@@ -39,8 +39,11 @@ export function salario(ovr: number): number {
   return Math.round((450 * Math.pow(1.125, ovr - 60)) / 100) * 100;
 }
 export function valorMercado(p: Player): number {
-  const idadeF = p.idade <= 21 ? 1.4 : p.idade <= 25 ? 1.15 : p.idade <= 28 ? 1 : 0.7;
-  return Math.round((salario(p.ovr) * 30 * idadeF * (1 + Math.max(0, p.pot - p.ovr) / 30)) / 1000) * 1000;
+  // ~1,5 ano de salário, com prêmio crescente para a elite (nota 85 ≈ R$ 1,7 mi; 90 ≈ R$ 6 mi; astros chegam a R$ 15 mi)
+  const idadeF = p.idade <= 21 ? 1.4 : p.idade <= 25 ? 1.15 : p.idade <= 28 ? 1 : p.idade <= 30 ? 0.75 : 0.5;
+  const elite = Math.min(6, Math.pow(1.17, Math.max(0, p.ovr - 80)));
+  const v = salario(p.ovr) * 80 * elite * idadeF * (1 + Math.max(0, p.pot - p.ovr) / 30);
+  return v >= 1_000_000 ? Math.round(v / 50_000) * 50_000 : Math.round(v / 1000) * 1000;
 }
 
 const TRACOS: Traco[] = ['lider', 'profissional', 'ambicioso', 'esquentado', 'tranquilo', 'irregular', 'talentoso'];
