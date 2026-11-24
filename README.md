@@ -39,6 +39,8 @@ No Vercel: Framework Preset **Vite** (build `npm run build`, saída `dist`).
 2. Salve as imagens com **qualquer nome** em `entrada/logos/` ou `entrada/fotos/`.
 3. Rode `python3 tools/importar_imagens.py` (precisa do Pillow). Ele reconhece de quem é cada arquivo, recorta, tira o fundo dos logos, converte para webp e atualiza as listas do jogo.
 
+Fotos automáticas: `python tools/buscar_fotos.py [lol cs2 ...]` baixa as fotos dos jogadores **reais** (os nicks fictícios ficam com o avatar) para `public/fotos/`: LoL pela Leaguepedia; CS2/Valorant/R6/Dota 2 pelo prosettings.net, Wikidata/Commons e Liquipedia; Free Fire/EA FC pelo Wikidata e Liquipedia. A origem de cada foto fica em `public/fotos/CREDITOS.txt`.
+
 Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa um avatar com as iniciais.
 
 ## Fase 2 (feita)

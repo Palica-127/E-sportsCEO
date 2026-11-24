@@ -35,7 +35,7 @@ export function Proposta({ pid, onFechar }: { pid: string; onFechar: () => void 
           <label>Contrato<select value={anos} onChange={e => setAnos(Number(e.target.value))}>{[1, 2, 3].map(a => <option key={a} value={a}>{a} ano{a > 1 ? 's' : ''}</option>)}</select></label>
           <label>Papel<select value={papel} onChange={e => setPapel(e.target.value as 'titular' | 'reserva')}><option value="titular">Titular</option><option value="reserva">Reserva</option></select></label>
           <p className="dica">
-            {conhece ? <>Valor estimado: <b>{moeda(valorMercado(p))}</b>. Pedido salarial: <b>~{moeda(pedidoSalario(s, p) * 4)}/mês</b>. Interesse: <b>{s.conhecido[pid].int ?? interesse(s, p, p.game)}%</b>.</> : <>Sem relatório de olheiro: os valores são chutes. Observar antes ajuda a não pagar demais.</>}
+            {conhece ? <>Valor estimado: <b>{moeda(valorMercado(p))}</b>. Pedido salarial: <b>~{moeda(pedidoSalario(s, p) * 4)}/mês</b>. Interesse: <b>{s.conhecido[pid]?.int ?? interesse(s, p, p.game)}%</b>.</> : <>Sem relatório de olheiro: os valores são chutes. Observar antes ajuda a não pagar demais.</>}
             <br />{t ? (janelaAberta(s) ? 'Janela aberta.' : `Janela fechada: abre em ${fmtData(proximaJanela(s), false)}.`) : 'Agente livre: pode assinar a qualquer momento.'} Caixa: {moeda(s.org.caixa)}.
           </p>
         </div>
