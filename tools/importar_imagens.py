@@ -34,18 +34,28 @@ def alvos_times():
             for t in L['t1'] + L['t2']: nomes.add(t['n'])
     return {slug(n): n for n in nomes}
 
+JOGO_DE = {}  # chave do nick -> jogos em que ele aparece
+
 def alvos_jogadores():
-    lol = json.loads((DADOS / 'lol.json').read_text())
-    out = json.loads((DADOS / 'outros.json').read_text())
+    lol = json.loads((DADOS / 'lol.json').read_text(encoding='utf-8'))
+    out = json.loads((DADOS / 'outros.json').read_text(encoding='utf-8'))
     nicks = {}
-    for L in lol['leagues'].values():
-        for t in L['t1'] + L['t2']:
-            for p in (t['p'] or []): nicks[slug(str(p[0])).replace('-', '')] = str(p[0])
-    for g in out.values():
-        for L in g['leagues'].values():
+    jogos = [('lol', lol)] + list(out.items())
+    for g, d in jogos:
+        for L in d['leagues'].values():
             for t in L['t1'] + L['t2']:
-                for p in (t['p'] or []): nicks[slug(str(p[0])).replace('-', '')] = str(p[0])
+                for p in (t['p'] or []):
+                    k = slug(str(p[0])).replace('-', '')
+                    nicks[k] = str(p[0]); JOGO_DE.setdefault(k, set()).add(g)
     return nicks
+
+JOGOS = ('lol', 'cs2', 'dota2', 'valorant', 'ff', 'r6', 'fifa', 'wr')
+def jogo_do_arquivo(nome, alvo):
+    """'cs2-kaze.png' -> 'cs2'; sem prefixo, o único jogo em que o nick aparece (ou None se for ambíguo)"""
+    pre = re.match(r'([a-z0-9]+)[-_ ]', Path(nome).stem.lower())
+    if pre and pre.group(1) in JOGOS and pre.group(1) in JOGO_DE.get(alvo, ()): return pre.group(1)
+    gs = JOGO_DE.get(alvo, set())
+    return next(iter(gs)) if len(gs) == 1 else None
 
 def casa(nome, alvos, junto=False):
     chave = limpa(nome)
@@ -113,12 +123,16 @@ def main():
     dry = '--dry' in sys.argv
     times, jogs = alvos_times(), alvos_jogadores()
     logos = set(json.loads((DADOS / 'logos.LOGOS.json').read_text()))
-    fotos = set(json.loads((DADOS / 'fotos.json').read_text()))
+    bruto = json.loads((DADOS / 'fotos.json').read_text(encoding='utf-8'))
+    fotos = {g: set(v) for g, v in (bruto.items() if isinstance(bruto, dict) else [])}
     duvidas = []
     for pasta, logo in [('logos', True), ('fotos', False)]:
         for arq in sorted((RAIZ / 'entrada' / pasta).glob('*')):
             if arq.suffix.lower() not in ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp'): continue
-            alvo, conf = casa(arq.name, times if logo else jogs, junto=not logo)
+            nome_arq = arq.name
+            if not logo:  # tira o prefixo do jogo antes de reconhecer o nick
+                nome_arq = re.sub(r'^(' + '|'.join(JOGOS) + r')[-_ ]', '', nome_arq, flags=re.I)
+            alvo, conf = casa(nome_arq, times if logo else jogs, junto=not logo)
             if not alvo:
                 duvidas.append(f'  ? {pasta}/{arq.name}: não reconheci. Renomeie para o nome do {"time" if logo else "jogador"}.')
                 continue
@@ -126,13 +140,22 @@ def main():
             aviso = '' if conf >= 0.9 else f'  (confira: {int(conf * 100)}% de certeza)'
             print(f'  ✓ {pasta}/{arq.name} -> {quem}{aviso}')
             if dry: continue
-            destino = RAIZ / 'public' / pasta / f'{alvo}.webp'
+            if logo:
+                destino = RAIZ / 'public' / pasta / f'{alvo}.webp'
+            else:
+                g = jogo_do_arquivo(arq.name, alvo)
+                if not g:
+                    duvidas.append(f'  ? {pasta}/{arq.name}: {quem} aparece em mais de um jogo ({", ".join(sorted(JOGO_DE[alvo]))}). Renomeie para <jogo>-{alvo}.png')
+                    continue
+                destino = RAIZ / 'public' / pasta / g / f'{alvo}.webp'
+                destino.parent.mkdir(parents=True, exist_ok=True)
             prepara(arq, logo).save(destino, 'WEBP', quality=88)
-            (logos if logo else fotos).add(alvo)
+            if logo: logos.add(alvo)
+            else: fotos.setdefault(g, set()).add(alvo)
             arq.unlink()
     if not dry:
         (DADOS / 'logos.LOGOS.json').write_text(json.dumps(sorted(logos)))
-        (DADOS / 'fotos.json').write_text(json.dumps(sorted(fotos)))
+        (DADOS / 'fotos.json').write_text(json.dumps({g: sorted(v) for g, v in sorted(fotos.items()) if v}))
         subprocess.run(['node', str(RAIZ / 'tools' / 'pendencias.mjs')], check=False)
     if duvidas: print('\n'.join(['', 'Não reconhecidos:'] + duvidas))
 

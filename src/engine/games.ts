@@ -1,6 +1,7 @@
 // Definição dos 8 jogos: nomes, cores, funções, formato das partidas e dias de jogo.
 import LOL from '../data/lol.json';
 import OUTROS from '../data/outros.json';
+import ELENCOS from '../data/elencos.json';
 
 export type GameId = 'lol' | 'cs2' | 'valorant' | 'dota2' | 'ff' | 'r6' | 'fifa' | 'wr';
 
@@ -33,12 +34,19 @@ export const GAMES: Record<GameId, GameDef> = {
 
 export const GAME_IDS = Object.keys(GAMES) as GameId[];
 
-export interface RawTeam { n: string; p: (string | number | null)[][] | null }
+export interface RawTeam { n: string; p: (string | number | null)[][] | null; real?: boolean }
 export interface RawLeague { nome: string; regiao: string; t1: RawTeam[]; t2: RawTeam[] }
 
+// elencos reais pesquisados (tools/buscar_elencos.py): [nick, nota, idade, nac, nome real], por cima dos dados base
+const cacheLigas: Partial<Record<GameId, Record<string, RawLeague>>> = {};
 export function rawLeagues(g: GameId): Record<string, RawLeague> {
-  if (g === 'lol') return (LOL as any).leagues;
-  return (OUTROS as any)[g].leagues;
+  if (cacheLigas[g]) return cacheLigas[g]!;
+  const base: Record<string, RawLeague> = g === 'lol' ? (LOL as any).leagues : (OUTROS as any)[g].leagues;
+  const over = ((ELENCOS as any)[g] ?? {}) as Record<string, RawTeam['p']>;
+  const troca = (t: RawTeam): RawTeam => (over[t.n] ? { n: t.n, p: over[t.n], real: true } : t);
+  const res: Record<string, RawLeague> = {};
+  for (const [k, L] of Object.entries(base)) res[k] = { ...L, t1: L.t1.map(troca), t2: L.t2.map(troca) };
+  return (cacheLigas[g] = res);
 }
 
 export function regioes(g: GameId): { id: string; nome: string; regiao: string }[] {

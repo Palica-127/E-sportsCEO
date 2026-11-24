@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baixa as fotos dos jogadores REAIS do jogo e salva em public/fotos/<chave>.webp.
+"""Baixa as fotos dos jogadores REAIS do jogo e salva em public/fotos/<jogo>/<chave>.webp.
 
 Só busca foto de quem é jogador de verdade: todo o LoL (lol.json) e, nos outros jogos, os elencos
 REAL / FC_PROS de tools/gen_outros.py. Os demais nicks são gerados (fictícios) e continuam com o avatar,
@@ -34,8 +34,8 @@ LIQUI = {'cs2': 'counterstrike', 'dota2': 'dota2', 'valorant': 'valorant', 'ff':
 PROSET = {'cs2': 'CS2', 'valorant': 'VALORANT', 'r6': 'Rainbow Six', 'dota2': 'Dota'}
 WD_JOGO = {'cs2': r'counter.?strike|cs:?go|cs2', 'valorant': r'valorant', 'r6': r'rainbow six|siege', 'dota2': r'dota',
            'ff': r'free ?fire', 'fifa': r'fifa|ea sports fc|fc pro|football', 'wr': r'wild rift', 'lol': r'league of legends'}
-FONTES = {'lol': ['leaguepedia'], 'cs2': ['prosettings', 'wikidata', 'liquipedia'], 'valorant': ['prosettings', 'wikidata', 'liquipedia'],
-          'r6': ['prosettings', 'wikidata', 'liquipedia'], 'dota2': ['prosettings', 'wikidata', 'liquipedia'],
+FONTES = {'lol': ['leaguepedia'], 'cs2': ['prosettings', 'wikidata', 'liquipedia'], 'valorant': ['prosettings', 'vlr', 'wikidata', 'liquipedia'],
+          'r6': ['prosettings', 'siegegg', 'wikidata', 'liquipedia'], 'dota2': ['prosettings', 'wikidata', 'liquipedia'],
           'ff': ['wikidata', 'liquipedia'], 'fifa': ['wikidata', 'liquipedia'], 'wr': ['wikidata', 'liquipedia']}
 
 class Bloqueado(Exception): pass
@@ -65,7 +65,7 @@ def get(url, host_wait=0.0, binario=False, referer=None, texto=False):
                     if r.headers.get('Content-Encoding') == 'gzip':
                         import gzip; dados = gzip.decompress(dados)
             except urllib.error.HTTPError as e:
-                if e.code == 404: return None
+                if e.code in (404, 410) or 300 <= e.code < 400: return None  # não existe / redirecionamento quebrado
                 if e.code == 429 and 'liquipedia' in host: raise Bloqueado(host)
                 raise
             _ult[host] = time.time()
@@ -124,13 +124,15 @@ def jogadores():
     lol = json.loads((DADOS / 'lol.json').read_text(encoding='utf-8'))
     out = json.loads((DADOS / 'outros.json').read_text(encoding='utf-8'))
     reais = nicks_reais()
-    res = {'lol': []}
-    for L in lol['leagues'].values():
-        for t in L['t1'] + L['t2']: res['lol'] += [(str(p[0]), t['n']) for p in (t['p'] or [])]
-    for g, v in out.items():
+    arq = DADOS / 'elencos.json'  # elencos pesquisados (tools/buscar_elencos.py): todos reais
+    over = json.loads(arq.read_text(encoding='utf-8')) if arq.exists() else {}
+    res = {}
+    for g, v in [('lol', lol)] + list(out.items()):
         res[g] = []
         for L in v['leagues'].values():
-            for t in L['t1'] + L['t2']: res[g] += [(str(p[0]), t['n']) for p in (t['p'] or []) if str(p[0]) in reais.get(g, ())]
+            for t in L['t1'] + L['t2']:
+                if t['n'] in over.get(g, {}): res[g] += [(str(p[0]), t['n']) for p in over[g][t['n']] if p]
+                else: res[g] += [(str(p[0]), t['n']) for p in (t['p'] or []) if g == 'lol' or str(p[0]) in reais.get(g, ())]
     return res
 
 def prepara(dados):
@@ -253,31 +255,75 @@ def urls_liquipedia(g, lista):
             achados[chave(nick)] = (orig, f'https://liquipedia.net/{wiki}/' + urllib.parse.quote(pg['title'].replace(' ', '_')))
     return achados
 
-BUSCA = {'leaguepedia': urls_leaguepedia, 'prosettings': urls_prosettings, 'wikidata': urls_wikidata, 'liquipedia': urls_liquipedia}
-ESPERA = {'leaguepedia': 1.0, 'prosettings': 1.5, 'wikidata': 1.0, 'liquipedia': 2.1}
+# ---------- páginas de time (vlr.gg / siege.gg): foto de cada titular ----------
+def _times_pesquisados(g):
+    import buscar_elencos as be
+    over = json.loads((DADOS / 'elencos.json').read_text(encoding='utf-8')).get(g, {})
+    mapa = json.loads((RAIZ / 'entrada' / f'.cache_elencos_{"valorant_ranking" if g == "valorant" else "r6_times"}.json').read_text(encoding='utf-8'))
+    for t in over:
+        nome = be.casa_nome(t, mapa)
+        if nome: yield t, mapa[nome]
+
+def urls_vlr(g, lista):
+    quero = {chave(n) for n, _ in lista}
+    achados = {}
+    for t, url in _times_pesquisados(g):
+        h = get('https://www.vlr.gg' + url, 1.5, texto=True) or ''
+        for it in re.split(r'class="team-roster-item"', h)[1:]:
+            img = re.search(r'team-roster-item-img">\s*<img src="([^"]+)"', it)
+            nick = re.search(r'team-roster-item-name-alias">\s*(?:<i[^>]*></i>)?\s*([^<]+?)\s*<', it)
+            if not img or not nick or 'sil.png' in img.group(1): continue
+            k = chave(html.unescape(nick.group(1)))
+            if k in quero: achados[k] = (('https:' + img.group(1)) if img.group(1).startswith('//') else img.group(1), 'https://www.vlr.gg' + url)
+    return achados
+
+def urls_siegegg(g, lista):
+    quero = {chave(n) for n, _ in lista}
+    achados = {}
+    for t, url in _times_pesquisados(g):
+        h = get('https://siege.gg' + url, 1.5, texto=True) or ''
+        a = h.find('roster roster--row'); b = h.find('</section>', a)
+        for bloco in re.split(r'class="roster__player', h[a:b] if a > 0 else '')[1:]:
+            src = re.findall(r'(https://cdn\.siege\.gg/[^"?\s]+\.(?:png|jpe?g|webp))\?resize=(\d+)', bloco)
+            u = re.search(r'<h3[^>]*><a href="(/players/[^"]+)"', bloco)
+            if not src or not u or 'silhouette' in src[0][0]: continue
+            # o nick com a grafia certa vem do cache da pesquisa de elencos (página do jogador)
+            hp = get('https://siege.gg' + u.group(1), 1.5, texto=True) or ''
+            m = re.search(r'<h1[^>]*pg-title[^>]*>([^<]+)</h1>', hp)
+            k = chave(html.unescape(m.group(1).strip())) if m else None
+            if k in quero: achados[k] = (max(src, key=lambda x: int(x[1]))[0], 'https://siege.gg' + u.group(1))
+    return achados
+
+BUSCA = {'vlr': urls_vlr, 'siegegg': urls_siegegg, 'leaguepedia': urls_leaguepedia, 'prosettings': urls_prosettings, 'wikidata': urls_wikidata, 'liquipedia': urls_liquipedia}
+ESPERA = {'vlr': 1.0, 'siegegg': 1.0, 'leaguepedia': 1.0, 'prosettings': 1.5, 'wikidata': 1.0, 'liquipedia': 2.1}
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     refazer = '--refazer' in sys.argv
     DEST.mkdir(parents=True, exist_ok=True)
-    fotos = set(json.loads((DADOS / 'fotos.json').read_text(encoding='utf-8')))
+    bruto = json.loads((DADOS / 'fotos.json').read_text(encoding='utf-8'))
+    fotos_g = {g: set(v) for g, v in (bruto.items() if isinstance(bruto, dict) else [])}
+    def salva_lista():
+        (DADOS / 'fotos.json').write_text(json.dumps({g: sorted(v) for g, v in sorted(fotos_g.items()) if v}), encoding='utf-8')
     cred_arq = DEST / 'CREDITOS.txt'
     creditos = {}
     if cred_arq.exists():
         for l in cred_arq.read_text(encoding='utf-8').splitlines():
             if '\t' in l: k, v = l.split('\t', 1); creditos[k] = v
     todos = jogadores()
-    feitos = set() if refazer else set(fotos)
     for g in (args or list(todos)):
+        fotos = fotos_g.setdefault(g, set())
+        # um arquivo já baixado para o mesmo nick (em outro jogo) não serve: pode ser outra pessoa
+        feitos = set() if refazer else set(fotos)
         if not todos.get(g):
             print(f'[{g}] nenhum jogador real (só nicks fictícios) — nada a buscar'); continue
         for fonte in FONTES[g]:
             lista = [(n, t) for n, t in todos[g] if chave(n) not in feitos]
             if not lista: break
             print(f'[{g}] {fonte}: {len(lista)} jogadores sem foto', flush=True)
-            cache = RAIZ / 'entrada' / f'.cache_fotos_{g}_{fonte}.json'
-            if fonte == 'leaguepedia' and not cache.exists() and (RAIZ / 'entrada' / f'.cache_fotos_{g}.json').exists():
-                cache = RAIZ / 'entrada' / f'.cache_fotos_{g}.json'  # cache da versão anterior
+            import hashlib  # o cache vale para esta lista de nicks (jogadores novos geram outra consulta)
+            h = hashlib.md5('|'.join(sorted({chave(n) for n, _ in lista})).encode()).hexdigest()[:10]
+            cache = RAIZ / 'entrada' / f'.cache_fotos_{g}_{fonte}_{h}.json'
             if cache.exists() and not refazer:
                 achados = {k: tuple(v) for k, v in json.loads(cache.read_text(encoding='utf-8')).items()}
             else:
@@ -293,12 +339,13 @@ def main():
             print(f'  {len(achados)} fotos encontradas', flush=True)
             for k, (url, origem) in sorted(achados.items()):
                 try:
-                    prepara(baixa_imagem(url, ESPERA[fonte], origem)).save(DEST / f'{k}.webp', 'WEBP', quality=86)
+                    (DEST / g).mkdir(parents=True, exist_ok=True)
+                    prepara(baixa_imagem(url, ESPERA[fonte], origem)).save(DEST / g / f'{k}.webp', 'WEBP', quality=86)
                 except Exception as e:
                     print(f'  ! {k}: {e}'); continue
-                fotos.add(k); feitos.add(k); creditos[k] = origem
+                fotos.add(k); feitos.add(k); creditos[f'{g}/{k}'] = origem
                 print(f'  ✓ {k}', flush=True)
-                (DADOS / 'fotos.json').write_text(json.dumps(sorted(fotos)), encoding='utf-8')
+                salva_lista()
         faltam = sorted({n for n, _ in todos[g] if chave(n) not in fotos})
         if faltam: print(f'[{g}] sem foto ({len(faltam)}): ' + ', '.join(faltam[:60]) + (' ...' if len(faltam) > 60 else ''))
         cred_arq.write_text('Fotos de jogadores — origem de cada uma (Leaguepedia/Liquipedia: CC BY-SA; Wikimedia Commons: ver a página do arquivo; prosettings.net)\n' +

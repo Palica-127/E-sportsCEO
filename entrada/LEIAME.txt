@@ -5,3 +5,4 @@ Depois rode:  python3 tools/importar_imagens.py
 O script descobre de quem é cada imagem, recorta, redimensiona, converte para webp,
 tira o fundo dos logos e coloca em public/logos e public/fotos.
 A lista do que falta (com links) fica em public/pendencias.html (abra no navegador ou em /pendencias.html no site).
+Se o nick existir em mais de um jogo (ex.: Kaze no LoL e no CS2), comece o nome com o jogo: "cs2-kaze.png".

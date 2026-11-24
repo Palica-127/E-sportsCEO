@@ -5,4 +5,4 @@ release
 desktop/node_modules
 desktop/app
 desktop/release
-entrada/.cache_fotos_*.json
+entrada/.cache_*.json

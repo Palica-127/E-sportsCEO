@@ -14,6 +14,7 @@ export const TRACOS: Record<Traco, { nome: string; desc: string }> = {
 export interface Player {
   id: string;
   nick: string;
+  nome?: string; // nome verdadeiro (jogadores reais pesquisados)
   game: GameId;
   role: number;
   ovr: number;

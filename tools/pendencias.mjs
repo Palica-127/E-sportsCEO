@@ -5,7 +5,7 @@ import path from 'node:path';
 const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const D = f => JSON.parse(fs.readFileSync(path.join(RAIZ, 'src/data', f), 'utf8'));
 const lol = D('lol.json'), outros = D('outros.json');
-const logos = new Set(D('logos.LOGOS.json')), fotos = new Set(D('fotos.json'));
+const logos = new Set(D('logos.LOGOS.json')), FOTOS = D('fotos.json'), fotosDe = g => new Set(FOTOS[g] || []);
 const slug = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const WIKI = { lol: null, cs2: 'counterstrike', valorant: 'valorant', dota2: 'dota2', ff: 'freefire', r6: 'rainbowsix', fifa: 'fifa', wr: 'wildrift' };
 const NOME = { lol: 'League of Legends', cs2: 'Counter-Strike 2', valorant: 'VALORANT', dota2: 'Dota 2', ff: 'Free Fire', r6: 'Rainbow Six Siege', fifa: 'EA SPORTS FC', wr: 'Wild Rift' };
@@ -25,7 +25,7 @@ for (const [g, ligas] of Object.entries(jogos)) {
     if (!logos.has(slug(t.n))) { totL++; blocoL += `<div class="item"><span>${t.n} <span class="mut">· ${L.nome}${tier === 't2' ? ' Challengers' : ''}</span></span><a href="${link(g, t.n)}" target="_blank">abrir</a></div>`; }
     if (tier === 't1') for (const p of t.p || []) {
       const k = slug(String(p[0])).replace(/-/g, '');
-      if (!fotos.has(k)) { totF++; blocoF += `<div class="item"><span>${p[0]} <span class="mut">· ${t.n}</span></span><a href="${link(g, String(p[0]))}" target="_blank">abrir</a></div>`; }
+      if (!fotosDe(g).has(k)) { totF++; blocoF += `<div class="item"><span>${p[0]} <span class="mut">· ${t.n}</span></span><a href="${link(g, String(p[0]))}" target="_blank">abrir</a></div>`; }
     }
   }
   html += `<h2>${NOME[g]}</h2><details ${blocoL ? 'open' : ''}><summary>Logos que faltam</summary>${blocoL || '<p class="mut">Completo!</p>'}</details><details><summary>Fotos que faltam (só ligas principais)</summary>${blocoF || '<p class="mut">Completo!</p>'}</details>`;

@@ -49,6 +49,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
             <RetratoJogador s={s} p={p} size={210} />
             <div>
               <h2><b>{p.nick}</b></h2>
+              {p.nome && <div className="mut" style={{ marginTop: -4 }}>{p.nome}</div>}
               <div className="pf-l">{conhece ? <Estrelas v={Math.max(0.5, Math.min(5, (p.ovr - 58) / 8))} size={24} /> : <span className="mut">nota: {nv.txt}</span>}<span className="role" style={{ fontSize: 16 }}>{def.roleNomes[p.role]}</span></div>
               <div className="pf-l">{t ? <><Crest s={s} team={t} size={26} />{t.nome}</> : 'Agente livre'}</div>
               <div className="pf-l"><Flag nat={p.nat} />{(p.nat ?? '').toUpperCase()} · {p.idade} anos</div>

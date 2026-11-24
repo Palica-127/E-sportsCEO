@@ -4,9 +4,8 @@ import { aposentarCamisa, campeoesPorTorneio, LIMIAR_HALL } from '../../engine/l
 import { moeda } from '../../engine/org';
 import { anoDe } from '../../engine/sim';
 import type { Premiado, State, TorKind } from '../../engine/types';
-import { slug } from '../../engine/world';
 import { act, useGame } from '../../store';
-import { Crest, Escudo, Flag, FOTO_SET, Panel, Retrato } from '../common';
+import { Crest, Escudo, Flag, fotoDe, Panel, Retrato } from '../common';
 
 const trofeu = (kind: TorKind, nome: string) => {
   const m: Partial<Record<TorKind, string>> = { worlds: 'w', msi: 'm', fs: 'f', ewc: 'e', intlA: 'm', intlB: 'w' };
@@ -15,7 +14,6 @@ const trofeu = (kind: TorKind, nome: string) => {
   return `/trofeus/${liga ?? 'c'}.png`;
 };
 const timePorNome = (s: State, g: GameId, nome: string) => Object.values(s.teams).find(t => t.game === g && t.nome === nome && !t.acad);
-const foto = (nick: string) => { const k = slug(nick).replace(/-/g, ''); return FOTO_SET.has(k) ? `/fotos/${k}.webp` : null; };
 
 export function Historia({ abrir }: { abrir: (tela: string, arg?: string) => void }) {
   const s = useGame()!;
@@ -84,7 +82,7 @@ function CardPremio({ s, titulo, p, g, grande, abrir }: { s: State; titulo: stri
   return (
     <button className={'premio ' + (grande ? 'grande ' : '') + (p.org ? 'org' : '')} onClick={() => vivo && abrir('perfil', p.pid)} disabled={!vivo}>
       <span className="pr-tit">{titulo}</span>
-      <Retrato nome={p.nick + p.pid} cor={p.org ? s.org.cor : timePorNome(s, g, p.time)?.cor ?? '#4a5568'} size={grande ? 150 : 84} foto={foto(p.nick)} sigla={p.sigla} />
+      <Retrato nome={p.nick + p.pid} cor={p.org ? s.org.cor : timePorNome(s, g, p.time)?.cor ?? '#4a5568'} size={grande ? 150 : 84} foto={fotoDe(g, p.nick)} sigla={p.sigla} />
       <b>{p.nick}</b>
       <small><Flag nat={p.nat} /> {GAMES[g].roleNomes[p.role]} · {p.time}</small>
       {p.motivo && <small className="mut">{p.motivo}</small>}
@@ -152,7 +150,7 @@ function Hall() {
         <div className="hall">
           {lista.map(h => (
             <div key={h.pid} className={'placa ' + (h.lendaOrg ? 'org ' : '') + (h.camisa ? 'camisa' : '')} style={{ '--g': GAMES[h.game].cor } as CSSProperties}>
-              <Retrato nome={h.nick + h.pid} cor={h.lendaOrg ? s.org.cor : '#8a6d2f'} size={96} foto={foto(h.nick)} />
+              <Retrato nome={h.nick + h.pid} cor={h.lendaOrg ? s.org.cor : '#8a6d2f'} size={96} foto={fotoDe(h.game, h.nick)} />
               <div className="pl-info">
                 <b>{h.nick}</b>
                 <small><Flag nat={h.nat} /> <span className="gtag">{GAMES[h.game].curto}</span> {GAMES[h.game].roleNomes[h.role]} · {h.inicio}–{h.ano}</small>

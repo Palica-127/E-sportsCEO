@@ -82,6 +82,7 @@ export function criaJogador(s: State, o: Partial<Player> & { game: GameId; role:
     id: novoId(s, 'p'), nick: o.nick, game: o.game, role: o.role, ovr: o.ovr, pot, idade,
     nat: o.nat ?? null, teamId: o.teamId ?? null, sal: o.sal ?? salario(o.ovr), contrato: o.contrato ?? 2028 + ri(s, 0, 1),
     forma: 0, moral: ri(s, 58, 74), traco: o.traco ?? pick(s, TRACOS), real: o.real ?? false, jogos: 0, mvps: 0,
+    ...(o.nome ? { nome: o.nome } : {}),
   };
   s.players[p.id] = p;
   return p;
@@ -108,7 +109,7 @@ function criaTime(s: State, g: GameId, region: string, tier: 1 | 2, raw: RawTeam
       let ovr = Number(rp[1]);
       // o T2 do LoL vem com nota única; espalha um pouco para dar personalidade
       if (g === 'lol' && tier === 2) ovr = clamp(ovr - 3 + (hashStr(String(rp[0])) % 8), 64, 78);
-      p = criaJogador(s, { game: g, role: r, ovr, nick: String(rp[0]), idade: rp[2] ? Number(rp[2]) : undefined, nat: natDe(rp[3], String(rp[0]), g), teamId: t.id, real: true });
+      p = criaJogador(s, { game: g, role: r, ovr, nick: String(rp[0]), idade: rp[2] ? Number(rp[2]) : undefined, nat: natDe(rp[3], String(rp[0]), g), teamId: t.id, real: true, ...(rp[4] ? { nome: String(rp[4]) } : {}) });
     } else {
       const cc = sorteiaPais(s, cl);
       p = criaJogador(s, { game: g, role: r, ovr: tier === 1 ? ri(s, 70, 76) : ri(s, 63, 71), nick: geraNick(s, cc), nat: cc.toLowerCase(), teamId: t.id });

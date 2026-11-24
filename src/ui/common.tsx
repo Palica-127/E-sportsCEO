@@ -4,7 +4,12 @@ import type { Player, Staff, State, Team } from '../engine/types';
 import { estrelas, humor, logoUrl, slug } from '../engine/world';
 import FOTOS from '../data/fotos.json';
 
-export const FOTO_SET = new Set<string>(FOTOS as string[]);
+// fotos por jogo ({ lol: [...], cs2: [...] }): só jogadores reais daquele jogo têm foto
+const FOTO_SETS: Record<string, Set<string>> = Object.fromEntries(Object.entries(FOTOS as Record<string, string[]>).map(([g, l]) => [g, new Set(l)]));
+export function fotoDe(game: string, nick: string): string | null {
+  const k = slug(nick).replace(/-/g, '');
+  return FOTO_SETS[game]?.has(k) ? `/fotos/${game}/${k}.webp` : null;
+}
 function hash(s: string) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 
 // ---------- escudos ----------
@@ -72,8 +77,7 @@ export function Retrato({ nome, cor, size = 64, foto, fone, sigla }: { nome: str
 }
 export function RetratoJogador({ s, p, size = 64 }: { s: State; p: Player; size?: number }) {
   const t = s.teams[p.teamId ?? ''];
-  const k = slug(p.nick).replace(/-/g, '');
-  const foto = p.real && FOTO_SET.has(k) ? `/fotos/${k}.webp` : null;
+  const foto = p.real ? fotoDe(p.game, p.nick) : null;
   return <Retrato nome={p.nick + p.id} cor={t ? (t.org ? s.org.cor : t.cor) : '#4a5568'} size={size} foto={foto} sigla={t?.sigla} />;
 }
 export function RetratoStaff({ s, x, size = 64 }: { s: State; x: Staff; size?: number }) {
