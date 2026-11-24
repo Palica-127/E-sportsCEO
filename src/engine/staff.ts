@@ -5,6 +5,8 @@ import { GAMES, GameId } from './games';
 import { chance, clamp, pick, ri, rnd } from './rng';
 import type { Cargo, ComodoId, Staff, State } from './types';
 import { novoId } from './world';
+import TEC from '../data/tecnicos.json';
+import { fotoTecnico } from './historiaReal';
 
 export const CARGOS: Record<Cargo, { nome: string; porJogo?: boolean; comodo?: ComodoId; desc: string; base: number; cap?: number }> = {
   tecnico: { nome: 'Técnico', porJogo: true, desc: 'Treino, escalação e tática. Aumenta a força do time e a evolução dos jogadores.', base: 3500 },
@@ -59,7 +61,27 @@ export function geraStaff(s: State, cargo: Cargo, nota: number, game?: GameId): 
 export function renovaPool(s: State) {
   const pool: Staff[] = [];
   for (const c of [...CARGOS_JOGO, ...CARGOS_ORG]) for (let k = 0; k < (c === 'tecnico' ? 4 : 3); k++) pool.push(geraStaff(s, c, ri(s, 55, 88)));
+  pool.push(...tecnicosReais(s, 3));
   s.staffPool = pool;
+}
+
+/** técnicos reais (src/data/tecnicos.json) que topam conversar: só dos jogos da org e ainda não contratados */
+function tecnicosReais(s: State, n: number): Staff[] {
+  const ja = new Set(Object.values(s.staff).map(x => x.nome));
+  const cand: { g: GameId; time: string; c: any }[] = [];
+  for (const g of s.jogos) for (const [time, c] of Object.entries(((TEC as any)[g] ?? {}) as Record<string, any>)) cand.push({ g, time, c });
+  const out: Staff[] = [];
+  for (let k = 0; k < 40 && out.length < n && cand.length; k++) {
+    const { g, time, c } = cand.splice(ri(s, 0, cand.length - 1), 1)[0];
+    const partes = String(c.nome ?? '').trim().split(/\s+/).filter(Boolean);
+    const nome = partes.length >= 2 ? `${partes[0]} "${c.nick}" ${partes.slice(1).join(' ')}` : String(c.nick);
+    if (ja.has(nome)) continue;
+    const t = Object.values(s.teams).find(x => x.game === g && x.nome === time);
+    const nota = clamp(ri(s, 70, 80) + (t?.tier === 1 ? 6 : 0), 60, 92);
+    out.push({ id: novoId(s, 'f'), nome, nat: c.nat ?? 'br', cargo: 'tecnico', nota, sal: salarioStaff('tecnico', nota), estilo: `Técnico do ${time}`, game: g,
+      contrato: 0, real: true, ...(c.foto ? { foto: fotoTecnico(g, String(c.nick)) } : {}) });
+  }
+  return out;
 }
 
 export const doCargo = (s: State, c: Cargo, g?: GameId) => Object.values(s.staff).filter(x => x.cargo === c && (!g || x.game === g));
@@ -70,6 +92,7 @@ export function contratarStaff(s: State, id: string, game?: GameId): string | nu
   if (!c) return 'Profissional não está mais disponível.';
   const info = CARGOS[c.cargo];
   if (info.porJogo && !game) return 'Escolha o jogo.';
+  if (c.real && c.game && game && c.game !== game) return `${c.nome} só trabalha com ${GAMES[c.game].nome}.`;
   if (info.porJogo && doCargo(s, c.cargo, game).length) return `Já existe um ${info.nome.toLowerCase()} no ${GAMES[game!].curto}. Demita antes.`;
   if (!info.porJogo && c.cargo !== 'olheiro' && doCargo(s, c.cargo).length) return `A org já tem ${info.nome.toLowerCase()}.`;
   if (c.cargo === 'olheiro' && doCargo(s, 'olheiro').length >= 3) return 'Máximo de 3 olheiros.';

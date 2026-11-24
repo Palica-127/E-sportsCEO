@@ -59,9 +59,9 @@ export function StaffTela() {
             <p className="mut">O mercado de profissionais renova a cada 4 semanas. Luvas: 1 mês de salário.</p>
             <Panel solto>
               <div className="staff-grid">
-                {s.staffPool.filter(x => x.cargo === pool.cargo).map(x => (
+                {s.staffPool.filter(x => x.cargo === pool.cargo && (!x.real || !pool.game || x.game === pool.game)).map(x => (
                   <div key={x.id} className="scard">
-                    <RetratoStaff s={s} x={x} size={90} /><b>{x.nome}</b>
+                    <RetratoStaff s={s} x={x} size={90} /><b>{x.nome}</b>{x.real && <span className="chip2 ok">técnico real</span>}
                     <Estrelas v={Math.max(0.5, Math.min(5, (x.nota - 50) / 9))} size={16} />
                     <small>Nota {x.nota} · {moeda(x.sal * 4)}/mês</small><p>{x.estilo}</p>
                     <button className="btn primary sm" onClick={() => { const e = act(st => contratarStaff(st, x.id, pool.game)); if (e) setMsg(e); else { setMsg(`${x.nome} contratado.`); setPool(null); } }}>Contratar</button>

@@ -5,7 +5,7 @@ import { anoDe, fmtData, jogosDoTorneio, ligaDoTime, torneioDaLiga } from '../..
 import type { State, Torneio } from '../../engine/types';
 import { useGame } from '../../store';
 import { Chave, Grupos, ListaJogos, Suico, TabelaLiga } from '../Bracket';
-import { Crest, GameTag } from '../common';
+import { Crest, GameTag, NomeTime } from '../common';
 
 interface Item { id: string; nome: string; tor?: Torneio; dia: number; sub?: boolean; org?: boolean }
 interface Grupo { titulo: string; itens: Item[] }
@@ -81,7 +81,7 @@ function Detalhe({ s, tor }: { s: State; tor: Torneio }) {
       <header className="det-h">
         <div><h2>{tor.nome}</h2><div className="det-s"><GameTag g={tor.game} /><span>{tor.stages.map(x => x.nome).join('  →  ')}</span></div></div>
         <div className="det-st">
-          {tor.fim ? <><small>Campeão</small><b><Crest s={s} team={s.teams[tor.campeao!]} size={22} /> {s.teams[tor.campeao!].nome}</b></>
+          {tor.fim ? <><small>Campeão</small><b><Crest s={s} team={s.teams[tor.campeao!]} size={22} /> <NomeTime s={s} id={tor.campeao!} /></b></>
             : <><small>Em andamento</small><b>{st.nome} · rodada {st.ri + 1}</b></>}
         </div>
       </header>
@@ -102,7 +102,7 @@ function Detalhe({ s, tor }: { s: State; tor: Torneio }) {
           return (
             <table key={a.k} className="tab">
               <thead><tr><th>#</th><th className="tm">Time</th><th>Região</th><th>Entrada</th><th>Resultado</th></tr></thead>
-              <tbody>{(tor.rank ?? tor.teams).map((id, i) => <tr key={id} className={s.teams[id].org ? 'org' : ''}><td className="pos">{i + 1}</td><td className="tm"><Crest s={s} team={s.teams[id]} size={20} />{s.teams[id].nome}</td><td>{s.leagues[`${tor.game}-${s.teams[id].region}-1`]?.nome ?? s.teams[id].region}</td><td>{tor.direct && !tor.direct.includes(id) ? 'Play-In' : 'Direto'}</td><td>{tor.campeao === id ? '🏆 Campeão' : tor.elim[id] ?? (tor.fim ? '' : 'Vivo')}</td></tr>)}</tbody>
+              <tbody>{(tor.rank ?? tor.teams).map((id, i) => <tr key={id} className={s.teams[id].org ? 'org' : ''}><td className="pos">{i + 1}</td><td className="tm"><Crest s={s} team={s.teams[id]} size={20} /><NomeTime s={s} id={id} /></td><td>{s.leagues[`${tor.game}-${s.teams[id].region}-1`]?.nome ?? s.teams[id].region}</td><td>{tor.direct && !tor.direct.includes(id) ? 'Play-In' : 'Direto'}</td><td>{tor.campeao === id ? '🏆 Campeão' : tor.elim[id] ?? (tor.fim ? '' : 'Vivo')}</td></tr>)}</tbody>
             </table>
           );
         })}

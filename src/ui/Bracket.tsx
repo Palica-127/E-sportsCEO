@@ -5,7 +5,7 @@ import { SPECS } from '../engine/comp';
 import type { Match, SpecId, Stage, State, Torneio } from '../engine/types';
 import { jogosDoTorneio, tabelaTorneio } from '../engine/sim';
 import { forca } from '../engine/world';
-import { Crest, Ult } from './common';
+import { Crest, Ult, NomeTime } from './common';
 
 const CW = 172, CH = 58, GX = 34;
 const X = (c: number) => c * (CW + GX);
@@ -29,7 +29,7 @@ function Card({ s, m, a, b, tba, x, y, fin }: { s: State; m?: Match; a?: string;
     const t = s.teams[id];
     const sc = m?.sa != null ? (lado === 'a' ? m.sa : m.sb) : null;
     const ot = m?.sa != null ? (lado === 'a' ? m.sb : m.sa) : null;
-    return <div className={'bt ' + (sc != null ? (sc > ot! ? 'w' : 'l') : '') + (t.org ? ' org' : '')} title={t.nome}><Crest s={s} team={t} size={20} /><span className="bt-n">{t.nome}</span><b>{sc ?? ''}</b></div>;
+    return <div className={'bt ' + (sc != null ? (sc > ot! ? 'w' : 'l') : '') + (t.org ? ' org' : '')} title={t.nome}><Crest s={s} team={t} size={20} /><span className="bt-n"><NomeTime s={s} id={t.id} /></span><b>{sc ?? ''}</b></div>;
   };
   return (
     <div className={'bcard' + (m && m.sa == null ? ' pend' : '') + (fin ? ' fin' : '')} style={{ left: x, top: y, width: CW }}>
@@ -77,7 +77,7 @@ export function Chave({ s, st, pre = '', seeds, campeao }: { s: State; st: Stage
         {temCampeao && (
           <div className="champ" style={{ left: X(cols) - GX + 24, top: L.p[ultimo][1] + CH / 2 }}>
             <small>Campeão</small>
-            {camp ? <><Crest s={s} team={s.teams[camp]} size={46} /><b>{s.teams[camp].nome}</b></> : <b className="q">?</b>}
+            {camp ? <><Crest s={s} team={s.teams[camp]} size={46} /><b><NomeTime s={s} id={camp} /></b></> : <b className="q">?</b>}
           </div>
         )}
       </div>
@@ -100,7 +100,7 @@ export function Suico({ s, tor, st, si }: { s: State; tor: Torneio; st: Stage; s
         return (
           <tr key={id} className={(t.org ? 'org ' : '') + (r.w >= 3 ? 'ok' : r.l >= 3 ? 'out' : '')}>
             <td className="pos">{i + 1}</td>
-            <td className="tm"><Crest s={s} team={t} size={20} />{t.nome}</td>
+            <td className="tm"><Crest s={s} team={t} size={20} /><NomeTime s={s} id={t.id} /></td>
             <td><b>{r.w}-{r.l}</b></td>
             {Array.from({ length: rodadas }, (_, k) => {
               const m = ms.find(x => x.rodada === k + 1 && (x.a === id || x.b === id));
@@ -128,7 +128,7 @@ export function Grupos({ s, st }: { s: State; st: Stage }) {
         return (
           <section key={g.n} className="panel">
             <header className="panel-h"><h3>Grupo {g.n}</h3></header>
-            <table className="tab mini"><tbody>{ord.map((id, i) => <tr key={id} className={(s.teams[id].org ? 'org ' : '') + (i < 2 && vd(id)[0] >= 2 ? 'ok' : '')}><td className="pos">{i + 1}</td><td className="tm"><Crest s={s} team={s.teams[id]} size={18} />{s.teams[id].nome}</td><td>{vd(id)[0]}-{vd(id)[1]}</td></tr>)}</tbody></table>
+            <table className="tab mini"><tbody>{ord.map((id, i) => <tr key={id} className={(s.teams[id].org ? 'org ' : '') + (i < 2 && vd(id)[0] >= 2 ? 'ok' : '')}><td className="pos">{i + 1}</td><td className="tm"><Crest s={s} team={s.teams[id]} size={18} /><NomeTime s={s} id={id} /></td><td>{vd(id)[0]}-{vd(id)[1]}</td></tr>)}</tbody></table>
             <Chave s={s} st={st} pre={g.n + ':'} seeds={g.ids} />
           </section>
         );
@@ -149,7 +149,7 @@ export function TabelaLiga({ s, tor, compacta }: { s: State; tor: Torneio; compa
         return (
           <tr key={l.id} className={(t.org ? 'org ' : '') + (i < po ? 'po ' : '') + (i === tab.length - 1 && tor.kind === 'split' ? 'rel' : '')}>
             <td className="pos">{i + 1}</td>
-            <td className="tm"><Crest s={s} team={t} size={compacta ? 16 : 20} />{t.nome}</td>
+            <td className="tm"><Crest s={s} team={t} size={compacta ? 16 : 20} /><NomeTime s={s} id={t.id} /></td>
             <td>{l.j}</td><td><b>{l.v}</b></td><td>{l.d}</td>
             {!compacta && <><td>{l.mp}–{l.mc}</td><td className={l.mp - l.mc > 0 ? 'pos-n' : l.mp - l.mc < 0 ? 'neg' : ''}>{l.mp - l.mc > 0 ? '+' : ''}{l.mp - l.mc}</td><td className="hide-sm"><Ult r={t.ult} /></td><td className="hide-sm">{forca(s, t).toFixed(1)}</td></>}
           </tr>
@@ -172,9 +172,9 @@ export function ListaJogos({ s, ms }: { s: State; ms: Match[] }) {
           <div className="lj-h">{k.split('|')[1]}<span>{new Date(Date.UTC(2027, 0, 4) + Number(k.split('|')[0]) * 864e5).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', timeZone: 'UTC' })}</span></div>
           {por[k].map(m => (
             <div key={m.id} className={'lj ' + (s.teams[m.a].org || s.teams[m.b].org ? 'org' : '')}>
-              <span className={'lj-t r ' + (m.sa != null && m.sa > m.sb! ? 'w' : '')}>{s.teams[m.a].nome}<Crest s={s} team={s.teams[m.a]} size={18} /></span>
+              <span className={'lj-t r ' + (m.sa != null && m.sa > m.sb! ? 'w' : '')}><NomeTime s={s} id={m.a} /><Crest s={s} team={s.teams[m.a]} size={18} /></span>
               <b>{m.sa != null ? `${m.sa} – ${m.sb}` : `Bo${m.bo}`}</b>
-              <span className={'lj-t ' + (m.sb != null && m.sb > m.sa! ? 'w' : '')}><Crest s={s} team={s.teams[m.b]} size={18} />{s.teams[m.b].nome}</span>
+              <span className={'lj-t ' + (m.sb != null && m.sb > m.sa! ? 'w' : '')}><Crest s={s} team={s.teams[m.b]} size={18} /><NomeTime s={s} id={m.b} /></span>
             </div>
           ))}
         </Fragment>

@@ -50,6 +50,9 @@ export interface Staff {
   game?: GameId; // técnico, auxiliar e analista são de um jogo
   contrato: number; // ano
   tarefa?: { pid: string; fim: number }; // olheiro observando alguém
+  real?: boolean; // técnico real pesquisado (buscar_tecnicos.py)
+  foto?: string; // foto do técnico real
+  fem?: boolean; // para escolher o rosto gerado
 }
 
 export interface Neg {

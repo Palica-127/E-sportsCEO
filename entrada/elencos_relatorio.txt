@@ -179,3 +179,49 @@
 [cs2] ? Renegades: elenco não confirmado no prosettings (0 jogadores) — mantido
 [cs2] ODDIK: WOOD7 está em DENDELE — vaga aberta
 [cs2] ODDIK: naitte está em DENDELE — vaga aberta
+[dota2] ? Heroic (HEROIC): só 0 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? paiN Gaming (paiN Gaming): só 0 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? Wildcard: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? beastcoast: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Infinity: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Thunder Predator: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? RED Canids: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Team Waska: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Furia Dota: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Leviatán: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Yawara: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Gaimin SA: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Elevate: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Case Esports: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Keyd Stars: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] Team Liquid: saem Wisper | entram Jabbz
+[dota2] ? 1w Team: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] Team Yandex: saem Rutekblu, xegi7, hexrexvexzz, Mirublu7, Axfux | entram CHIRA_JUNIOR, Maladych, 医者watson`, Saksa, DM
+[dota2] ? BetBoom Team (BETBOOM TEAM): só 1 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? LGD Gaming (LGD Gaming): só 0 jogadores atuais no OpenDota — elenco mantido
+[dota2] PARIVISION: saem dracrizz, Axsao, naax, funahex1, Hextorzz | entram No[o]ne-, Dukalis, 9Class, Satanic, Noticed
+[dota2] ? Nigma Galaxy (Nigma Galaxy ): só 3 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? OG (OG): só 3 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? Entity: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] Natus Vincere: saem dragimozz, kashox, zihexdo7, Turuy, Jinbal | entram pma, gotthejuice, Riddys, Niku, daze
+[dota2] ? Gaimin Gladiators: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Team Secret: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Cloud9: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] Xtreme Gaming: saem BoBoKa | entram —
+[dota2] ? Team Tidebound: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Azure Ray: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Talon Esports: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? BOOM Esports: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] Team Nemesis: saem cripay, Oriaxbal7, lumgizz, mokana1, Nateky | entram Mac, J, Jhocam, Jaunuel, NARMAN
+[dota2] ? Aster: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Vici Gaming (Vici Gaming): só 2 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? Execration: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Geek Fam: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Rex Regum Qeon: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Invictus Gaming (Team Invictus): só 0 jogadores atuais no OpenDota — elenco mantido
+[dota2] ? EHOME: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Team SMG: sem time ativo com esse nome no OpenDota — elenco mantido
+[dota2] ? Neon Esports: sem time ativo com esse nome no OpenDota — elenco mantido
+[ff] sem fonte disponível (precisa da Liquipedia)
+[fifa] sem fonte disponível (precisa da Liquipedia)
+[wr] sem fonte disponível (precisa da Liquipedia)

@@ -3,6 +3,8 @@ import { GAMES, GameId } from '../engine/games';
 import type { Player, Staff, State, Team } from '../engine/types';
 import { estrelas, humor, logoUrl, slug } from '../engine/world';
 import FOTOS from '../data/fotos.json';
+import ROSTOS from '../data/rostos.json';
+import { abrirTime } from './nav';
 
 // fotos por jogo ({ lol: [...], cs2: [...] }): só jogadores reais daquele jogo têm foto
 const FOTO_SETS: Record<string, Set<string>> = Object.fromEntries(Object.entries(FOTOS as Record<string, string[]>).map(([g, l]) => [g, new Set(l)]));
@@ -80,8 +82,22 @@ export function RetratoJogador({ s, p, size = 64 }: { s: State; p: Player; size?
   const foto = p.real ? fotoDe(p.game, p.nick) : null;
   return <Retrato nome={p.nick + p.id} cor={t ? (t.org ? s.org.cor : t.cor) : '#4a5568'} size={size} foto={foto} sigla={t?.sigla} />;
 }
+// rostos gerados por IA (pessoas que não existem) para a comissão fictícia; técnicos reais usam a foto deles
+const FEM = new Set(['ana', 'juliana', 'bruna', 'paula', 'camila', 'larissa', 'emily', 'sarah', 'lena', 'sofia', 'seo-yeon']);
+export function fem(nome: string) { const p = nome.split(' '); return FEM.has(p[0].toLowerCase()) || FEM.has((p[p.length - 1] ?? '').toLowerCase()); }
+export function rostoStaff(x: Pick<Staff, 'nome' | 'foto' | 'fem'>): string | null {
+  if (x.foto) return x.foto;
+  const lista = (ROSTOS as Record<string, string[]>)[(x.fem ?? fem(x.nome)) ? 'f' : 'm'] ?? [];
+  return lista.length ? `/fotos/staff/ia/${lista[hash(x.nome) % lista.length]}.webp` : null;
+}
 export function RetratoStaff({ s, x, size = 64 }: { s: State; x: Staff; size?: number }) {
-  return <Retrato nome={x.nome} cor={s.org.cor} size={size} fone={false} sigla={s.org.sigla} />;
+  return <Retrato nome={x.nome} cor={s.org.cor} size={size} fone={false} sigla={s.org.sigla} foto={rostoStaff(x)} />;
+}
+/** nome do time clicável: abre a ficha */
+export function NomeTime({ s, id, children }: { s: State; id: string; children?: ReactNode }) {
+  const t = s.teams[id];
+  if (!t) return <>{children ?? '—'}</>;
+  return <span className="lnk-time" role="link" tabIndex={0} onClick={e => { e.stopPropagation(); abrirTime(id); }} onKeyDown={e => e.key === 'Enter' && abrirTime(id)}>{children ?? t.nome}</span>;
 }
 
 // ---------- pequenos componentes ----------

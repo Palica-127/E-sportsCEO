@@ -72,3 +72,9 @@ Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa 
 
 ## Próximas fases
 4. Históricos e prêmios (Golden Crown etc.), Hall da Fama, versão .exe.
+
+### Técnicos, histórico e Lendas
+- `python tools/buscar_tecnicos.py lol valorant` — técnicos reais dos times (Leaguepedia / vlr.gg) em `src/data/tecnicos.json` e fotos em `public/fotos/staff/<jogo>/`. Aparecem na ficha do time e, de vez em quando, no mercado da comissão.
+- `python tools/gerar_hist_lol.py` — gera `src/data/hist_lol.json` (Worlds, MSI e ligas) a partir do `lolx.json`.
+- A comissão fictícia usa rostos gerados por IA (pessoas que não existem) de `public/fotos/staff/ia/`, listados em `src/data/rostos.json`.
+- Ficha do time: clique no nome de qualquer time. Aba **História → Lendas**: ranking de todos os tempos, galeria de cada torneio, títulos por time e recordes (história real + o que acontece no save).

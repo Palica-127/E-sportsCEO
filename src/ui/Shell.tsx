@@ -18,8 +18,10 @@ import { Mercado } from './telas/Mercado';
 import { SedeTela } from './telas/Sede';
 import { MarcaTela } from './telas/Marca';
 import { Historia } from './telas/Historia';
+import { FichaTime } from './telas/FichaTime';
+import { setNav } from './nav';
 
-export type Tela = 'inicio' | 'inbox' | 'elenco' | 'perfil' | 'staff' | 'olheiros' | 'mercado' | 'competicoes' | 'calendario' | 'sede' | 'financas' | 'marca' | 'historia' | 'org';
+export type Tela = 'inicio' | 'inbox' | 'elenco' | 'perfil' | 'staff' | 'olheiros' | 'mercado' | 'competicoes' | 'calendario' | 'sede' | 'financas' | 'marca' | 'historia' | 'org' | 'time';
 const NAV: ({ id: Tela; nome: string; Ico: typeof Home; curto?: string } | 'gap')[] = [
   { id: 'inicio', nome: 'Início', Ico: Home },
   { id: 'inbox', nome: 'Mensagens', Ico: Mail, curto: 'E-mail' },
@@ -39,14 +41,14 @@ const NAV: ({ id: Tela; nome: string; Ico: typeof Home; curto?: string } | 'gap'
   'gap',
   { id: 'org', nome: 'Organização', Ico: Settings, curto: 'Org' },
 ];
-const TITULO: Record<Tela, string> = { inicio: 'Início', inbox: 'Mensagens', elenco: 'Elenco', perfil: 'Perfil do jogador', staff: 'Comissão técnica', olheiros: 'Olheiros', mercado: 'Transferências', competicoes: 'Competições', calendario: 'Calendário', sede: 'Sede', financas: 'Finanças', marca: 'Marca e loja', historia: 'História', org: 'Organização' };
+const TITULO: Record<Tela, string> = { time: 'Ficha do time', inicio: 'Início', inbox: 'Mensagens', elenco: 'Elenco', perfil: 'Perfil do jogador', staff: 'Comissão técnica', olheiros: 'Olheiros', mercado: 'Transferências', competicoes: 'Competições', calendario: 'Calendário', sede: 'Sede', financas: 'Finanças', marca: 'Marca e loja', historia: 'História', org: 'Organização' };
 const SEM = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 /** foto de fundo de cada tela (Unsplash, uso livre) */
 const FUNDO: Partial<Record<Tela, string>> = {
   inicio: 'ginasio', inbox: 'escritorio', elenco: 'pc', perfil: 'pc', staff: 'pc', olheiros: 'escritorio', mercado: 'escritorio',
-  competicoes: 'estadio', calendario: 'estadio', financas: 'escritorio', marca: 'arena', historia: 'teatro', org: 'escritorio',
+  competicoes: 'estadio', calendario: 'estadio', financas: 'escritorio', marca: 'arena', historia: 'teatro', org: 'escritorio', time: 'estadio',
 };
 
 export function Shell() {
@@ -68,6 +70,8 @@ export function Shell() {
     const h = [...hist.slice(0, pos + 1), { t, a }].slice(-40);
     setHist(h); setPos(h.length - 1);
   };
+
+  setNav((t, a) => ir(t as Tela, a));
 
   function umDia() {
     if (rodando) return;
@@ -102,7 +106,7 @@ export function Shell() {
 
   const orgTeam = s.teams[s.orgTeams[s.jogos[0]]!];
   const d = dataDe(s.dia);
-  const sub = tela === 'perfil' && arg && s.players[arg] ? s.players[arg].nick : tela === 'elenco' ? s.org.nome : '';
+  const sub = tela === 'time' && arg && s.teams[arg] ? s.teams[arg].nome : tela === 'perfil' && arg && s.players[arg] ? s.players[arg].nick : tela === 'elenco' ? s.org.nome : '';
 
   return (
     <div className="app" style={{ '--acc': s.org.cor } as CSSProperties}>
@@ -149,6 +153,7 @@ export function Shell() {
           {tela === 'marca' && <MarcaTela />}
           {tela === 'historia' && <Historia abrir={(t, a) => ir(t as Tela, a)} />}
           {tela === 'org' && <OrgTela />}
+          {tela === 'time' && arg && <FichaTime id={arg} />}
         </main>
       </div>
       {diaJogo && <DiaDeJogo onFechar={() => setDiaJogo(false)} />}

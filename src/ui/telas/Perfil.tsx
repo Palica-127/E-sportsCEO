@@ -8,7 +8,7 @@ import { ATRIBUTOS, atributos, valorMercado } from '../../engine/world';
 import { custoRescisao, dispensar, interesse, notaVista, pedidoSalario, renovar } from '../../engine/mercado';
 import { TRACOS } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Chips, Crest, Estrelas, Flag, Gauge, Linha, Radar, RetratoJogador } from '../common';
+import { Chips, Crest, Estrelas, Flag, Gauge, Linha, Radar, RetratoJogador, NomeTime } from '../common';
 import { Proposta } from './Mercado';
 import type { Tela } from '../Shell';
 
@@ -51,7 +51,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
               <h2><b>{p.nick}</b></h2>
               {p.nome && <div className="mut" style={{ marginTop: -4 }}>{p.nome}</div>}
               <div className="pf-l">{conhece ? <Estrelas v={Math.max(0.5, Math.min(5, (p.ovr - 58) / 8))} size={24} /> : <span className="mut">nota: {nv.txt}</span>}<span className="role" style={{ fontSize: 16 }}>{def.roleNomes[p.role]}</span></div>
-              <div className="pf-l">{t ? <><Crest s={s} team={t} size={26} />{t.nome}</> : 'Agente livre'}</div>
+              <div className="pf-l">{t ? <><Crest s={s} team={t} size={26} /><NomeTime s={s} id={t.id} /></> : 'Agente livre'}</div>
               <div className="pf-l"><Flag nat={p.nat} />{(p.nat ?? '').toUpperCase()} · {p.idade} anos</div>
               <div className="pf-l"><Chips p={p} titular={t ? titular : false} /></div>
               {meu && academyDe(s, g) && (

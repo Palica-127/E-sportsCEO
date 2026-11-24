@@ -13,7 +13,8 @@ Fontes:
   - valorant: vlr.gg (página do time) + prosettings.net (aniversário)
   - r6:       siege.gg (página do time)
   - cs2:      prosettings.net (página do time e do jogador)
-  Dota 2, Free Fire, EA FC e Wild Rift só têm fonte boa na Liquipedia (hoje bloqueada para este IP).
+  - dota2:    OpenDota (times ativos e jogadores atuais; sem aniversário nem nome real)
+  Free Fire, EA FC e Wild Rift só têm fonte boa na Liquipedia (hoje bloqueada para este IP).
 
 Uso: python tools/buscar_elencos.py lol valorant ...   (--refazer ignora o cache)
 Gera também entrada/elencos_relatorio.txt com o que mudou e o que ficou de fora.
@@ -90,6 +91,7 @@ ALIAS_LOL = {'Leviatán': 'Leviatan', '7REX Team': '7REX', 'paiN Academy': 'PaiN
 def cargo(**kw): return bf.cargo(**kw)
 def q(s): return bf.q(s)
 
+PAGINA_LOL = {}  # nome no jogo -> página do time na Leaguepedia (usado também pelo buscar_tecnicos)
 def lol(rel):
     atuais = dados_atuais('lol')
     times = list(atuais)
@@ -130,6 +132,7 @@ def lol(rel):
         else: rel.append(f'[lol] ? {t}: não achei o time na Leaguepedia — elenco mantido')
         if t in pagina and pagina[t] in [r['OverviewPage'] for r in tms if r.get('IsDisbanded') == '1']:
             rel.append(f'[lol] ! {t} ({pagina[t]}) consta como DESFEITO na Leaguepedia')
+    PAGINA_LOL.clear(); PAGINA_LOL.update(pagina)
     paginas = sorted(set(pagina.values()))
     def rosters():
         out = []
@@ -341,7 +344,35 @@ def cs2(rel):
         res[t] = monta_time('cs2', atuais, t, js, rel, 5, prio=2 if fonte_real else 1)
     return res
 
-FONTES = {'lol': lol, 'valorant': valorant, 'r6': r6, 'cs2': cs2}
+# ---------------------------------------------------------------- Dota 2 (OpenDota)
+OD = 'https://api.opendota.com/api'
+def dota2(rel):
+    atuais = dados_atuais('dota2')
+    times = cache_json('dota2_times', lambda: bf.get(OD + '/teams', 1.2))
+    pros = {p['account_id']: p for p in cache_json('dota2_pros', lambda: bf.get(OD + '/proPlayers', 1.2))}
+    agora = datetime.datetime.now().timestamp()
+    ativos = [t for t in times if t.get('last_match_time') and agora - t['last_match_time'] < 300 * 86400]  # jogou nos últimos ~10 meses
+    por_nome = {}
+    for t in sorted(ativos, key=lambda t: -(t.get('rating') or 0)):
+        for n in (t.get('name'), t.get('tag')):
+            if n: por_nome.setdefault(n, t)
+    res = {}
+    for t in atuais:
+        nome = casa_nome(t, por_nome)
+        if not nome: rel.append(f'[dota2] ? {t}: sem time ativo com esse nome no OpenDota — elenco mantido'); continue
+        tid = por_nome[nome]['team_id']
+        js = cache_json(f'dota2_time_{tid}', lambda tid=tid: bf.get(f'{OD}/teams/{tid}/players', 1.2))
+        cur = sorted([p for p in js if p.get('is_current_team_member')], key=lambda p: -(p.get('games_played') or 0))
+        if len(cur) < 4: rel.append(f'[dota2] ? {t} ({nome}): só {len(cur)} jogadores atuais no OpenDota — elenco mantido'); continue
+        jog = []
+        for p in cur[:5]:
+            pro = pros.get(p['account_id'], {})
+            jog.append({'nick': pro.get('name') or p.get('name'), 'nat': (pro.get('country_code') or '').lower() or None})
+        res[t] = monta_time('dota2', atuais, t, jog, rel, 5)
+        if bf.slug(nome) != bf.slug(t): rel.append(f'[dota2]   ({t} = "{nome}" no OpenDota)')
+    return res
+
+FONTES = {'lol': lol, 'valorant': valorant, 'r6': r6, 'cs2': cs2, 'dota2': dota2}
 
 def dedup(g, over, rel):
     """cada jogador fica num time só. Prioridade: fonte principal (2) > lista de time do prosettings (1) >

@@ -6,3 +6,4 @@ desktop/node_modules
 desktop/app
 desktop/release
 entrada/.cache_*.json
+tools/__pycache__/

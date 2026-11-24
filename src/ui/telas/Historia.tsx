@@ -5,7 +5,8 @@ import { moeda } from '../../engine/org';
 import { anoDe } from '../../engine/sim';
 import type { Premiado, State, TorKind } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Crest, Escudo, Flag, fotoDe, Panel, Retrato } from '../common';
+import { Lendas } from './Lendas';
+import { Crest, Escudo, Flag, fotoDe, Panel, Retrato, NomeTime } from '../common';
 
 const trofeu = (kind: TorKind, nome: string) => {
   const m: Partial<Record<TorKind, string>> = { worlds: 'w', msi: 'm', fs: 'f', ewc: 'e', intlA: 'm', intlB: 'w' };
@@ -17,12 +18,13 @@ const timePorNome = (s: State, g: GameId, nome: string) => Object.values(s.teams
 
 export function Historia({ abrir }: { abrir: (tela: string, arg?: string) => void }) {
   const s = useGame()!;
-  const [aba, setAba] = useState<'trofeus' | 'premios' | 'hall' | 'campeoes'>('trofeus');
+  const [aba, setAba] = useState<'trofeus' | 'premios' | 'lendas' | 'hall' | 'campeoes'>('trofeus');
   return (
     <div>
-      <div className="tabs">{([['trofeus', 'Sala de troféus'], ['premios', 'Prêmios do ano'], ['hall', 'Hall da Fama'], ['campeoes', 'Campeões']] as const).map(([k, n]) => <button key={k} className={aba === k ? 'on' : ''} onClick={() => setAba(k)}>{n}</button>)}</div>
+      <div className="tabs">{([['trofeus', 'Sala de troféus'], ['premios', 'Prêmios do ano'], ['lendas', 'Lendas'], ['hall', 'Hall da Fama'], ['campeoes', 'Campeões']] as const).map(([k, n]) => <button key={k} className={aba === k ? 'on' : ''} onClick={() => setAba(k)}>{n}</button>)}</div>
       {aba === 'trofeus' && <Trofeus />}
       {aba === 'premios' && <Premios abrir={abrir} />}
+      {aba === 'lendas' && <Lendas />}
       {aba === 'hall' && <Hall />}
       {aba === 'campeoes' && <Campeoes />}
     </div>
@@ -189,7 +191,7 @@ function Campeoes() {
                     <div key={e.ano + (e.split ?? '')} className={'camp-l ' + (e.campeao === s.org.nome ? 'org' : '')}>
                       <span>{e.ano}{e.split ? ` · S${e.split}` : ''}</span>
                       {tc ? <Crest s={s} team={tc} size={22} /> : <span style={{ width: 22 }} />}
-                      <b>{e.campeao}</b>
+                      <b>{tc ? <NomeTime s={s} id={tc.id} /> : e.campeao}</b>
                       <small className="mut">vice {e.vice}</small>
                     </div>
                   );
