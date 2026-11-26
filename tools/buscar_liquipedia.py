@@ -192,6 +192,11 @@ def infobox(txt, nome_re):
 ROLE_KEYS = {
     'wr': [('TOP', r'top|baron'), ('JNG', r'jungl'), ('MID', r'mid'), ('ADC', r'bot|adc|carry|dragon|duo'), ('SUP', r'supp')],
     'ff': [('IGL', r'igl|leader|captain|shot.?call'), ('RUSH', r'rush|entry|assault|flank'), ('SNP', r'snip'), ('SUP', r'supp|bomb|grenad')],
+    'dota2': [('POS1', r'^\s*1\s*$|carry|safe|pos.?1'), ('POS2', r'^\s*2\s*$|mid|pos.?2'), ('POS3', r'^\s*3\s*$|off.?lan|pos.?3'),
+              ('POS4', r'^\s*4\s*$|soft|pos.?4'), ('POS5', r'^\s*5\s*$|hard|pos.?5')],
+    'cs2': [('IGL', r'igl|in.?game|leader|captain'), ('AWP', r'awp|snip'), ('ENT', r'entry|rifl'), ('LUR', r'lurk'), ('SUP', r'supp')],
+    'valorant': [('DUE', r'duel'), ('INI', r'initi'), ('CTR', r'contr|smok'), ('SEN', r'sentin'), ('FLX', r'flex')],
+    'r6': [('ENT', r'entry'), ('FLX', r'flex|igl|leader'), ('ANC', r'anchor'), ('ROM', r'roam'), ('SUP', r'supp|hard.?break')],
 }
 def ordena(g, js, n):
     keys = ROLE_KEYS.get(g)

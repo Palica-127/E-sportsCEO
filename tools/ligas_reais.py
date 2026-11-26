@@ -67,9 +67,11 @@ def aplica(g, jogo, cfg, elencos):
         t1, t2 = L['t1'], L['t2']
         nomes = [x['n'] if isinstance(x, dict) else x for x in t1 + t2]
         assert len(set(nomes)) == 15 and len(t1) == 8, (g, L['id'], len(set(nomes)))
-        ligas[L['id']] = {'nome': L['nome'], 'regiao': L['regiao'], 'premio': L['premio_usd'] * PRECO_USD, **({'logo': L['logo']} if L.get('logo') else {}),
-                          't1': [time(n, 80 - i * 1.2) for i, n in enumerate(t1)],
-                          't2': [time(n, 70 - i * 1.0) for i, n in enumerate(t2)]}
+        aj = L.get('ajuste', 0)  # região mais fraca: jogadores gerados com nota menor
+        ligas[L['id']] = {'nome': L['nome'], 'regiao': L['regiao'], **({'premio': L['premio_usd'] * PRECO_USD} if L.get('premio_usd') else {}),
+                          **({'logo': L['logo']} if L.get('logo') else {}),
+                          't1': [time(n, 80 + aj - i * 1.2) for i, n in enumerate(t1)],
+                          't2': [time(n, 70 + aj - i * 1.0) for i, n in enumerate(t2)]}
     novos_nomes = {t['n'] for L in ligas.values() for t in L['t1'] + L['t2']}
     entram = [n for n in novos_nomes if n not in antigos]
     saem = [n for n in antigos if n not in novos_nomes]
@@ -79,7 +81,7 @@ def aplica(g, jogo, cfg, elencos):
         jogo['intl'][k]['nome'] = v['nome']
         jogo['intl'][k]['premio'] = v['premio_usd'] * PRECO_USD
         if v.get('logo'): jogo['intl'][k]['logo'] = v['logo']
-        jogo['intl'][k]['vagas'] = dict(zip(ligas, jogo['intl'][k]['vagas'].values()))
+        jogo['intl'][k]['vagas'] = v.get('vagas') or dict(zip(ligas, jogo['intl'][k]['vagas'].values()))
     if reais: elencos[g] = reais  # EA FC: o elenco inteiro vem daqui
     elif g in elencos: elencos[g] = {t: ps for t, ps in elencos[g].items() if t in novos_nomes}
     return entram, saem

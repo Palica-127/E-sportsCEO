@@ -13,9 +13,10 @@ import { contratosFimDeAno, post, respostaNeg, respostaVenda, tickMercado } from
 
 export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: number; meta: string; metaId: 'subir' | 'playoffs' | 'titulo'; detalhes: string[] }> = {
   nova: {
-    nome: 'Org nova', resumo: 'Você compra uma vaga na liga de acesso e monta o time do zero numa peneira.',
-    caixa: 900_000, meta: 'Subir para a elite em até 2 anos', metaId: 'subir',
-    detalhes: ['Caixa: R$ 900 mil', 'Liga Challengers (T2)', 'Peneira para montar o elenco', 'Diretoria paciente'],
+    // aporte de um empresário fundador: cobre a peneira e ~2 anos de operação (folha + comissão + sede ≈ R$ 30 mil/semana)
+    nome: 'Org nova', resumo: 'Um empresário aporta capital, você compra uma vaga na liga de acesso e monta o time do zero numa peneira.',
+    caixa: 3_000_000, meta: 'Subir para a elite em até 2 anos', metaId: 'subir',
+    detalhes: ['Aporte do fundador: R$ 3 mi', 'Liga Challengers (T2)', 'Peneira para montar o elenco', 'Diretoria paciente'],
   },
   crise: {
     nome: 'Org em crise', resumo: 'Você compra um time da elite endividado e com moral baixa, e faz o rebrand.',

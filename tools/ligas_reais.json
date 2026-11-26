@@ -660,19 +660,112 @@
   }
  },
  "dota2": {
-  "fonte": "Liquipedia: DreamLeague Season 29 e The International 2026",
+  "fonte": "Liquipedia: times ativos em nov/2026 (eliminatórias e convites do TI 2026, portal de times e ganhos nos torneios Tier 1/2 de 2026)",
+  "cluster": {
+   "SA": "SAM",
+   "EU": "EUCIS",
+   "AS": "ASIA"
+  },
+  "ligas": [
+   {
+    "id": "EU",
+    "nome": "Europa/CEI",
+    "regiao": "Europa e CEI",
+    "ajuste": 0,
+    "t1": [
+     "Team Spirit",
+     "Team Yandex",
+     "PARIVISION",
+     "BetBoom Team",
+     "Team Liquid",
+     "Aurora Gaming",
+     "Natus Vincere",
+     "Nigma Galaxy"
+    ],
+    "t2": [
+     "HULIGANI",
+     "MOUZ",
+     "1w Team",
+     "Virtus.pro",
+     "Inner Circle x Insanity",
+     "Yellow Submarine",
+     "MODUS"
+    ]
+   },
+   {
+    "id": "AS",
+    "nome": "China/SEA",
+    "regiao": "China e Sudeste Asiático",
+    "ajuste": -2,
+    "t1": [
+     "Xtreme Gaming",
+     "Team Resilience",
+     "OG",
+     "Yakult Brothers",
+     "Execration",
+     "Direborn Esports",
+     "Yangon Galacticos",
+     "Roar Gaming"
+    ],
+    "t2": [
+     "Team Refuser",
+     "Game Master",
+     "Grey Track",
+     "Grind Back",
+     "Mentality Monsters",
+     "InterActive Philippines",
+     "Cloud Rising"
+    ]
+   },
+   {
+    "id": "SA",
+    "nome": "Américas",
+    "regiao": "América do Sul e do Norte",
+    "ajuste": -5,
+    "t1": [
+     "LGD Gaming",
+     "PlayTime",
+     "GamerLegion",
+     "Amaru Gaming",
+     "Team Nemesis",
+     "Hokori",
+     "4 Anchors and Ilmeria",
+     "The Bug"
+    ],
+    "t2": [
+     "GG BOOM",
+     "Red Hot Chili Pibble",
+     "Lindorfitos",
+     "RisingRage",
+     "Infamous Gaming",
+     "Pacific Esports",
+     "Focus Team"
+    ]
+   }
+  ],
   "intl": {
    "A": {
     "nome": "DreamLeague",
     "premio_usd": 290000,
-    "logo": "dota2-A"
+    "logo": "dota2-A",
+    "vagas": {
+     "EU": 4,
+     "AS": 2,
+     "SA": 2
+    }
    },
    "B": {
     "nome": "The International",
     "premio_usd": 1660200,
-    "logo": "dota2-B"
+    "logo": "dota2-B",
+    "vagas": {
+     "EU": 7,
+     "AS": 5,
+     "SA": 4
+    }
    }
-  }
+  },
+  "paginas": {}
  },
  "r6": {
   "fonte": "Liquipedia: BLAST R6 Major Salt Lake City 2026 e Six Invitational 2026",

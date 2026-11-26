@@ -100,3 +100,37 @@ burmese-ghouls	https://liquipedia.net/commons/images/3/3c/Burmese_Ghouls_2023_da
 sbo3a	https://liquipedia.net/commons/images/9/9d/Sbo3a_2024_allmode.png
 solo-leveling	https://liquipedia.net/commons/images/5/52/Solo_Leveling_darkmode.png
 find-dog sane4ka durian-pizza sousou kso-creed ilyshka-4q 74-club train-to-kill only-forward f1ve real1: logos originais desenhados por tools/gerar_logos.py (o time não tem logo público)
+1w-team	https://liquipedia.net/commons/images/5/5c/1win_Team_2024_allmode.png
+amaru-gaming	https://liquipedia.net/commons/images/1/1e/Amaru_Gaming_allmode.png
+aurora-gaming	https://liquipedia.net/commons/images/3/32/Aurora_Gaming_2025_full_allmode.png
+betboom-team	https://liquipedia.net/commons/images/5/5b/BetBoom_Team_2024_allmode.png
+direborn-esports	https://liquipedia.net/commons/images/c/c8/Direborn_Esports_full_allmode.png
+execration	https://liquipedia.net/commons/images/a/af/Execration_2024_full_allmode.png
+gamerlegion	https://liquipedia.net/commons/images/2/21/GamerLegion_2026_allmode.png
+huligani	https://liquipedia.net/commons/images/8/81/HULIGANI_allmode.png
+hokori	https://liquipedia.net/commons/images/d/d0/Hokori_2021_allmode.png
+infamous-gaming	https://liquipedia.net/commons/images/5/58/Infamous_2020_allmode.png
+inner-circle-x-insanity	https://liquipedia.net/commons/images/e/ed/Inner_Circle_x_Insanity_lightmode.png
+mouz	https://liquipedia.net/commons/images/a/a5/MOUZ_2021_full_allmode.png
+natus-vincere	https://liquipedia.net/commons/images/3/3f/Natus_Vincere_2021_lightmode.png
+nigma-galaxy	https://liquipedia.net/commons/images/e/e8/Nigma_Galaxy_full_lightmode.png
+og	https://liquipedia.net/commons/images/7/7b/OG_2026_allmode.png
+parivision	https://liquipedia.net/commons/images/9/9d/PARIVISION_allmode.png
+pacific-esports	https://liquipedia.net/commons/images/c/c4/Pacific_Esports_Bolivia_2023_allmode.png
+playtime	https://liquipedia.net/commons/images/e/ef/PlayTime_full_allmode.png
+team-nemesis	https://liquipedia.net/commons/images/a/a0/Team_Nemesis_full_lightmode.png
+team-resilience	https://liquipedia.net/commons/images/b/bf/Team_Resilience_%28DOTA2%29_full_lightmode.png
+team-spirit	https://liquipedia.net/commons/images/f/f2/Team_Spirit_2022_full_lightmode.png
+team-yandex	https://liquipedia.net/commons/images/9/9c/Team_Yandex_2026_lightmode.png
+virtus-pro	https://liquipedia.net/commons/images/c/c0/Virtus.pro_2019_allmode.png
+xtreme-gaming	https://liquipedia.net/commons/images/9/97/Xtreme_Gaming_%28China%29_full_allmode.png
+yakult-brothers	https://liquipedia.net/commons/images/0/08/Yakult_Brothers_full_lightmode.png
+yangon-galacticos	https://liquipedia.net/commons/images/f/fc/Yangon_Galacticos_2021_full_allmode.png
+yellow-submarine	https://liquipedia.net/commons/images/d/d2/Yellow_Submarine_2025_full_lightmode.png
+roar-gaming	https://liquipedia.net/commons/images/9/99/Roar_Gaming_darkmode.png
+team-refuser	https://liquipedia.net/commons/images/d/d3/Team_Refuser_allmode.png
+game-master	https://liquipedia.net/commons/images/9/92/Game_Master_darkmode.png
+mentality-monsters	https://liquipedia.net/commons/images/4/48/Mentality_Monsters_darkmode.png
+cloud-rising	https://liquipedia.net/commons/images/6/60/Cloud_Rising_darkmode.png
+red-hot-chili-pibble	https://liquipedia.net/commons/images/a/a5/Red_Hot_Chili_Pibble_allmode.webp
+modus grey-track grind-back interactive-philippines 4-anchors-and-ilmeria the-bug gg-boom lindorfitos risingrage focus-team: logos originais desenhados por tools/gerar_logos.py (o time não tem logo público)

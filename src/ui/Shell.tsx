@@ -4,6 +4,7 @@ import { passo, temJogoOrgHoje, dataDe, proximoEvento, fmtData } from '../engine
 import { act, useGame } from '../store';
 import { Crest } from './common';
 import { DiaDeJogo } from './DiaDeJogo';
+import { Busca } from './Busca';
 import { Inicio } from './telas/Inicio';
 import { Inbox } from './telas/Inbox';
 import { Calendario } from './telas/Calendario';
@@ -117,6 +118,7 @@ export function Shell() {
           <button disabled={pos >= hist.length - 1} onClick={() => setPos(pos + 1)} title="Avançar (Alt+→)"><ChevronRight size={34} strokeWidth={2.5} /></button>
         </div>
         <div className="top-t"><h1>{TITULO[tela]}{sub && <span> | {sub}</span>}</h1></div>
+        <Busca s={s} />
         {decisoes > 0 && <button className="top-alert" onClick={() => ir('inbox')} title="Decisões pendentes"><Bell size={24} /><span className="badge">{decisoes}</span></button>}
         <div className="top-date"><b>{SEM[s.dia % 7]},</b><span>{String(d.getUTCDate()).padStart(2, '0')} {MES[d.getUTCMonth()]} {d.getUTCFullYear()}</span><small>{rodando ? 'avançando…' : jogoHoje ? 'dia de jogo!' : prox ? `${prox.txt}: ${fmtData(prox.dia, false).replace(/ \d{4}$/, '')}` : ''}</small></div>
         <div className="go-grp">

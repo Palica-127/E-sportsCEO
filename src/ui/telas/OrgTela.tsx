@@ -1,11 +1,27 @@
 import { useState } from 'react';
-import { act, setState, useGame } from '../../store';
+import { act, deTexto, paraTexto, salvarAgora, setState, useGame } from '../../store';
 import { Escudo, Panel } from '../common';
 import { Modalidades } from './Expansao';
 
 export function OrgTela() {
   const s = useGame()!;
   const [conf, setConf] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  function exportar() {
+    const txt = paraTexto(); if (!txt) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' }));
+    a.download = `esportsceo-${s.org.sigla.toLowerCase()}-${s.dia}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+    setAviso('Arquivo salvo. Guarde-o para restaurar a carreira depois.');
+  }
+  function importar(f: File) {
+    f.text().then(txt => {
+      const novo = deTexto(txt);
+      if (!novo) { setAviso('Esse arquivo não é uma carreira válida desta versão do jogo.'); return; }
+      setState(novo); salvarAgora();
+    });
+  }
   function setCor(c: string) {
     act(st => { st.org.cor = c; for (const g of st.jogos) st.teams[st.orgTeams[g]!].cor = c; });
   }
@@ -34,7 +50,12 @@ export function OrgTela() {
         </div>
       </Panel>
       <Panel ico="maleta" title="Carreira">
-        <p className="mut">O jogo salva sozinho neste navegador.</p>
+        <p className="mut">O jogo salva sozinho neste navegador. Exporte um arquivo de vez em quando: se os dados do navegador forem apagados, é com ele que você recupera a carreira (ou continua em outro computador).</p>
+        <div className="row" style={{ marginBottom: 12 }}>
+          <button className="btn" onClick={exportar}>Exportar carreira</button>
+          <label className="btn ghost file">Importar carreira<input type="file" accept=".json,application/json" onChange={e => e.target.files?.[0] && importar(e.target.files[0])} /></label>
+        </div>
+        {aviso && <p className="mut">{aviso}</p>}
         {!conf ? <button className="btn ghost" onClick={() => setConf(true)}>Apagar carreira e começar de novo</button> :
           <div className="row"><span>Tem certeza? Não dá para desfazer.</span><button className="btn danger" onClick={() => { localStorage.removeItem('esportsceo-v2'); setState(null); }}>Apagar</button><button className="btn ghost" onClick={() => setConf(false)}>Cancelar</button></div>}
       </Panel>

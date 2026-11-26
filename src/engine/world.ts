@@ -10,7 +10,7 @@ const LOGO_SET = new Set<string>(LOGOS as string[]);
 const LOGO_ALIAS: Record<string, string> = {
   'royal-never-give-up': 'royal-club', 'sk-telecom-t1': 't1', 'g2-esports': 'g2', 'damwon-gaming': 'dplus-kia',
   'dwg-kia': 'dplus-kia', 'bilibili-gaming': 'blg', 'gen-g-esports': 'gen-g', 'red-canids': 'red-canids-kalunga',
-  'team-falcons': 'falcons', 'team-falcons-apac': 'falcons', 'team-weibo': 'weibo-gaming',
+  'team-falcons': 'falcons', 'team-falcons-apac': 'falcons', 'team-weibo': 'weibo-gaming', 'aurora-gaming': 'aurora',
 };
 
 export function slug(nome: string): string {
