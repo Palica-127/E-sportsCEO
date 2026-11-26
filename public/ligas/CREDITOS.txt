@@ -1,0 +1,16 @@
+Logos de ligas e torneios — origem (Liquipedia: CC BY-SA 3.0; marcas dos organizadores)
+ff-BR	https://liquipedia.net/commons/images/7/73/Free_Fire_World_Series_Brazil_icon_allmode.png
+ff-LA	https://liquipedia.net/commons/images/e/e2/Free_Fire_World_Series_Latam_icon_allmode.png
+ff-SE	https://liquipedia.net/commons/images/b/b8/Free_Fire_World_Series_SEA_icon_allmode.png
+ff-A	https://liquipedia.net/commons/images/5/5f/Esports_World_Cup_icon_darkmode.png
+ff-B	https://liquipedia.net/commons/images/e/e0/Free_Fire_World_Series_2021_icon_allmode.png
+wr-CN	https://liquipedia.net/commons/images/f/fe/WR_WSL_allmode.png
+wr-EU	https://liquipedia.net/commons/images/4/4f/The_Wild_Rift_Circuit_Legends_icon_allmode.png
+wr-AS	https://liquipedia.net/commons/images/3/39/WRL_Asia_icon_darkmode.png
+wr-A	https://liquipedia.net/commons/images/f/fb/Horizon_Cup_allmode.png
+wr-B	https://liquipedia.net/commons/images/a/a6/WR_ICONS_2022_allmode.png
+fifa-BR	https://liquipedia.net/commons/images/b/be/CONMEBOL_eLibertadores_darkmode.png
+fifa-EU	https://liquipedia.net/commons/images/d/db/EA_FC_Pro_Open_darkmode.png
+fifa-GL	https://liquipedia.net/commons/images/7/7f/EA_FC26_default_allmode.png
+fifa-A	https://liquipedia.net/commons/images/d/d9/EChampions_League_full_darkmode.png
+fifa-B	https://liquipedia.net/commons/images/f/fa/EAFC_Worlds_allmode.png

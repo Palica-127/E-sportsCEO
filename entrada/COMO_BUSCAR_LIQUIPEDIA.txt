@@ -89,3 +89,16 @@ Opções extras do script
   --sem-logos   não baixa logos       --so-logos   só baixa logos
   --todos       refaz também os times que já têm elenco real
   --refazer     ignora o cache e pede tudo de novo (evite: gasta pedidos à toa)
+
+
+LIGAS REAIS (Free Fire, Wild Rift, EA FC)
+-----------------------------------------
+Os times de cada liga, o nome dos campeonatos e o prêmio do campeão ficam em tools/ligas_reais.json
+(montado a partir das tabelas de premiação da Liquipedia de 2026). Para aplicar no jogo:
+
+    python tools/ligas_reais.py ff wr fifa
+    python tools/buscar_liquipedia.py ff wr --todos --contato=SEU_CONTATO     (elencos reais e logos)
+    python tools/buscar_liquipedia.py fifa --contato=SEU_CONTATO              (EA FC: só logos)
+    python tools/importar_imagens.py
+
+Jogos já salvos continuam com as ligas antigas; as novas valem para carreiras novas.

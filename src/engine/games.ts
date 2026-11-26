@@ -35,7 +35,7 @@ export const GAMES: Record<GameId, GameDef> = {
 export const GAME_IDS = Object.keys(GAMES) as GameId[];
 
 export interface RawTeam { n: string; p: (string | number | null)[][] | null; real?: boolean }
-export interface RawLeague { nome: string; regiao: string; premio?: number; t1: RawTeam[]; t2: RawTeam[] }
+export interface RawLeague { nome: string; regiao: string; premio?: number; logo?: string; t1: RawTeam[]; t2: RawTeam[] }
 
 // elencos reais pesquisados (tools/buscar_elencos.py): [nick, nota, idade, nac, nome real], por cima dos dados base
 const cacheLigas: Partial<Record<GameId, Record<string, RawLeague>>> = {};
@@ -61,4 +61,12 @@ export function premioReal(g: GameId, kind: string, region?: string): number | u
   const p = region ? d.leagues[region]?.premio : undefined;
   if (p == null) return undefined;
   return kind === 'split' ? p : kind === 'd2' ? Math.round(p * 0.25 / 1000) * 1000 : undefined;
+}
+
+/** logo da liga/internacional dos outros jogos (public/ligas/<logo>.webp), quando existe */
+export function logoLigaOutros(g: GameId, kind: string, region?: string): string | null {
+  if (g === 'lol') return null;
+  const d = (OUTROS as any)[g];
+  const l = kind === 'intlA' ? d.intl.A.logo : kind === 'intlB' ? d.intl.B.logo : region ? d.leagues[region]?.logo : undefined;
+  return l ? `/ligas/${l}.webp` : null;
 }

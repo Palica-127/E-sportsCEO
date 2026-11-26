@@ -18,7 +18,8 @@ export function slug(nome: string): string {
 }
 /** caminho do logo real, se o usuário colocou o arquivo na pasta logos/ */
 export function logoUrl(sl: string): string | null {
-  const s = LOGO_SET.has(sl) ? sl : LOGO_ALIAS[sl];
+  const base = sl.replace(/-(ii|iii|iv|v|vi)$/, '');  // "Team Liquid II" (EA FC: vários pros da mesma org) usa o logo da org
+  const s = LOGO_SET.has(sl) ? sl : LOGO_ALIAS[sl] ?? (LOGO_SET.has(base) ? base : LOGO_ALIAS[base]);
   return s && LOGO_SET.has(s) ? `${import.meta.env?.BASE_URL ?? '/'}logos/${s}.webp` : null;
 }
 

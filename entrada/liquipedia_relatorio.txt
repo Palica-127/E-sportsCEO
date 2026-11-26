@@ -9,27 +9,27 @@
 [ff] ? NF E-Sport: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
 [ff] ? Docelunas: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
 [ff] ? Chill Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[ff] ? Influence Rage: só 3 titular(es) na página — elenco mantido
-[ff] ? CPT VOX: só 2 titular(es) na página — elenco mantido
-[ff] ? Quisqueya FD: só 2 titular(es) na página — elenco mantido
-[ff] ? Team Akkee: só 1 titular(es) na página — elenco mantido
+[ff] ? Team Akkee: só 3 titular(es) na página — elenco mantido
 [ff] Fluxo W7M: saem Vextorori, Axaxpay, Dolegizz, Nizor1 | entram MT7, Bops, But, Giuh.87
 [ff] LOUD: saem Trap | entram Bzp10
 [ff] RUSH Gaming: saem axruniz, papaxe, axzi, Lumpazz | entram BLACK02, Guimerlq, PROZIN, MitinX
+[ff] Influence Rage: saem kaxe, Axsay, tekkaii, Kahexii | entram Igor7, Lippe!, LYON, NEPO IGN
 [ff] Team Solid: saem Nalez, hexrexzz, Sashox, Parexzz | entram BYTE333, Motovea7, Pitbull, VITINxp
 [ff] LOS: saem vexmo1, Torfuroii, lelo, vovex | entram General, mtsexy, RIGBY, Raone7
 [ff] Alpha7 Esports: saem shokazz, Fuhex, rexpho, Runihex | entram MitoMvp, JNMVP, Sam7, LC777
+[ff] CPT VOX: saem Shohexz, lomio, Zimozz, Zorpa | entram bad9, Gbtrem22, Seven7zk, TREVOR9
 [ff] Loops Esports: saem rexjintorz, shotuz, Tekna, zeziz | entram DRAXX7, Vitin9, PÃO7, iguiNmvp
 [ff] LYON: saem zesao, Shoroy, miorikax, Nazor | entram Haax, Gamezking, Joker, SoyDella
 [ff] Blue Cheese: saem Balky7, Vodrajinx, vextorz, Ruvexhex1 | entram Esteban, Jostin, Naranjo, Stu
 [ff] GunDynasty: saem parukyzz, oribalzi, Tortek, Pado1 | entram David444, BNL, Andrexz, RushFXP
-[ff] HNS Esport: saem zorrozeo, Saxelumy, xehexz, Fudravo | entram Isaias, Souza, Isaiaszxx, Pieroxy
+[ff] HNS Esport: saem zorrozeo, Saxelumy, xehexz, Fudravo | entram Isaias, Souza, Isaiaszxx, Yzfory
 [ff] Bloody Brothers: saem Fumo, Dorux, axsamizz, Fubalorix | entram Shyro, VegaTHK, Vene, LopesXL
 [ff] Estorm DRK: saem xeshohex, lumro1, Nabluii, mina | entram Molina, Kinn, Macuin, Matyzn
 [ff] Leviatán: saem jinmoy, oriaxii, hexze, crirexx | entram FAQ7, Paco07, JOTA, MAXI
+[ff] Quisqueya FD: saem Bluna7, Kyxeo, Girozz, rexbalo | entram Elite, PipeLive, Qluso, Krippy
 [ff] Nova Legión: saem Bluxeii, kysho, Phobluniii, Orishoo | entram Jairitop, Sebas, Strike, Carlxs
-[ff] CACM Esports: saem Furo1, Zikyy, sholoz, Zorvoii | entram Roldan, Floki, Juan, Smoke
-[ff] 9z Team: saem Zorhexzz, Zorvoo, Papao, Lolum7 | entram RUNNER, Chix, Chris, Pingui
+[ff] CACM Esports: saem Furo1, Zikyy, sholoz, Zorvoii | entram Roldan, lexxo9, Floki, Juan
+[ff] 9z Team: saem Zorhexzz, Zorvoo, Papao, Lolum7 | entram RUNNER, Maty, Chix, Chris
 [ff] Infinity: saem jinlox, namiaxy, gisazz, vexruii | entram CHUCKY, David9, Poveda, Pabloo98
 [ff] Bigetron by Vitality: saem Pholoy, Blukaii, balcrio, Bluvo | entram Kyong, Kojaaaa, C1benk, Fellow
 [ff] GOW: saem Jinblux, midoii, Tuoriii, Fukay | entram Demon, Gocu, Piciu, DyanN
@@ -45,18 +45,57 @@
 [ff] Twisted Minds: saem gitekzz, Gidraii, Dona1, Draruii | entram COUGAR, JUMP, THEBAS, DIAMOND
 [ff] Team Vamos: saem Roziz, Mimo, Xedraii, Dophocrix | entram Juann, Jun, TheAxel, Zuezz
 [ff] Maqna Esports Club: saem tormizz, Zisao, ropay, Padoo | entram Getbu, Yannz, Viruz, Winzzy
-[ff] ? RUSH Gaming: página sem logo
-[ff] ? Influence Rage: página sem logo
-[ff] ? Loops Esports: página sem logo
-[ff] ? GunDynasty: página sem logo
-[ff] ? HNS Esport: página sem logo
-[ff] ? Bloody Brothers: página sem logo
-[ff] ? Quisqueya FD: página sem logo
-[ff] ? Nova Legión: página sem logo
-[ff] ? CACM Esports: página sem logo
-[ff] ? 9z Team: página sem logo
-[ff] ? All Gamers Global: página sem logo
-[ff] ? ONIC Olympus: página sem logo
-[ff] ? Buriram United Esports: página sem logo
-[ff] ? Team Akkee: página sem logo
-[ff] ? Maqna Esports Club: página sem logo
+[wr] ? Nova Esports: a página "Nova Esports (Chinese Team)" diz que o time acabou — elenco mantido
+[wr] ? G2 Blacklist: a página "G2 Blacklist" diz que o time acabou — elenco mantido
+[wr] ? Buriram United Esports: a página "Buriram United Esports" diz que o time acabou — elenco mantido
+[wr] ? Team Flash: a página "Team Flash" diz que o time acabou — elenco mantido
+[wr] ? INVATE Esports: a página "INVATE Esports" diz que o time acabou — elenco mantido
+[wr] ? MDG Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Xing Ou Wan: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? No Sponsor Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? HuA Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Solo Leveling: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Faust Team: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Burmese Ghouls: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Find Dog: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? SANE4KA: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Durian Pizza: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? SOUSOU: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? KSO CREED: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Ilyshka & 4Q: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? 74 CLUB: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? BRUTE: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Train to kill: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? ONLY FORWARD: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? F1VE: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Sbo3a: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? JSK Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Real1: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Mango Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? J Team: só 1 titular(es) na página — elenco mantido
+[wr] ? Thunder Gaming: só 4 titular(es) na página — elenco mantido
+[wr] ? EDward Gaming: só 3 titular(es) na página — elenco mantido
+[wr] ThunderTalk Gaming: saem Moky, Samoz, axrolumz, hexcri, miaxzz | entram Xin, Xbai, Z, KK, qingshan
+[wr] 5Power Gaming: saem zenazz, Origiax, Jinlo, Zezex, Dodo7 | entram Xiaomai, Jiangzhi, Soldier, lin11, Awei
+[wr] Radiant Virtue: saem vogicriii, Tuxeo, Vexruo, Zemo, Zivo | entram XZhang, Huiba, Anran9, Berry, Tak
+[wr] KeepBest Gaming: saem robaltor1, Zimoaxy, zile, Drana, kydomi1 | entram Xzhen, DaT, Jimeng, Xiaoma, Uu
+[wr] Team Weibo: saem rexax7, vexaxru, mirex, rozimizz, Tuphoii | entram MaxPower, XiaoG, Yousa, TenMiss, XcOvo
+[wr] SSONE: saem xemo, ruphox, Crijinphoo, padovo, Vexbalzizz | entram meng7, zm, kxhb, Yuri, smy
+[wr] WuHu Gaming: saem Satorori, teklumo, Jinsao, Dralumy, Tordohexx | entram Zhou, Jun., Awen, Mie, Intro
+[wr] Arrogant Conquer Esports: saem Lumvo1, Sazorz, nize7, zicriii, orikyhexii | entram Goddog, Xs, shanhai, tt2, yisui
+[wr] Fish Gaming: saem Draromix, zijinlum, zikatorx, zepay, rujingio | entram GodD, manre, yuchen, NuanJin, en7
+[wr] KT Rolster: saem ziax1, Voroz, Bluzeo, drazorvo, Tekrumizz | entram Ratel, Do, XerO, Luna, NomeL
+[wr] NAOS Esports: saem Kyshogiii, Kavozz, Lumnao, Rotor, Tuoripa1 | entram Calm, etaf, Mitsura, Mirmoooo, Margaux
+[wr] CERBERUS Esports: saem Hexzezz, mikafux, Axpatuii, lepa, dralox | entram BMM, Meliodas, Taku, Genza, DuckB
+[wr] FENNEL: saem Torjinx, Nina1, Moxe1, tekaxz, rotor7 | entram Speltz, Chaazz, Helios, Dani, Orthros
+[wr] SBTC Esports: saem doxephoo, furuorix, Zordo1, teklo, Hexaxbluo | entram Neyun, TF, T3, Mina, Akeno
+[wr] Saigon Phantom: saem zorzi, Kytor, fuvoy, mimozz, jinzivexzz | entram Gony, Blake1, Tisus, Gunner, Vigoss
+[fifa] ? Ajax eSports: a página "Ajax eSports" diz que o time acabou — elenco mantido
+[fifa] ? AS Monaco Esports: a página "AS Monaco Esports" diz que o time acabou — elenco mantido
+[fifa]   (PSV = "PSV Esports" na Liquipedia)
+[fifa] ? ENX: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Stellae Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Sassuolo: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Al Qadsiah: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Holstein Kiel: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] elencos do EA FC vêm do tools/ligas_reais.py (um pro por time); aqui só os logos

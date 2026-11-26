@@ -172,14 +172,15 @@ def elenco_montado(g, titulo, txt):
             if not tds: continue
             col = {cab[i] if i < len(cab) else str(i): v for i, v in enumerate(tds)}
             idc = col.get('id', tds[0])
-            a = re.search(r'<a href="[^"]*" title="([^"]+)"[^>]*>(.*?)</a>', idc, re.S)
+            a = re.search(r'<a href="[^"]*"[^>]*? title="([^"]+)"[^>]*>(.*?)</a>', idc, re.S)  # inclui link de página inexistente (class="new")
             if not a: continue
             pais = re.search(r'<span class="flag"><img alt="([^"]+)"', idc)
             txtc = lambda k: H.unescape(re.sub(r'<sup.*?</sup>|<[^>]+>', '', col.get(k, ''), flags=re.S)).strip()
-            role = txtc('position') or txtc('role')
+            role = txtc('position') or txtc('role') or txtc('')  # às vezes a coluna da função não tem título
             if NAO_JOGA.search(role) or txtc('leave date') or txtc('inactive date'): continue
             nick = H.unescape(re.sub(r'<[^>]+>', '', a.group(2))).strip()
-            out.append({'nick': nick, 'link': H.unescape(a.group(1)), 'nat': be.iso(pais.group(1)) if pais else None,
+            existe = '(page does not exist)' not in a.group(1)
+            out.append({'nick': nick, 'link': H.unescape(a.group(1)) if existe else None, 'nat': be.iso(pais.group(1)) if pais else None,
                         'nome': txtc('name') or None, 'role': role})
     return out
 
@@ -301,8 +302,12 @@ def processa(g, saida, rel):
     nomes = list(atuais)
     if '--times' in OPC: nomes = [t for t in nomes if t in OPC['--times'].split(',')]
     elif g in be.FONTES and '--todos' not in OPC: nomes = [t for t in nomes if t not in over]  # só o que as outras fontes não acharam
+    if g == 'fifa': nomes = [t for t in nomes if not re.search(r' (II|III|IV|V|VI)$', t)]  # "Team Liquid II" usa o logo da org
     print(f'[{g}] {len(nomes)} times — procurando as páginas na Liquipedia ({WIKI[g]})', flush=True)
     achados = acha_times(g, nomes, rel)
+    if g == 'fifa' and '--so-logos' not in OPC:
+        rel.append('[fifa] elencos do EA FC vêm do tools/ligas_reais.py (um pro por time); aqui só os logos')
+        OPC['--so-logos'] = True
     if '--so-logos' not in OPC:
         auto = [t for t, p in achados.items() if not elenco_ativo(p['texto'])]
         if auto: print(f'[{g}] {len(auto)} times com elenco automático: ~{len(auto) * 31 // 60 + 1} min (1 página a cada 30 s)', flush=True)
@@ -314,10 +319,10 @@ def processa(g, saida, rel):
             if len(js) < ROLES_N[g]:
                 rel.append(f'[{g}] ? {t}: só {len(js)} titular(es) na página — elenco mantido'); del elencos[t]
         print(f'[{g}] lendo {sum(map(len, elencos.values()))} páginas de jogadores', flush=True)
-        pj = paginas(g, [j['link'] for js in elencos.values() for j in js], 'jogadores')
+        pj = paginas(g, [j['link'] for js in elencos.values() for j in js if j['link']], 'jogadores')
         for js in elencos.values():
             for j in js:
-                ib = infobox((pj.get(j['link']) or {}).get('texto', ''), r'Infobox player')
+                ib = infobox((pj.get(j['link'] or '') or {}).get('texto', ''), r'Infobox player')
                 j['nasc'] = (re.search(r'\d{4}-\d{2}-\d{2}', ib.get('birth_date', '')) or [None])[0]
                 j['nat'] = nat_iso(ib.get('country')) or nat_iso(j['nat'])
                 j['nome'] = ib.get('romanized_name') or ib.get('name') or j['nome']

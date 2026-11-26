@@ -1,0 +1,619 @@
+{
+ "ff": {
+  "fonte": "FFWS Brasil 2026 Split 2 (+ E1 Sports do Split 1), FFWS LATAM 2026 Split 2, FFWS SEA 2026 Fall",
+  "ligas": [
+   {
+    "id": "BR",
+    "nome": "FFWS Brasil",
+    "regiao": "Brasil",
+    "premio_usd": 44081,
+    "t1": [
+     "Fluxo W7M",
+     "LOUD",
+     "RUSH Gaming",
+     "Influence Rage",
+     "Team Solid",
+     "LOS",
+     "Alpha7 Esports",
+     "RISE Gaming"
+    ],
+    "t2": [
+     "SX TET",
+     "CPT VOX",
+     "INTZ",
+     "AFG E-Sports",
+     "Loops Esports",
+     "Civis",
+     "E1 Sports"
+    ],
+    "logo": "ff-BR"
+   },
+   {
+    "id": "LA",
+    "nome": "FFWS LATAM",
+    "regiao": "América Latina",
+    "premio_usd": 40000,
+    "t1": [
+     "LYON",
+     "Blue Cheese",
+     "GunDynasty",
+     "HNS Esport",
+     "Bloody Brothers",
+     "Estorm DRK",
+     "Leviatán",
+     "Quisqueya FD"
+    ],
+    "t2": [
+     "Nova Legión",
+     "CACM Esports",
+     "9z Team",
+     "Infinity",
+     "NF E-Sport",
+     "Docelunas",
+     "Chill Esports"
+    ],
+    "logo": "ff-LA"
+   },
+   {
+    "id": "SE",
+    "nome": "FFWS SEA",
+    "regiao": "Sudeste Asiático",
+    "premio_usd": 95000,
+    "t1": [
+     "Bigetron by Vitality",
+     "GOW",
+     "P Esports",
+     "All Gamers Global",
+     "Team Flash",
+     "RRQ Kazu",
+     "ONIC Olympus",
+     "Buriram United Esports"
+    ],
+    "t2": [
+     "MBR Omega",
+     "Secret WAG",
+     "Team Falcons",
+     "Twisted Minds",
+     "Team Akkee",
+     "Team Vamos",
+     "Maqna Esports Club"
+    ],
+    "logo": "ff-SE"
+   }
+  ],
+  "intl": {
+   "A": {
+    "nome": "Esports World Cup",
+    "premio_usd": 300000,
+    "logo": "ff-A"
+   },
+   "B": {
+    "nome": "FFWS Global Finals",
+    "premio_usd": 350000,
+    "logo": "ff-B"
+   }
+  },
+  "paginas": {
+   "RUSH Gaming": "RUSH Gaming (Mobile)"
+  }
+ },
+ "wr": {
+  "fonte": "Wild Rift Super League 2026 Summer e 2025 (China), Rift Legends 2026 Spring (Europa, amadora), WRL Asia 2023 S2 APAC e promoção 2024 (Ásia: sem liga ativa desde 2024)",
+  "cluster": {
+   "CN": "CN",
+   "AS": "APAC",
+   "EU": "EUR"
+  },
+  "ligas": [
+   {
+    "id": "CN",
+    "nome": "Wild Rift Super League",
+    "regiao": "China",
+    "premio_usd": 144047,
+    "t1": [
+     "ThunderTalk Gaming",
+     "5Power Gaming",
+     "Radiant Virtue",
+     "KeepBest Gaming",
+     "Team Weibo",
+     "SSONE",
+     "WuHu Gaming",
+     "Arrogant Conquer Esports"
+    ],
+    "t2": [
+     "J Team",
+     "Thunder Gaming",
+     "Fish Gaming",
+     "MDG Esports",
+     "Nova Esports",
+     "Xing Ou Wan",
+     "EDward Gaming"
+    ],
+    "logo": "wr-CN"
+   },
+   {
+    "id": "AS",
+    "nome": "Wild Rift League Asia",
+    "regiao": "Ásia-Pacífico",
+    "premio_usd": 105034,
+    "t1": [
+     "KT Rolster",
+     "G2 Blacklist",
+     "NAOS Esports",
+     "CERBERUS Esports",
+     "FENNEL",
+     "Buriram United Esports",
+     "Team Flash",
+     "INVATE Esports"
+    ],
+    "t2": [
+     "No Sponsor Esports",
+     "HuA Esports",
+     "Solo Leveling",
+     "Faust Team",
+     "SBTC Esports",
+     "Saigon Phantom",
+     "Burmese Ghouls"
+    ],
+    "logo": "wr-AS"
+   },
+   {
+    "id": "EU",
+    "nome": "Rift Legends",
+    "regiao": "Europa",
+    "premio_usd": 3500,
+    "t1": [
+     "Find Dog",
+     "SANE4KA",
+     "Durian Pizza",
+     "SOUSOU",
+     "KSO CREED",
+     "Ilyshka & 4Q",
+     "74 CLUB",
+     "BRUTE"
+    ],
+    "t2": [
+     "Train to kill",
+     "ONLY FORWARD",
+     "F1VE",
+     "Sbo3a",
+     "JSK Esports",
+     "Real1",
+     "Mango Esports"
+    ],
+    "logo": "wr-EU"
+   }
+  ],
+  "intl": {
+   "A": {
+    "nome": "Horizon Cup",
+    "premio_usd": 100000,
+    "logo": "wr-A"
+   },
+   "B": {
+    "nome": "Icons Global Championship",
+    "premio_usd": 640000,
+    "logo": "wr-B"
+   }
+  },
+  "paginas": {
+   "Nova Esports": "Nova Esports (Chinese Team)"
+  }
+ },
+ "fifa": {
+  "fonte": "eLibertadores 2026 (sul-americanos), FC Pro 26 Open (Europa), FC Pro 26 World Championship (resto); clube/org real de cada pro",
+  "cluster": {
+   "BR": "BR",
+   "EU": "EUR",
+   "GL": "GLOBAL"
+  },
+  "ligas": [
+   {
+    "id": "BR",
+    "nome": "eLibertadores",
+    "regiao": "América do Sul",
+    "premio_usd": 35000,
+    "t1": [
+     {
+      "n": "Team Liquid",
+      "nick": "Paulo Neto",
+      "idade": 23,
+      "nat": "br",
+      "nome": "Paulo Neto",
+      "pagina": "Paulo Neto"
+     },
+     {
+      "n": "Tuzzy E-Sports",
+      "nick": "PHzin",
+      "idade": 23,
+      "nat": "br",
+      "nome": "Paulo Henrique Chaves",
+      "pagina": "PHzin"
+     },
+     {
+      "n": "Manchester City",
+      "nick": "GugaFerraz",
+      "idade": 18,
+      "nat": "br",
+      "nome": "Gustavo Ferraz",
+      "pagina": "GugaFerraz"
+     },
+     {
+      "n": "Tuzzy E-Sports II",
+      "nick": "Cowen",
+      "idade": 23,
+      "nat": "ar",
+      "nome": "Facundo Cowen",
+      "pagina": "Cowen"
+     },
+     {
+      "n": "9z Team",
+      "nick": "derpeedcl",
+      "idade": null,
+      "nat": "cl",
+      "nome": "Claudio Olhaberry",
+      "pagina": "Derpeedcl"
+     },
+     {
+      "n": "Tuzzy E-Sports III",
+      "nick": "Rampazzo",
+      "idade": 27,
+      "nat": "br",
+      "nome": "Vinícius Rampazzo",
+      "pagina": "Rampazzo"
+     },
+     {
+      "n": "Ninjas in Pyjamas",
+      "nick": "nicolas99fc",
+      "idade": 27,
+      "nat": "ar",
+      "nome": "Nicolas Villalba",
+      "pagina": "Nicolas99fc"
+     },
+     {
+      "n": "RBLZ Gaming",
+      "nick": "GuiBarros",
+      "idade": 22,
+      "nat": "br",
+      "nome": "Guilherme Barros",
+      "pagina": "GuiBarros"
+     }
+    ],
+    "t2": [
+     {
+      "n": "RBLZ YoungstarZ",
+      "nick": "Kiketo",
+      "idade": 24,
+      "nat": "ar",
+      "nome": "Lautaro Carletti",
+      "pagina": "Kiketo"
+     },
+     {
+      "n": "ENX",
+      "nick": "Ezecorrea1802",
+      "idade": 23,
+      "nat": "ar",
+      "nome": "Ezequiel Correa",
+      "pagina": "Ezecorrea1802"
+     },
+     {
+      "n": "Exeed",
+      "nick": "Giuliano2001",
+      "idade": 25,
+      "nat": "ar",
+      "nome": "Giuliano Olivieri",
+      "pagina": "Giuliano2001"
+     },
+     {
+      "n": "Tuzzy E-Sports IV",
+      "nick": "Joelr_21",
+      "idade": 22,
+      "nat": "ar",
+      "nome": "Joel Soto",
+      "pagina": "Joelr 21"
+     },
+     {
+      "n": "Stellae Gaming",
+      "nick": "Big",
+      "idade": null,
+      "nat": "br",
+      "nome": "Vitor Oller",
+      "pagina": "Vitor"
+     },
+     {
+      "n": "Stellae Gaming II",
+      "nick": "Dudu27",
+      "idade": 23,
+      "nat": "br",
+      "nome": "Eduardo Oller",
+      "pagina": "Dudu"
+     },
+     {
+      "n": "Exeed II",
+      "nick": "zuvi17",
+      "idade": null,
+      "nat": "ar",
+      "nome": "Lautaro Zuviria",
+      "pagina": "Zuvi17"
+     }
+    ],
+    "logo": "fifa-BR"
+   },
+   {
+    "id": "EU",
+    "nome": "FC Pro Open",
+    "regiao": "Europa",
+    "premio_usd": 100000,
+    "t1": [
+     {
+      "n": "Team Falcons",
+      "nick": "Vejrgang",
+      "idade": 20,
+      "nat": "dk",
+      "nome": "Anders Vejrgang",
+      "pagina": "Vejrgang"
+     },
+     {
+      "n": "Team Liquid II",
+      "nick": "EmreYilmaz",
+      "idade": 22,
+      "nat": "nl",
+      "nome": "Emre Yilmaz",
+      "pagina": "EmreYilmaz"
+     },
+     {
+      "n": "Team Liquid III",
+      "nick": "Levi de Weerd",
+      "idade": 22,
+      "nat": "nl",
+      "nome": "Levi de Weerd",
+      "pagina": "LevideWeerd"
+     },
+     {
+      "n": "NOVO Esports",
+      "nick": "Danipitbull",
+      "idade": 28,
+      "nat": "it",
+      "nome": "Danilo Pinto",
+      "pagina": "Danipitbull"
+     },
+     {
+      "n": "Team Liquid IV",
+      "nick": "ManuBachoore",
+      "idade": 21,
+      "nat": "nl",
+      "nome": "Manuel Bachoore",
+      "pagina": "Manuel"
+     },
+     {
+      "n": "RBLZ Gaming II",
+      "nick": "Umut",
+      "idade": 23,
+      "nat": "de",
+      "nome": "Umut Gültekin",
+      "pagina": "Umut"
+     },
+     {
+      "n": "Ninjas in Pyjamas II",
+      "nick": "HHezerS",
+      "idade": 27,
+      "nat": "it",
+      "nome": "Lucio Vecchione",
+      "pagina": "HHezerS"
+     },
+     {
+      "n": "SC Freiburg",
+      "nick": "Nassada",
+      "idade": null,
+      "nat": "de",
+      "nome": "Nassim Dahman",
+      "pagina": "Nassada"
+     }
+    ],
+    "t2": [
+     {
+      "n": "Team RA'AD",
+      "nick": "AnasBadr",
+      "idade": null,
+      "nat": "eg",
+      "nome": "Anas Badr",
+      "pagina": "AnasBadr"
+     },
+     {
+      "n": "Clermont Foot 63",
+      "nick": "Yaskow",
+      "idade": 22,
+      "nat": "fr",
+      "nome": "Yanis Boucebaine",
+      "pagina": "Yaskoowww"
+     },
+     {
+      "n": "Betclic Apogee Esports",
+      "nick": "tuga810",
+      "idade": 27,
+      "nat": "pt",
+      "nome": "Diogo Pombo",
+      "pagina": "Tuga810"
+     },
+     {
+      "n": "Twisted Minds",
+      "nick": "LJR Peixoto",
+      "idade": 23,
+      "nat": "fr",
+      "nome": "Leandro Peixoto",
+      "pagina": "LPeixoto"
+     },
+     {
+      "n": "Exeed III",
+      "nick": "Obrun2002",
+      "idade": 24,
+      "nat": "it",
+      "nome": "Francesco Pio Tagliafierro",
+      "pagina": "Obrun2002"
+     },
+     {
+      "n": "RBLZ Gaming III",
+      "nick": "Alihan",
+      "idade": 18,
+      "nat": "bg",
+      "nome": "Alihan Hadzhi",
+      "pagina": "Alihan"
+     },
+     {
+      "n": "RBLZ Gaming IV",
+      "nick": "Tekkz",
+      "idade": 25,
+      "nat": "gb",
+      "nome": "Donovan Hunt",
+      "pagina": "Tekkz"
+     }
+    ],
+    "logo": "fifa-EU"
+   },
+   {
+    "id": "GL",
+    "nome": "FC Pro Play-Ins",
+    "regiao": "Mundo",
+    "premio_usd": 35000,
+    "premio_obs": "estimado: a Liquipedia ainda não divulgou o 1º lugar",
+    "t1": [
+     {
+      "n": "HYPERSPIRIT",
+      "nick": "RvPLegend",
+      "idade": 23,
+      "nat": "ro",
+      "nome": "Razvan Puiu",
+      "pagina": "RvPLegend"
+     },
+     {
+      "n": "RBLZ Gaming V",
+      "nick": "levyfinn",
+      "idade": 24,
+      "nat": "de",
+      "nome": "Levy Finn Rieck",
+      "pagina": "Levyfinn"
+     },
+     {
+      "n": "Manchester City II",
+      "nick": "Bonanno",
+      "idade": 24,
+      "nat": "ar",
+      "nome": "Matías Bonanno",
+      "pagina": "Matias"
+     },
+     {
+      "n": "Sassuolo",
+      "nick": "samugamer",
+      "idade": null,
+      "nat": "it",
+      "nome": "Samuele Prestigiacomo",
+      "pagina": "Samugamer 07"
+     },
+     {
+      "n": "Al Qadsiah",
+      "nick": "AbuMakkah",
+      "idade": 25,
+      "nat": "sa",
+      "nome": "Ahmad Mujahid",
+      "pagina": "AboMakkah"
+     },
+     {
+      "n": "Team Falcons II",
+      "nick": "Msdossary",
+      "idade": 26,
+      "nat": "sa",
+      "nome": "Mossad Aldossary",
+      "pagina": "Msdossary"
+     },
+     {
+      "n": "Holstein Kiel",
+      "nick": "Milkalove",
+      "idade": 21,
+      "nat": "de",
+      "nome": "Justin Springer",
+      "pagina": "Milkalove"
+     },
+     {
+      "n": "Cádiz CF",
+      "nick": "DFernandes",
+      "idade": 21,
+      "nat": "pt",
+      "nome": "Daniel Fernandes",
+      "pagina": "DFernandes"
+     }
+    ],
+    "t2": [
+     {
+      "n": "Atlético de Madrid",
+      "nick": "Neat",
+      "idade": 22,
+      "nat": "es",
+      "nome": "Ander Tobal",
+      "pagina": "Neat"
+     },
+     {
+      "n": "Ajax eSports",
+      "nick": "Chris de Boer",
+      "idade": 19,
+      "nat": "nl",
+      "nome": "Chris de Boer",
+      "pagina": "ChrisdeBoer"
+     },
+     {
+      "n": "AS Monaco Esports",
+      "nick": "Karimisbak",
+      "idade": 23,
+      "nat": "ma",
+      "nome": "Karim Rmaiti",
+      "pagina": "Karimisbak"
+     },
+     {
+      "n": "PSV",
+      "nick": "Luuk",
+      "idade": null,
+      "nat": "nl",
+      "nome": "Luuk Wijdeveld",
+      "pagina": "Luuk"
+     },
+     {
+      "n": "Manchester City III",
+      "nick": "jafonsogv",
+      "idade": 22,
+      "nat": "pt",
+      "nome": "João Afonso Vasconcelos",
+      "pagina": "Jafonsogv"
+     },
+     {
+      "n": "Borussia Dortmund",
+      "nick": "Virgil",
+      "idade": null,
+      "nat": "it",
+      "nome": "Francesco Allocca",
+      "pagina": "Virgil"
+     },
+     {
+      "n": "Exeed IV",
+      "nick": "Caccia",
+      "idade": 28,
+      "nat": "it",
+      "nome": "Raffaele Cacciapuoti",
+      "pagina": "Er Caccia98"
+     }
+    ],
+    "logo": "fifa-GL"
+   }
+  ],
+  "intl": {
+   "A": {
+    "nome": "eChampions League",
+    "premio_usd": 75000,
+    "logo": "fifa-A"
+   },
+   "B": {
+    "nome": "FC Pro World Championship",
+    "premio_usd": 250000,
+    "logo": "fifa-B"
+   }
+  }
+ }
+}

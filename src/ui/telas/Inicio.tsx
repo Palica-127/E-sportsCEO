@@ -1,6 +1,6 @@
 import { CSSProperties, ReactElement, useState } from 'react';
 import { AlertTriangle, ThumbsUp, Trophy } from 'lucide-react';
-import { GAMES, GameId } from '../../engine/games';
+import { GAMES, GameId, logoLigaOutros } from '../../engine/games';
 import { calendario, inicioAno, nomeIntl } from '../../engine/comp';
 import { probSerie } from '../../engine/match';
 import { moeda } from '../../engine/org';
@@ -15,7 +15,7 @@ import type { State } from '../../engine/types';
 
 const LOGO_LIGA: Record<string, string> = { CBLOL: 'cblol', LCK: 'lck', LPL: 'lpl', LEC: 'lec', LCS: 'lcs', LCP: 'lcp' };
 function logoComp(g: GameId, kind: string, region?: string): string | null {
-  if (g !== 'lol') return null;
+  if (g !== 'lol') return logoLigaOutros(g, kind, region);
   if (kind === 'msi' || kind === 'fs') return '/ligas/msi.webp';
   if (kind === 'worlds' || kind === 'ewc') return '/ligas/mundial.webp';
   return region && LOGO_LIGA[region] ? `/ligas/${LOGO_LIGA[region]}.webp` : null;
