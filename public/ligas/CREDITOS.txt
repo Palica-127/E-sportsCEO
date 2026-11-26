@@ -14,3 +14,13 @@ fifa-EU	https://liquipedia.net/commons/images/d/db/EA_FC_Pro_Open_darkmode.png
 fifa-GL	https://liquipedia.net/commons/images/7/7f/EA_FC26_default_allmode.png
 fifa-A	https://liquipedia.net/commons/images/d/d9/EChampions_League_full_darkmode.png
 fifa-B	https://liquipedia.net/commons/images/f/fa/EAFC_Worlds_allmode.png
+cs2-A	https://liquipedia.net/commons/images/4/4d/Intel_Extreme_Masters_2022_icon_allmode.png
+valorant-A	https://liquipedia.net/commons/images/4/4e/VCT_Masters_icon_allmode.png
+valorant-B	https://liquipedia.net/commons/images/a/ae/VCT_Champions_icon_allmode.png
+valorant-AM	https://liquipedia.net/commons/images/0/09/VCT_2023_Americas_League_allmode.png
+valorant-EM	https://liquipedia.net/commons/images/9/95/VCT_2024_EMEA_League_darkmode.png
+valorant-PC	https://liquipedia.net/commons/images/5/54/VCT_2023_Pacific_League_allmode.png
+dota2-A	https://liquipedia.net/commons/images/1/10/DreamLeague_2023_icon_darkmode.png
+dota2-B	https://liquipedia.net/commons/images/0/02/The_International_2026_aegis_allmode.png
+r6-A	https://liquipedia.net/commons/images/7/78/BR6_Major_Symbol_darkmode.png
+r6-B	https://liquipedia.net/commons/images/5/58/Six_Invitational_2026_darkmode.png

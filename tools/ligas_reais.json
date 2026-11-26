@@ -615,5 +615,78 @@
     "logo": "fifa-B"
    }
   }
+ },
+ "cs2": {
+  "fonte": "Liquipedia: IEM Cologne Major 2026 (campeão US$ 500 mil); o Major do fim do ano usa o mesmo valor (PGL Major Singapore 2026 ainda sem resultado)",
+  "intl": {
+   "A": {
+    "nome": "IEM Cologne Major",
+    "premio_usd": 500000,
+    "logo": "cs2-A"
+   },
+   "B": {
+    "nome": "CS2 Major Championship",
+    "premio_usd": 500000
+   }
+  }
+ },
+ "valorant": {
+  "fonte": "Liquipedia: VCT 2026 (Stage 2 das ligas, Masters London, Champions Shanghai)",
+  "ligas_info": {
+   "AM": {
+    "premio_usd": 100000,
+    "logo": "valorant-AM"
+   },
+   "EM": {
+    "premio_usd": 100000,
+    "logo": "valorant-EM"
+   },
+   "PC": {
+    "premio_usd": 100000,
+    "logo": "valorant-PC"
+   }
+  },
+  "intl": {
+   "A": {
+    "nome": "VALORANT Masters",
+    "premio_usd": 350000,
+    "logo": "valorant-A"
+   },
+   "B": {
+    "nome": "VALORANT Champions",
+    "premio_usd": 1000000,
+    "logo": "valorant-B"
+   }
+  }
+ },
+ "dota2": {
+  "fonte": "Liquipedia: DreamLeague Season 29 e The International 2026",
+  "intl": {
+   "A": {
+    "nome": "DreamLeague",
+    "premio_usd": 290000,
+    "logo": "dota2-A"
+   },
+   "B": {
+    "nome": "The International",
+    "premio_usd": 1660200,
+    "logo": "dota2-B"
+   }
+  }
+ },
+ "r6": {
+  "fonte": "Liquipedia: BLAST R6 Major Salt Lake City 2026 e Six Invitational 2026",
+  "intl": {
+   "A": {
+    "nome": "BLAST R6 Major",
+    "premio_usd": 200000,
+    "logo": "r6-A"
+   },
+   "B": {
+    "nome": "Six Invitational",
+    "premio_usd": 1000000,
+    "logo": "r6-B"
+   }
+  }
  }
 }

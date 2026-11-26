@@ -81,6 +81,11 @@ def get(url, host_wait=0.0, binario=False, referer=None, texto=False):
             return d
         except Bloqueado:
             raise
+        except RuntimeError as e:
+            if 'missingtitle' in str(e) or 'invalidtitle' in str(e): raise  # página não existe: insistir não adianta
+            _ult[host] = time.time()
+            if tent == 5: raise
+            print(f'    ! {e} — tentando de novo em {10 * (tent + 1)} s', flush=True); time.sleep(10 * (tent + 1))
         except Exception as e:
             _ult[host] = time.time()
             if tent == 5: raise

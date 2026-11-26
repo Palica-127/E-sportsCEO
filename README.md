@@ -43,6 +43,10 @@ Fotos automáticas: `python tools/buscar_fotos.py [lol cs2 ...]` baixa as fotos 
 
 Elencos reais: `python tools/buscar_elencos.py [lol valorant r6 cs2]` pesquisa titulares, nome verdadeiro, nacionalidade e idade (LoL: Leaguepedia; Valorant: vlr.gg; R6: siege.gg; CS2 e aniversários: prosettings.net) e grava `src/data/elencos.json`, que o jogo aplica por cima de `lol.json`/`outros.json` ao criar um novo save. O que mudou e o que não foi achado fica em `entrada/elencos_relatorio.txt`. Dota 2, Free Fire, EA FC e Wild Rift dependem da Liquipedia.
 
+Liquipedia (API oficial, devagar e com contato no User-Agent): `python tools/buscar_liquipedia.py ff wr --contato=...` traz elencos ativos, nome real, país, nascimento e logos. As ligas reais de 2026 (Free Fire, Wild Rift e EA FC: times na ordem da classificação) e os nomes e prêmios reais dos internacionais de todos os jogos ficam em `tools/ligas_reais.json`, aplicados com `python tools/ligas_reais.py`. O prêmio do campeão no jogo é o valor real em US$ × 4. Passo a passo em `entrada/COMO_BUSCAR_LIQUIPEDIA.txt`.
+
+Troféus: Aegis do Dota 2 (foto livre do Wikimedia Commons); os outros jogos usam troféus desenhados por `python tools/gerar_trofeus.py`. Logos das ligas em `public/ligas/`.
+
 Quem não tem logo usa um escudo gerado com sigla e cor. Quem não tem foto usa um avatar com as iniciais.
 
 ## Fase 2 (feita)

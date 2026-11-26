@@ -10,7 +10,7 @@ campeão em US$, nomes dos internacionais). Só mexe nos jogos pedidos.
   - Grava a página de cada time na Liquipedia em entrada/liquipedia_alias.json e, quando as regiões
     mudam, o sorteio de nacionalidade dos jogadores gerados (src/data/nomes.json).
 
-Uso: python tools/ligas_reais.py ff wr fifa
+Uso: python tools/ligas_reais.py ff wr fifa      (cs2, valorant, dota2, r6: só nomes, prêmios e logos)
 Depois: python tools/buscar_liquipedia.py ff wr --todos --contato=...   e   python tools/importar_imagens.py
 """
 import json, random, sys
@@ -33,7 +33,21 @@ def nick(r, usados):
 
 def chave(s): return ''.join(c for c in str(s).lower() if c.isalnum())
 
+def so_nomes(g, jogo, cfg):
+    """jogos com times já reais: só nome, prêmio e logo dos internacionais (e das ligas, se houver)"""
+    for rid, v in cfg.get('ligas_info', {}).items():
+        L = jogo['leagues'][rid]
+        if 'nome' in v: L['nome'] = v['nome']
+        if 'premio_usd' in v: L['premio'] = v['premio_usd'] * PRECO_USD
+        if 'logo' in v: L['logo'] = v['logo']
+    for k, v in cfg['intl'].items():
+        I = jogo['intl'][k]
+        I['nome'] = v['nome']; I['premio'] = v['premio_usd'] * PRECO_USD
+        if v.get('logo'): I['logo'] = v['logo']
+    return [], []
+
 def aplica(g, jogo, cfg, elencos):
+    if 'ligas' not in cfg: return so_nomes(g, jogo, cfg)
     antigos = {t['n']: t for L in jogo['leagues'].values() for t in L['t1'] + L['t2']}
     nota_antiga = {chave(p[0]): p[1] for t in antigos.values() for p in t['p']}
     usados = {str(p[0]).lower() for t in antigos.values() for p in t['p']}

@@ -35,7 +35,7 @@ describe('motor', () => {
     // LoL: 3 splits x 12 ligas + First Stand, MSI, EWC, Mundial; CS2: 3 x 6 + 2 internacionais
     expect(h27.length).toBe(36 + 4 + 18 + 2);
     const nomes = h27.map(h => h.nome);
-    for (const n of ['First Stand 2027', 'MSI 2027', 'Esports World Cup 2027', 'Mundial 2027', 'IEM Major 2027', 'Mundial CS2 2027']) expect(nomes).toContain(n);
+    for (const n of ['First Stand 2027', 'MSI 2027', 'Esports World Cup 2027', 'Mundial 2027', 'IEM Cologne Major 2027', 'CS2 Major Championship 2027']) expect(nomes).toContain(n);
     const acessos = Object.values(s.torneios).filter(t => t.kind === 'acesso' && t.fim);
     expect(acessos.length).toBe(3 * 9);
     rodaDias(s, 364);
