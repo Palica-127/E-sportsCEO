@@ -99,3 +99,4 @@ as-monaco-esports	https://liquipedia.net/commons/images/7/78/AS_Monaco_allmode.p
 burmese-ghouls	https://liquipedia.net/commons/images/3/3c/Burmese_Ghouls_2023_darkmode.png
 sbo3a	https://liquipedia.net/commons/images/9/9d/Sbo3a_2024_allmode.png
 solo-leveling	https://liquipedia.net/commons/images/5/52/Solo_Leveling_darkmode.png
+find-dog sane4ka durian-pizza sousou kso-creed ilyshka-4q 74-club train-to-kill only-forward f1ve real1: logos originais desenhados por tools/gerar_logos.py (o time não tem logo público)
