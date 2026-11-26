@@ -985,3 +985,17 @@ input[type=range] { width: 100%; padding: 0; accent-color: var(--cyan); }
 /* botão de arquivo (importar carreira) */
 .btn.file { cursor: pointer; display: inline-flex; align-items: center; }
 .btn.file input { display: none; }
+
+/* comparar jogadores */
+.cmp-busca { position: relative; margin-bottom: 12px; }
+.cmp-busca input { width: 100%; }
+.cmp-busca .busca-r { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; }
+.cmp-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.cmp-a, .cmp-b { display: flex; align-items: center; gap: 10px; }
+.cmp-a b { color: #2ec5e8; } .cmp-b b { color: #f0aa3c; } .cmp-b { text-align: right; }
+.cmp-top small { display: block; color: var(--mut, #9aa4b8); font-size: 12px; }
+.cmp-tab { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.cmp-tab td, .cmp-tab th { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.cmp-tab th { text-align: center; color: #9aa4b8; font-weight: 600; font-size: 12px; text-transform: uppercase; width: 34%; }
+.cmp-tab td:first-child { text-align: right; } .cmp-tab td:last-child { text-align: left; }
+.cmp-tab td.win { color: #5be38a; font-weight: 700; }

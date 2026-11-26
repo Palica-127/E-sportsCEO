@@ -617,7 +617,84 @@
   }
  },
  "cs2": {
-  "fonte": "Liquipedia: IEM Cologne Major 2026 (campeão US$ 500 mil); o Major do fim do ano usa o mesmo valor (PGL Major Singapore 2026 ainda sem resultado)",
+  "fonte": "Liquipedia: ganhos nos torneios S/A-Tier de 2026, região de cada time",
+  "ligas": [
+   {
+    "id": "AM",
+    "nome": "Américas",
+    "regiao": "Américas",
+    "ajuste": -3,
+    "t1": [
+     "FURIA",
+     "Legacy",
+     "9z Team",
+     "MIBR",
+     "Team Liquid",
+     "DENDELE CS",
+     "M80",
+     "NRG"
+    ],
+    "t2": [
+     "paiN Gaming",
+     "Wildcard",
+     "ShindeN",
+     "Team Voca",
+     "Life's A Game",
+     "Imperial",
+     "Chicken Coop Esports"
+    ]
+   },
+   {
+    "id": "EU",
+    "nome": "Europa",
+    "regiao": "Europa",
+    "ajuste": 0,
+    "t1": [
+     "Team Spirit",
+     "Vitality",
+     "MOUZ",
+     "Falcons",
+     "NAVI",
+     "FUT",
+     "PARIVISION",
+     "Aurora"
+    ],
+    "t2": [
+     "Astralis",
+     "GamerLegion",
+     "Nemiga Gaming",
+     "G2 Esports",
+     "Magic",
+     "Ninjas in Pyjamas",
+     "Luminosity Gaming"
+    ]
+   },
+   {
+    "id": "AP",
+    "nome": "Ásia-Pacífico",
+    "regiao": "Ásia-Pacífico",
+    "ajuste": -4,
+    "t1": [
+     "The MongolZ",
+     "TYLOO",
+     "Lynn Vision",
+     "JiJieHao",
+     "The Huns Esports",
+     "5star eSports",
+     "Chinggis Warriors",
+     "NEXVOID"
+    ],
+    "t2": [
+     "Rare Atom",
+     "Alter Ego",
+     "Morningstar",
+     "Kaleido Gaming",
+     "BORING PLAYER",
+     "E9esports",
+     "Off Chops"
+    ]
+   }
+  ],
   "intl": {
    "A": {
     "nome": "IEM Cologne Major",
@@ -628,24 +705,97 @@
     "nome": "CS2 Major Championship",
     "premio_usd": 500000
    }
+  },
+  "paginas": {
+   "paiN Gaming": "PaiN Gaming",
+   "Imperial": "Imperial Esports",
+   "Vitality": "Team Vitality",
+   "Falcons": "Team Falcons",
+   "NAVI": "Natus Vincere",
+   "FUT": "FUT Esports",
+   "Aurora": "Aurora Gaming",
+   "Lynn Vision": "Lynn Vision Gaming"
   }
  },
  "valorant": {
-  "fonte": "Liquipedia: VCT 2026 (Stage 2 das ligas, Masters London, Champions Shanghai)",
-  "ligas_info": {
-   "AM": {
-    "premio_usd": 100000,
-    "logo": "valorant-AM"
+  "fonte": "Liquipedia: VCT 2026 (Américas, EMEA e Pacífico, Stage 2) e ganhos nos torneios S/A-Tier de 2026",
+  "ligas": [
+   {
+    "id": "AM",
+    "nome": "VCT Américas",
+    "regiao": "Américas",
+    "ajuste": 0,
+    "t1": [
+     "LOUD",
+     "100 Thieves",
+     "NRG",
+     "Leviatán",
+     "G2 Esports",
+     "MIBR",
+     "KRÜ Esports",
+     "Sentinels"
+    ],
+    "t2": [
+     "2Game",
+     "Fluxo W7M",
+     "Cloud9",
+     "ENVY",
+     "Asuna",
+     "Bestia",
+     "Berzerkers"
+    ]
    },
-   "EM": {
-    "premio_usd": 100000,
-    "logo": "valorant-EM"
+   {
+    "id": "EM",
+    "nome": "VCT EMEA",
+    "regiao": "Europa, Oriente Médio e África",
+    "ajuste": 0,
+    "t1": [
+     "Team Vitality",
+     "BBL Esports",
+     "Karmine Corp",
+     "Team Liquid",
+     "FUT Esports",
+     "Fire Flux Esports",
+     "Joblife",
+     "Fnatic"
+    ],
+    "t2": [
+     "Natus Vincere",
+     "PCIFIC Esports",
+     "GIANTX",
+     "Team Heretics",
+     "Gentle Mates",
+     "Eternal Fire",
+     "Dos9"
+    ]
    },
-   "PC": {
-    "premio_usd": 100000,
-    "logo": "valorant-PC"
+   {
+    "id": "PC",
+    "nome": "VCT Pacífico",
+    "regiao": "Ásia-Pacífico",
+    "ajuste": -1,
+    "t1": [
+     "Nongshim RedForce",
+     "Paper Rex",
+     "T1",
+     "VARREL",
+     "Gen.G",
+     "DRX",
+     "DetonatioN FocusMe",
+     "ZETA DIVISION"
+    ],
+    "t2": [
+     "Rex Regum Qeon",
+     "FULL SENSE",
+     "UdoTan",
+     "Team Secret",
+     "Sharper Esports",
+     "QT DIG",
+     "ONSIDE GAMING"
+    ]
    }
-  },
+  ],
   "intl": {
    "A": {
     "nome": "VALORANT Masters",
@@ -657,6 +807,10 @@
     "premio_usd": 1000000,
     "logo": "valorant-B"
    }
+  },
+  "paginas": {
+   "2Game": "2GAME Esports",
+   "Gen.G": "Gen.G Esports"
   }
  },
  "dota2": {
@@ -768,7 +922,84 @@
   "paginas": {}
  },
  "r6": {
-  "fonte": "Liquipedia: BLAST R6 Major Salt Lake City 2026 e Six Invitational 2026",
+  "fonte": "Liquipedia: ligas regionais de 2026 (NA League, South America League, Europe MENA League e Challenger Series, APAC e CN League) e ganhos nos torneios S/A-Tier de 2026",
+  "ligas": [
+   {
+    "id": "AM",
+    "nome": "Américas",
+    "regiao": "América do Norte e do Sul",
+    "ajuste": 0,
+    "t1": [
+     "FaZe Clan",
+     "DarkZero",
+     "FURIA",
+     "Fluxo W7M",
+     "Shopify Rebellion",
+     "M80",
+     "Team Liquid",
+     "100 Thieves"
+    ],
+    "t2": [
+     "Wildcard",
+     "LOS",
+     "Cloud9",
+     "Spacestation",
+     "Black Dragons",
+     "Imperial Esports",
+     "LOUD"
+    ]
+   },
+   {
+    "id": "EU",
+    "nome": "Europe MENA League",
+    "regiao": "Europa e Oriente Médio",
+    "ajuste": 0,
+    "t1": [
+     "Team Secret",
+     "Falcons",
+     "Geekay Esports",
+     "Virtus.pro",
+     "G2 Esports",
+     "Twisted Minds",
+     "Shifters",
+     "Fnatic"
+    ],
+    "t2": [
+     "Team Heretics",
+     "Rebels Gaming",
+     "Euro Papa",
+     "Certified Skids",
+     "BLATANT GAP",
+     "Pannuhuone",
+     "Giggioletti"
+    ]
+   },
+   {
+    "id": "AP",
+    "nome": "Ásia-Pacífico",
+    "regiao": "Ásia, Oceania e China",
+    "ajuste": -3,
+    "t1": [
+     "EDward Gaming",
+     "All Gamers",
+     "TYLOO",
+     "ENTERPRISE Esports",
+     "KINGZERO eSports",
+     "Weibo Gaming",
+     "Dplus",
+     "One Coin"
+    ],
+    "t2": [
+     "CAG by VARREL",
+     "Four Angry Men",
+     "Chiefs Esports Club",
+     "Titan Esports Club",
+     "Sharper Esports",
+     "Man eSports LFO",
+     "SCARZ"
+    ]
+   }
+  ],
   "intl": {
    "A": {
     "nome": "BLAST R6 Major",
@@ -780,6 +1011,10 @@
     "premio_usd": 1000000,
     "logo": "r6-B"
    }
+  },
+  "paginas": {
+   "Spacestation": "Spacestation Gaming",
+   "Falcons": "Team Falcons"
   }
  }
 }

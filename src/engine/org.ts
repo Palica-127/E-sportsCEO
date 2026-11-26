@@ -16,7 +16,7 @@ export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: nu
     // aporte de um empresário fundador: cobre a peneira e ~2 anos de operação (folha + comissão + sede ≈ R$ 30 mil/semana)
     nome: 'Org nova', resumo: 'Um empresário aporta capital, você compra uma vaga na liga de acesso e monta o time do zero numa peneira.',
     caixa: 3_000_000, meta: 'Subir para a elite em até 2 anos', metaId: 'subir',
-    detalhes: ['Aporte do fundador: R$ 3 mi', 'Liga Challengers (T2)', 'Peneira para montar o elenco', 'Diretoria paciente'],
+    detalhes: ['Aporte do fundador: R$ 3 mi', 'Liga Challengers (T2)', 'Peneira para montar o elenco', 'Fundador pode aportar + R$ 1,5 mi'],
   },
   crise: {
     nome: 'Org em crise', resumo: 'Você compra um time da elite endividado e com moral baixa, e faz o rebrand.',
@@ -26,7 +26,7 @@ export const CENARIOS: Record<Cenario, { nome: string; resumo: string; caixa: nu
   investidor: {
     nome: 'Investidor', resumo: 'Você entra pesado numa org grande e faz o rebrand. Dinheiro sobra, paciência não.',
     caixa: 5_000_000, meta: 'Ser campeão já no primeiro ano', metaId: 'titulo',
-    detalhes: ['Caixa: R$ 5 mi', 'Time forte da elite', 'Diretoria exigente', 'Confiança cai rápido'],
+    detalhes: ['Caixa: R$ 5 mi', 'Time forte da elite', 'Fundo pode aportar + R$ 3 mi', 'Confiança cai rápido'],
   },
 };
 
@@ -255,7 +255,7 @@ export function receitasFixas(s: State): Record<string, number> {
 }
 
 /** categorias que já entraram/saíram do caixa na hora (só aparecem no extrato da semana) */
-const REC_NA_HORA = new Set(['Premiações', 'Ingressos']);
+const REC_NA_HORA = new Set(['Premiações', 'Ingressos', 'Aporte dos sócios']);
 const DESP_NA_HORA = new Set(['Luvas e multas', 'Bootcamp', 'Expansão', 'Produção da loja', 'Eventos']);
 
 function fechaSemana(s: State) {
@@ -302,6 +302,31 @@ function ofertaEmprestimo(s: State) {
     corpo: `Vimos que o caixa da ${s.org.nome} está apertado. Oferecemos ${moeda(valor)} agora, pagos em ${semanas} parcelas semanais de ${moeda(parcela)} (${moeda(total)} no total, juros de 18%).\n\nA proposta vale por 10 dias.`,
     acoes: [{ id: 'aceitar', txt: 'Pegar o crédito', tipo: 'bom' }, { id: 'recusar', txt: 'Recusar', tipo: 'ruim' }],
     dados: { emprestimo: { banco, valor, parcela, semanas }, expira: s.dia + 10 } });
+}
+
+/** org nova/investidor: quem bancou a org pode injetar mais capital quando o caixa aperta (no máximo 2x, 1x por ano),
+ *  como numa rodada de investimento de verdade: o dinheiro entra, mas a diretoria passa a cobrar mais */
+export const VALOR_APORTE: Partial<Record<Cenario, number>> = { nova: 1_500_000, investidor: 3_000_000 };
+function ofertaAporte(s: State) {
+  const valor = VALOR_APORTE[s.org.cenario];
+  const ap = s.aportes ?? [];
+  if (!valor || ap.length >= 2 || (ap.length && s.dia - ap[ap.length - 1] < 300)) return;
+  if (s.inbox.some(m => m.dados?.aporte && !m.resolvida)) return;
+  const quem = s.org.cenario === 'nova' ? 'Fundador' : 'Fundo investidor';
+  if (s.diretoria.confianca < 35) {
+    (s.aportes ??= []).push(s.dia);  // não insiste: só volta a pensar no ano que vem
+    msg(s, { de: quem, cargo: 'Sócio', cat: 'diretoria', titulo: 'Sem dinheiro novo por enquanto',
+      corpo: `Vi que o caixa da ${s.org.nome} está apertado. Com os resultados de agora, não coloco mais dinheiro. Mostre trabalho e a gente conversa de novo.` });
+    return;
+  }
+  msg(s, { de: quem, cargo: 'Sócio', cat: 'diretoria', titulo: `Proposta: novo aporte de ${moeda(valor)}`,
+    corpo: `O caixa da ${s.org.nome} está apertado. Posso colocar mais ${moeda(valor)} na operação, sem juros.
+
+Em troca, a cobrança aumenta: a confiança da diretoria cai 12 pontos e a meta continua a mesma. Ainda posso fazer isso ${2 - ap.length === 2 ? 'mais duas vezes' : 'só mais uma vez'}.
+
+A proposta vale por 10 dias.`,
+    acoes: [{ id: 'aceitar', txt: `Aceitar ${moeda(valor)}`, tipo: 'bom' }, { id: 'recusar', txt: 'Recusar', tipo: 'ruim' }],
+    dados: { aporte: valor, expira: s.dia + 10 } });
 }
 
 function ofertaPatrocinio(s: State) {
@@ -360,6 +385,13 @@ export function resolver(s: State, msgId: string, acao: string): string {
     if (chance(s, 0.5)) { p.moral = clamp(p.moral + 15, 0, 98); return `${p.nick} topou ficar e dar a volta por cima.`; }
     p.venda = true; return `${p.nick} não mudou de ideia. Ele está à venda.`;
   }
+  if (m.dados?.aporte) {
+    if (acao !== 'aceitar') { s.diretoria.confianca = clamp(s.diretoria.confianca + 2, 0, 100); return 'Aporte recusado. O sócio gostou de ver a gente se virando.'; }
+    s.org.caixa += m.dados.aporte; lanca(s, 'rec', 'Aporte dos sócios', m.dados.aporte);
+    (s.aportes ??= []).push(s.dia);
+    s.diretoria.confianca = clamp(s.diretoria.confianca - 12, 0, 100);
+    return `${moeda(m.dados.aporte)} entraram no caixa. A diretoria vai cobrar mais.`;
+  }
   if (m.dados?.emprestimo) {
     if (acao !== 'aceitar') return 'Crédito recusado.';
     const e = m.dados.emprestimo;
@@ -406,6 +438,7 @@ export function tickOrg(s: State) {
   for (const m of s.inbox) if (m.acoes && !m.resolvida && m.dados?.expira && m.dados.expira < s.dia) { m.resolvida = 'expirou'; }
   // eventos
   if (s.dia === 3 || s.dia === 12 || (dy % 21 === 10)) ofertaPatrocinio(s);
+  if (diaSemana(s.dia) === 1 && s.org.caixa < 400_000 && s.fase === 'jogo') ofertaAporte(s);
   if (diaSemana(s.dia) === 1 && s.org.caixa < 60_000 && s.fase === 'jogo') ofertaEmprestimo(s);
   if (dy % 35 === 17 && chance(s, 0.7)) eventoReserva(s);
   if (dy % 56 === 30 && chance(s, 0.6)) eventoBootcamp(s);

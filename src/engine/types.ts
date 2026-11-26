@@ -241,6 +241,7 @@ export interface State {
   inbox: Msg[];
   patro: Patro[];
   emprestimos?: { id: string; banco: string; parcela: number; ate: number }[];
+  aportes?: number[]; // dias em que o fundador/investidor injetou capital extra
   fin: { sem: number; rec: number; desp: number; caixa: number }[];
   finSemana: { rec: Record<string, number>; desp: Record<string, number> };
   hist: { ano: number; game: GameId; tor: string; nome: string; kind: TorKind; campeao: string; vice: string; org?: boolean }[];

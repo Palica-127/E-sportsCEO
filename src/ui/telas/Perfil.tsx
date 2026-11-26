@@ -11,6 +11,7 @@ import { act, useGame } from '../../store';
 import { Chips, Crest, Estrelas, Flag, Gauge, Linha, Radar, RetratoJogador, NomeTime } from '../common';
 import { Proposta } from './Mercado';
 import type { Tela } from '../Shell';
+import { Comparar } from '../Comparar';
 
 function reputacao(ovr: number, idade: number, pot: number) {
   if (ovr >= 90) return 'Lenda';
@@ -24,7 +25,7 @@ function reputacao(ovr: number, idade: number, pot: number) {
 export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => void }) {
   const s = useGame()!;
   const p = s.players[pid];
-  const [aba, setAba] = useState<'attr' | 'contrato' | 'carreira'>('attr');
+  const [aba, setAba] = useState<'attr' | 'contrato' | 'carreira' | 'cmp'>('attr');
   const [msg, setMsg] = useState('');
   const [prop, setProp] = useState(false);
   const [rsal, setRsal] = useState(() => pedidoSalario(s, p));
@@ -42,7 +43,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
 
   return (
     <div style={{ '--g': def.cor } as CSSProperties}>
-      <div className="tabs">{([['attr', 'Atributos'], ['contrato', 'Contrato'], ['carreira', 'Carreira']] as const).map(([k, n]) => <button key={k} className={aba === k ? 'on' : ''} onClick={() => setAba(k)}>{n}</button>)}</div>
+      <div className="tabs">{([['attr', 'Atributos'], ['contrato', 'Contrato'], ['carreira', 'Carreira'], ['cmp', 'Comparar']] as const).map(([k, n]) => <button key={k} className={aba === k ? 'on' : ''} onClick={() => setAba(k)}>{n}</button>)}</div>
       <div className="perfil">
         <div className="box">
           <div className="pf-head">
@@ -141,6 +142,7 @@ export function Perfil({ pid, ir }: { pid: string; ir: (t: Tela, a?: string) => 
               </div>
             </section>
           )}
+          {aba === 'cmp' && <Comparar key={p.id} s={s} p={p} />}
           {msg && <div className="retorno">{msg}</div>}
           {!meu && t && <button className="link" style={{ marginTop: 12 }} onClick={() => ir('competicoes')}>Ver competições ›</button>}
         </div>

@@ -17,10 +17,11 @@ Uso:
   python tools/buscar_fotos.py                 # todos os jogos
   python tools/buscar_fotos.py lol cs2         # só alguns
   python tools/buscar_fotos.py --refazer       # ignora o cache e baixa de novo quem já tem foto
+  python tools/buscar_fotos.py dota2 --contato=https://github.com/voce   # contato para a Liquipedia
 
 Precisa do Pillow (pip install pillow) e do curl. Atualiza src/data/fotos.json e public/fotos/CREDITOS.txt.
 """
-import ast, html, io, json, re, shutil, subprocess, sys, time, unicodedata, urllib.parse, urllib.request
+import ast, html, io, json, os, re, shutil, subprocess, sys, time, unicodedata, urllib.parse, urllib.request
 from pathlib import Path
 from PIL import Image
 
@@ -82,7 +83,7 @@ def get(url, host_wait=0.0, binario=False, referer=None, texto=False):
         except Bloqueado:
             raise
         except RuntimeError as e:
-            if 'missingtitle' in str(e) or 'invalidtitle' in str(e): raise  # página não existe: insistir não adianta
+            if re.search(r'missingtitle|invalidtitle|nosuchsection|missingparam|badvalue', str(e)): raise  # página não existe: insistir não adianta
             _ult[host] = time.time()
             if tent == 5: raise
             print(f'    ! {e} — tentando de novo em {10 * (tent + 1)} s', flush=True); time.sleep(10 * (tent + 1))
@@ -303,6 +304,9 @@ BUSCA = {'vlr': urls_vlr, 'siegegg': urls_siegegg, 'leaguepedia': urls_leagueped
 ESPERA = {'vlr': 1.0, 'siegegg': 1.0, 'leaguepedia': 1.0, 'prosettings': 1.5, 'wikidata': 1.0, 'liquipedia': 2.1}
 
 def main():
+    global UA
+    contato = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--contato=')), None) or os.environ.get('LIQUIPEDIA_CONTATO')
+    if contato: UA = f'EsportsCEO-hobby-game/1.0 (fan-made esports manager; {contato})'  # a Liquipedia pede um contato
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     refazer = '--refazer' in sys.argv
     DEST.mkdir(parents=True, exist_ok=True)

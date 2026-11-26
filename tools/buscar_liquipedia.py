@@ -22,7 +22,7 @@ Uso:
   Opções: --sem-logos  --so-logos  --todos (refaz também times que já têm elenco real)  --refazer
 Relatório em entrada/liquipedia_relatorio.txt.
 """
-import json, os, re, sys, time, urllib.parse
+import html as H, json, os, re, sys, time, urllib.parse
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import buscar_fotos as bf
@@ -106,7 +106,7 @@ def limpa(v):
     v = re.sub(r'<ref[^>]*/>|<ref.*?</ref>|<!--.*?-->', '', v or '', flags=re.S)
     v = re.sub(r'\[\[(?:[^|\]]*\|)?([^\]]*)\]\]', r'\1', v)
     v = re.sub(r'\{\{[^{}]*\}\}', '', v)
-    return v.strip()
+    return re.sub(r'\s+', ' ', H.unescape(v)).strip()  # &nbsp; e cia. viram espaço comum
 
 FORA = re.compile(r'former|inactive|loan|organi[sz]ation|staff|management|retired|academy|stand.?in', re.I)
 NAO_JOGA = re.compile(r'coach|analyst|manager|owner|ceo|staff|streamer|content|creator|substitute|sub\b|bench|reserve|stand.?in|psych|perform', re.I)
@@ -318,7 +318,8 @@ def processa(g, saida, rel):
         if auto: print(f'[{g}] {len(auto)} times com elenco automático: ~{len(auto) * 31 // 60 + 1} min (1 página a cada 30 s)', flush=True)
         elencos = {}
         for t, p in achados.items():
-            js = elenco_ativo(p['texto']) or elenco_montado(g, p['titulo'], p['texto'])
+            try: js = elenco_ativo(p['texto']) or elenco_montado(g, p['titulo'], p['texto'])
+            except RuntimeError as e: rel.append(f'[{g}] ? {t}: não deu para ler o elenco ({e})'); js = []
             elencos[t] = ordena(g, js, ROLES_N[g])
         for t, js in list(elencos.items()):
             if len(js) < ROLES_N[g]:
@@ -330,7 +331,7 @@ def processa(g, saida, rel):
                 ib = infobox((pj.get(j['link'] or '') or {}).get('texto', ''), r'Infobox player')
                 j['nasc'] = (re.search(r'\d{4}-\d{2}-\d{2}', ib.get('birth_date', '')) or [None])[0]
                 j['nat'] = nat_iso(ib.get('country')) or nat_iso(j['nat'])
-                j['nome'] = ib.get('romanized_name') or ib.get('name') or j['nome']
+                j['nome'] = limpa(ib.get('romanized_name') or ib.get('name') or j['nome'] or '') or None
         if MOSTRAR:
             for t, js in elencos.items():
                 print(f'  {t} ({achados[t]["titulo"]}): ' + ' | '.join(f'{j["nick"]} [{j["role"] or "-"}] {j["nat"] or "?"} {j["nasc"] or "?"} {j["nome"] or ""}' for j in js))

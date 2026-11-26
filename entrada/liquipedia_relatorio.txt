@@ -1,43 +1,106 @@
-[dota2] ? MODUS: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Roar Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Team Refuser: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Game Master: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Grey Track: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Grind Back: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Mentality Monsters: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? InterActive Philippines: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Cloud Rising: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? 4 Anchors and Ilmeria: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? The Bug: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? GG BOOM: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Red Hot Chili Pibble: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Lindorfitos: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? RisingRage: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Focus Team: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
-[dota2] ? Team Spirit: só 3 titular(es) na página — elenco mantido
-[dota2] ? BetBoom Team: só 2 titular(es) na página — elenco mantido
-[dota2] ? Team Liquid: só 1 titular(es) na página — elenco mantido
-[dota2] ? Nigma Galaxy: só 3 titular(es) na página — elenco mantido
-[dota2] ? MOUZ: só 2 titular(es) na página — elenco mantido
-[dota2] ? Virtus.pro: só 2 titular(es) na página — elenco mantido
-[dota2] ? Yellow Submarine: só 2 titular(es) na página — elenco mantido
-[dota2] ? Execration: só 4 titular(es) na página — elenco mantido
-[dota2] ? Hokori: só 4 titular(es) na página — elenco mantido
-[dota2] Team Yandex: saem Rutekblu, xegi7, hexrexvexzz, Mirublu7, Axfux | entram watson, CHIRA_JUNIOR, ATF, Saksa, Malady
-[dota2] PARIVISION: saem dracrizz, Axsao, naax, funahex1, Hextorzz | entram Satanic, No[o]ne-, Noticed, 9Class, Dukalis
-[dota2] Aurora Gaming: saem nibluii, vexblu1, Crixeo, Dokabalii, Kyax | entram skiter, Mikoto, Ws, Mira, kaori
-[dota2] Natus Vincere: saem dragimozz, kashox, zihexdo7, Turuy, Jinbal | entram gotthejuice, Niku, pma, daze, Riddys
-[dota2] HULIGANI: saem oriloze1, Axshoky, Pabluz, Bluvexy, legi | entram TA2000, Mirage`, elmo^^, queezy, Rein
-[dota2] Inner Circle x Insanity: saem axaxgiz, jinzihex7, migiy, nafuzz, Mile | entram yowaai, Ethereal, Norma, Fernans, Hyuga
-[dota2] Team Resilience: saem Gipazz, sana, Draoriy, Phovexzz, kavovexo | entram Erika, Echo, niu, TK, zzq
-[dota2] OG: saem ruloii, Sapholumy, hexdra, Jinsasa1, rexhex1 | entram Natsumi, Topson, SSS, OneJey, skem
-[dota2] Yakult Brothers: saem Zorlo1, oriori, Kybluii, Mini1, Hexaxbal | entram Lou, Emo, Beyond, kaka, 天命
-[dota2] Direborn Esports: saem Kymiphoy, Kyjinblu, Tekze1, Rodra7, lezorro | entram Dreamocel, Pota2, womy, dalul, db-
-[dota2] Yangon Galacticos: saem zixe, vexdoy, oritortorii, phoshovo, Vonaii | entram Ksh, Young PH, MOMO, Skill Lay, ZawRain
-[dota2] LGD Gaming: saem moorizz, lodra, vexlo7, Pasaky, balroy | entram Wits, SumaiL, Davai, Thiolicor, Sneyking
-[dota2] PlayTime: saem jinzi, Leka, Rextutuii, Vexlumzz, Vexmiy | entram Shad, No!ob, Xibbe, yamich, Kidaro
-[dota2] GamerLegion: saem sanator, blucrilumii, ruzizio, zorphoii, volonizz | entram Yuma, RCY, Fayde, Bignum, Speeed
-[dota2] Amaru Gaming: saem Axphozz, vextekzz, Savexdo, looritor, Vexmopax | entram K1, PiPi, Oscar, Genek, Panda
-[dota2] Team Nemesis: saem cripay, Oriaxbal7, lumgizz, mokana1, Nateky | entram JaCkky, Ken, Jabz, Jhocam, NARMAN
-[dota2] Infamous Gaming: saem Zegixex, Shoruzor, phovex1, zekyleo, mirex | entram JP, lalatronii, TakeCareMia, sl4d1n-, CHAAANNN
-[dota2] Pacific Esports: saem orijinii, axlodraii, Naky, Rexjincri7, Lejinzi | entram Neko, Faker, Arkano, pamplona, Smoker
+[r6]   (Spacestation = "Spacestation Gaming" na Liquipedia)
+[r6]   (Falcons = "Team Falcons" na Liquipedia)
+[r6] ? Euro Papa: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[r6] ? Certified Skids: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[r6] ? BLATANT GAP: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[r6] ? Giggioletti: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[r6] ? Wildcard: só 3 titular(es) na página — elenco mantido
+[r6] ? Spacestation: só 3 titular(es) na página — elenco mantido
+[r6] ? Black Dragons: só 2 titular(es) na página — elenco mantido
+[r6] ? Fnatic: só 4 titular(es) na página — elenco mantido
+[r6] ? Rebels Gaming: só 4 titular(es) na página — elenco mantido
+[r6] ? Pannuhuone: só 0 titular(es) na página — elenco mantido
+[r6] ? One Coin: só 4 titular(es) na página — elenco mantido
+[r6] DarkZero: saem zorruo, Kamozz, criniz, katutor, dotek | entram njr, Fultz, J9O, Kyno, Nuers
+[r6] FURIA: saem DiasLucas | entram DiasLucasBr
+[r6] Shopify Rebellion: saem giphoz, Oriaxii, mogiy, rukaruii, kypho1 | entram Ambi, Surf, Spoit, Bae94, Spiker
+[r6] M80: saem tuna1, ruro7, vexlumruz, Moaxii, micrix | entram dfuzr, Gunnar, Gaveni, Ashn, Savage
+[r6] 100 Thieves: saem rexvozz, tekhexz, Nikyo, phosa, miruzz | entram Atom, GMZ, SpiriTz, Hotancold, Kason
+[r6] LOS: saem drasami1, ledratekx, zororiy, ruvoii, Zelozorz | entram Daffo, dash, Nuxxga, peres, Dodez
+[r6] Cloud9: saem Focal, Kixhro | entram Monk, Panbazou
+[r6] Imperial Esports: saem Axziziy, pami, Vexvexo, draleziii, kamo | entram Mitrix, xS3xyCake, Hasaqui, Legacy, NearZ
+[r6] LOUD: saem Tekhexy, paletek1, Torxex, Lumorizz, Kazi | entram live, Flastry, Gabu, resetz, Stemp
+[r6] Team Secret: saem paorix, Tujin, Xezi, Xesa7, vodox | entram Drillz, Creedz, CroqSon, Hungry, Flexy
+[r6] Geekay Esports: saem xezor7, Crikatuz, Gigi1, kaax1, Zitumiii | entram AsK, Sarks, Eupor, Gruby, Yoggah
+[r6] Virtus.pro: saem hexori7, fulumpa, Zilumcrio, drarexni, leka | entram p4sh4, dan, Nayqo, RORICK, SkyZs
+[r6] Twisted Minds: saem Gihex1, Teksho, Oriax, Lobaly, Vofuz | entram Hashom, Jlad, Tr1ixd, BlaZ, Mowwwgli
+[r6] Shifters: saem Miky7, Vovex, rexrexhexx, Naky, Lokakao | entram Freq, Robby, Nafe, DEADSHT, CTZN
+[r6] Team Heretics: saem kavo1, Tufuzz, Cridobalii, orini, Phorozz | entram Lollo, Zaaramy, Lasmooo, Skeptic, sk1per
+[r6] EDward Gaming: saem Jindraz, zelecri1, Lumjinii, karexz, Lena1 | entram Carpe, Direction, Mo5quito, Reif, Bapn
+[r6] All Gamers: saem phorex, Phovogiz, Naorizz, torvoz, Sarexz | entram MoonL1ght, Ra3LGuN, SoloMID, YaZ, Mcie
+[r6] TYLOO: saem lesax, Vexsa, nixe7, shoxezorzz, kakamo | entram aBEi, Songla, Jackywu, Aurk11, Austin
+[r6] ENTERPRISE Esports: saem rojinzz, kynimi, lovexx, Sami1, Shonicri1 | entram Tuhan, Brendo, Jigsaw, Kyro, Playxr
+[r6] KINGZERO eSports: saem lumzidrao, kybalgi, Phovo1, torloy, Gibaltuy | entram Fiber, Sunset, KzB, MomoRiNs, Lian
+[r6] Weibo Gaming: saem romoz, Lemorexo, Sholez, kakyvexzz, Blubalro1 | entram Hovenherst, Reeps96, SpeakEasy, Terd, Gotti
+[r6] Dplus: saem Mizi7, Doxez, molumgiy, Kaaxii, niru | entram Faallz, Levy, Mity, ion, yurivst
+[r6] CAG by VARREL: saem Zorxevo, lobal, Nizor1, loro, lumgi7 | entram Anitun, Chibisu, DD, ShuReap, Zaka
+[r6] Four Angry Men: saem blushovex, Orisax, hexmiii, Gitekz, zetekzz | entram Ka, Txonly, Asylum, Logan, ShaZ5ibe.
+[r6] Chiefs Esports Club: saem lumloblu, Tudo1, rexhexz, najinbaly, axtunix | entram Jakenna, Lunchbox, Neptune, Relaes, Wettables
+[r6] Titan Esports Club: saem zemomi7, Vexdorexii, volox, dramio, Votor7 | entram A1mer, Kina1, Naka, Rusher, SeiNov9
+[r6] Sharper Esports: saem Zikay, palumzi, tekrocri, sakyy, baltuii | entram BGMan, KritJ, Lycolis, Nay..Pew, Peeps
+[r6] Man eSports LFO: saem dralo1, Balnibal, Narujinz, zefux, Tekgiz | entram Beers, Huntr, Pluto, Sharkie, Elementz
+[r6] SCARZ: saem fushotor, Vexmizz, Shoky, gisa, xelumii | entram FishLike, Wqsyo1, Rec, Nina, YuKiz
+[valorant]   (2Game = "2GAME Esports" na Liquipedia)
+[valorant]   (Gen.G = "Gen.G Esports" na Liquipedia)
+[valorant] ? Asuna: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[valorant] ? Bestia: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[valorant] ? Dos9: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[valorant] ? UdoTan: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[valorant] ? LOUD: só 3 titular(es) na página — elenco mantido
+[valorant] ? NRG: só 4 titular(es) na página — elenco mantido
+[valorant] ? Leviatán: só 3 titular(es) na página — elenco mantido
+[valorant] ? G2 Esports: só 2 titular(es) na página — elenco mantido
+[valorant] ? MIBR: só 2 titular(es) na página — elenco mantido
+[valorant] ? KRÜ Esports: só 1 titular(es) na página — elenco mantido
+[valorant] ? Berzerkers: só 1 titular(es) na página — elenco mantido
+[valorant] ? BBL Esports: só 3 titular(es) na página — elenco mantido
+[valorant] ? Team Liquid: só 2 titular(es) na página — elenco mantido
+[valorant] ? Fnatic: só 3 titular(es) na página — elenco mantido
+[valorant] ? Natus Vincere: só 0 titular(es) na página — elenco mantido
+[valorant] ? Team Heretics: só 2 titular(es) na página — elenco mantido
+[valorant] ? VARREL: só 0 titular(es) na página — elenco mantido
+[valorant] ? DRX: só 2 titular(es) na página — elenco mantido
+[valorant] ? DetonatioN FocusMe: só 1 titular(es) na página — elenco mantido
+[valorant] ? ZETA DIVISION: só 4 titular(es) na página — elenco mantido
+[valorant] ? Rex Regum Qeon: só 3 titular(es) na página — elenco mantido
+[valorant] ? FULL SENSE: só 3 titular(es) na página — elenco mantido
+[valorant] ? Team Secret: só 0 titular(es) na página — elenco mantido
+[valorant] 100 Thieves: saem Cryo | entram Cryocells
+[valorant] 2Game: saem dohexdoy, natu, Zorhexzz, Giky, Pakao | entram frz, gobera, xenom, prozin, Zanatsu
+[valorant] Fluxo W7M: saem crikakay, crijino, Kykatorii, crinakyo, sabluvexy | entram jzz, mazin, Palla, tuyz, ambitioN
+[valorant] Cloud9: saem naorikyy, Donaru1, rubalii, gibal, zepa | entram FireBallOps, GLYPH, alym, Derrek, nightz
+[valorant] ENVY: saem lorexx, donax, Niaxii, Balpa1, Axnaii | entram Eggsterr, exa, ion2x, Paincakes, v1c
+[valorant] FUT Esports: saem Donao, shoze, Tekmiii, rorudo1, Hexgivo | entram yetujey, Wo0t, batujnax, hezacoil, aspas
+[valorant] Fire Flux Esports: saem shotuxex, torrexxe, axblu7, Teksho, mojinx | entram Kachoww, Brave, Crewen, DeadInk, reazy
+[valorant] Joblife: saem dramoy, Kytorz, Shoori, hexbluphox, mitekzz | entram Sevire, WanZeru, al0rante, hoody, westside
+[valorant] PCIFIC Esports: saem Orijiny, Rexvo1, kyleii, crirushoo, Levexx | entram envex, Gloomy, sh0ut, sh1ngo, VdekJeNN
+[valorant] GIANTX: saem nalumtorx, doro, domoy, rexcrilumz, Hexcridra7 | entram globeX, sickrey, Vitie, WACKIE, ZachKappa
+[valorant] Gentle Mates: saem Vexgivoii, Niorio, roshox, torfuii, Vexjin1 | entram Alfajer, Boaster, kozzy, Magnum, Ruxic
+[valorant] Eternal Fire: saem Nishox, Tugiz, Gizi, Orilovoii, Mozorkyzz | entram echo, Favian, s0pp, sociablEE, BadreX
+[valorant] Sharper Esports: saem Lomoblu, Zihexlox, Giropa, Lumpazor7, Phobal7 | entram Kadoom, Apinya, Laz, PTC, Niffy
+[valorant] QT DIG: saem Tuvotor1, Mopa7, Tuorizz, Roaxfuo, niax | entram misaya, Kippei, Yuran, Meteor, TenTen
+[valorant] ONSIDE GAMING: saem katorgix, Dracri, rexsho7, Balcribal7, Lemomi | entram Cloudy, Fric, Ryan, shu, Zayce
+[cs2]   (paiN Gaming = "PaiN Gaming" na Liquipedia)
+[cs2]   (Imperial = "Imperial Esports" na Liquipedia)
+[cs2]   (Vitality = "Team Vitality" na Liquipedia)
+[cs2]   (Falcons = "Team Falcons" na Liquipedia)
+[cs2]   (NAVI = "Natus Vincere" na Liquipedia)
+[cs2]   (FUT = "FUT Esports" na Liquipedia)
+[cs2]   (Aurora = "Aurora Gaming" na Liquipedia)
+[cs2]   (Lynn Vision = "Lynn Vision Gaming" na Liquipedia)
+[cs2] ? FURIA: não deu para ler o elenco (API: nosuchsection There is no section 3 in FURIA.)
+[cs2] ? Legacy: não deu para ler o elenco (API: nosuchsection There is no section 3 in Legacy.)
+[cs2] ? 9z Team: não deu para ler o elenco (API: nosuchsection There is no section 3 in 9z Team.)
+[cs2] ? MIBR: não deu para ler o elenco (API: nosuchsection There is no section 3 in MIBR.)
+[cs2] ? Team Liquid: não deu para ler o elenco (API: nosuchsection There is no section 4 in Team Liquid.)
+[cs2] ? DENDELE CS: não deu para ler o elenco (API: nosuchsection There is no section 3 in DENDELE CS.)
+[cs2] ? NRG: não deu para ler o elenco (API: nosuchsection There is no section 3 in NRG.)
+[cs2] ? paiN Gaming: não deu para ler o elenco (API: nosuchsection There is no section 3 in PaiN Gaming.)
+[cs2] ? Wildcard: não deu para ler o elenco (API: nosuchsection There is no section 3 in Wildcard.)
+[cs2] ? Life's A Game: não deu para ler o elenco (API: nosuchsection There is no section 3 in Life's A Game.)
+[cs2] ? Imperial: não deu para ler o elenco (API: nosuchsection There is no section 3 in Imperial Esports.)
+[cs2] ? Team Spirit: não deu para ler o elenco (API: nosuchsection There is no section 3 in Team Spirit.)
+[cs2] ? Vitality: não deu para ler o elenco (API: nosuchsection There is no section 3 in Team Vitality.)
+[cs2] ? MOUZ: não deu para ler o elenco (API: nosuchsection There is no section 4 in MOUZ.)
+[cs2] ? Falcons: não deu para ler o elenco (API: nosuchsection There is no section 3 in Team Falcons.)
+[cs2] a Liquipedia respondeu "Rate Limited" — parei para não piorar o bloqueio. Tente de novo mais tarde (o que já veio ficou no cache).

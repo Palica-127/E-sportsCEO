@@ -171,7 +171,7 @@ export function Gauge({ v, max = 100, label, size = 96, txt }: { v: number; max?
     </div>
   );
 }
-export function Radar({ labels, vals, size = 260 }: { labels: string[]; vals: number[]; size?: number }) {
+export function Radar({ labels, vals, vals2, size = 260 }: { labels: string[]; vals: number[]; vals2?: number[]; size?: number }) {
   const n = labels.length, cx = 100, cy = 100, R = 70;
   const pt = (i: number, f: number) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / n; return [cx + Math.cos(a) * R * f, cy + Math.sin(a) * R * f]; };
   const poly = (f: (i: number) => number) => labels.map((_, i) => pt(i, f(i)).join(',')).join(' ');
@@ -179,9 +179,10 @@ export function Radar({ labels, vals, size = 260 }: { labels: string[]; vals: nu
     <svg className="radar" viewBox="-50 0 300 200" width={size * 1.5} height={size}>
       {[0.25, 0.5, 0.75, 1].map(k => <polygon key={k} points={poly(() => k)} fill="none" stroke="rgba(255,255,255,.1)" />)}
       {labels.map((_, i) => { const [x, y] = pt(i, 1); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(255,255,255,.08)" />; })}
+      {vals2 && <polygon points={poly(i => Math.max(0.05, (vals2[i] - 40) / 60))} fill="rgba(240,170,60,.16)" stroke="#f0aa3c" strokeWidth="2" strokeDasharray="4 3" />}
       <polygon points={poly(i => Math.max(0.05, (vals[i] - 40) / 60))} fill="rgba(46,197,232,.22)" stroke="#2ec5e8" strokeWidth="2" />
       {labels.map((_, i) => { const [x, y] = pt(i, Math.max(0.05, (vals[i] - 40) / 60)); return <circle key={i} cx={x} cy={y} r="3.5" fill="#2ec5e8" />; })}
-      {labels.map((l, i) => { const [x, y] = pt(i, 1.28); return <text key={l} x={x} y={y + 3} textAnchor="middle" fontFamily="Saira" fontWeight="700" fontSize="9.5" fill="#dfe5ee">{l.toUpperCase()} <tspan fill="#2ec5e8">{vals[i]}</tspan></text>; })}
+      {labels.map((l, i) => { const [x, y] = pt(i, 1.28); return <text key={l} x={x} y={y + 3} textAnchor="middle" fontFamily="Saira" fontWeight="700" fontSize="9.5" fill="#dfe5ee">{l.toUpperCase()} <tspan fill="#2ec5e8">{vals[i]}</tspan>{vals2 && <tspan fill="#f0aa3c"> {vals2[i]}</tspan>}</text>; })}
     </svg>
   );
 }
