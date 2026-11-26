@@ -72,7 +72,7 @@ export function Peneira() {
                   <span className="c-main">
                     <span className="c-nick"><Flag nat={p.nat} /> {p.nick} <span className="role">{def.roles[p.role]}</span></span>
                     <span className="c-sub">{p.idade} anos · {TRACOS[p.traco].nome}{c.motivo ? ` · ${c.motivo}` : ''}</span>
-                    {time && <span className="c-team"><Crest s={s} team={time} size={16} /> {time.nome} · multa {moeda(c.multa)}</span>}
+                    {time && <span className="c-team"><Crest link={false} s={s} team={time} size={16} /> {time.nome} · multa {moeda(c.multa)}</span>}
                   </span>
                   <span className="c-faixa"><small>Nota</small><b>{s.players[c.pid].ovr}</b></span>
                   <span className="c-custo"><small>Assinatura</small><b>{moeda(custoCandidato(s, c))}</b><small>{moeda(p.sal)}/sem</small></span>

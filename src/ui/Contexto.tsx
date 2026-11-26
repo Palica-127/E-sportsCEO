@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { GAMES } from '../engine/games';
 import type { ReactElement } from 'react';
 import { notaVista } from '../engine/mercado';
@@ -6,7 +7,7 @@ import { anoDe, jogosDoTorneio } from '../engine/sim';
 import type { Msg, Player, State } from '../engine/types';
 import { humor, valorMercado } from '../engine/world';
 import { TabelaLiga } from './Bracket';
-import { Bar, Crest, EstrelasNota, Flag, Ico3D, RetratoJogador } from './common';
+import { Bar, Crest, EstrelasNota, Flag, Ico3D, RetratoJogador, NomeTime, NomeJogador } from './common';
 
 /** painéis de contexto da mensagem aberta: dão os números para a decisão */
 export function Contexto({ s, m, ir }: { s: State; m: Msg; ir: (t: any, a?: string) => void }) {
@@ -25,7 +26,7 @@ export function Contexto({ s, m, ir }: { s: State; m: Msg; ir: (t: any, a?: stri
   return <div className="ctx">{blocos}</div>;
 }
 
-const Kpi = ({ ico, rot, v, cls }: { ico: string; rot: string; v: string; cls?: string }) => (
+const Kpi = ({ ico, rot, v, cls }: { ico: string; rot: string; v: ReactNode; cls?: string }) => (
   <div className="ctx-kpi"><Ico3D n={ico} size={34} /><div><span>{rot}</span><b className={cls}>{v}</b></div></div>
 );
 
@@ -42,7 +43,7 @@ function CardJogador({ s, p, m, ir }: { s: State; p: Player; m: Msg; ir: (t: any
         <RetratoJogador s={s} p={p} size={92} />
         <div className="cj-info">
           <b>{p.nick}</b>
-          <small><Flag nat={p.nat} /> {g.roleNomes[p.role]} · {p.idade} anos · {t ? <><Crest s={s} team={t} size={16} /> {t.nome}</> : 'Sem time'}</small>
+          <small><Flag nat={p.nat} /> {g.roleNomes[p.role]} · {p.idade} anos · {t ? <><Crest s={s} team={t} size={16} /> <NomeTime s={s} id={t.id} /></> : 'Sem time'}</small>
           <EstrelasNota ovr={nv.exata ? nv.a : Math.round((nv.a + nv.b) / 2)} />
           <div className="cj-barras">
             <span>Forma</span><Bar v={50 + p.forma * 10} cor={p.forma >= 0 ? '#3fd17a' : '#e5484d'} />
@@ -83,13 +84,13 @@ function CardTorneio({ s, m }: { s: State; m: Msg }) {
       <header><h4>» {tor.nome}</h4>{m.dados.fase && <span className="chip2 ok">{m.dados.fase}</span>}</header>
       {(camp || vice) && (
         <div className="podio">
-          {camp && <div className="pd ouro"><Ico3D n="trofeu" size={40} /><Crest s={s} team={camp} size={44} /><b>{camp.nome}</b><small>Campeão</small></div>}
-          {vice && <div className="pd"><Ico3D n="medalha" size={34} /><Crest s={s} team={vice} size={38} /><b>{vice.nome}</b><small>Vice</small></div>}
+          {camp && <div className="pd ouro"><Ico3D n="trofeu" size={40} /><Crest s={s} team={camp} size={44} /><b><NomeTime s={s} id={camp.id} /></b><small>Campeão</small></div>}
+          {vice && <div className="pd"><Ico3D n="medalha" size={34} /><Crest s={s} team={vice} size={38} /><b><NomeTime s={s} id={vice.id} /></b><small>Vice</small></div>}
         </div>
       )}
       <div className="ctx-kpis">
         {jogos.length > 0 && <Kpi ico="controle" rot="Campanha" v={`${v}V ${dd}D · mapas ${mv}-${md}`} />}
-        {destaque && <Kpi ico="estrela" rot="Destaque da org" v={`${s.players[destaque[0]].nick} (${destaque[1]} MVPs)`} />}
+        {destaque && <Kpi ico="estrela" rot="Destaque da org" v={<><NomeJogador s={s} id={destaque[0]} /> ({destaque[1]} MVPs)</>} />}
         {m.dados.premio ? <Kpi ico="dinheiro" rot="Premiação" v={moeda(m.dados.premio)} cls="pos" /> : null}
         {m.dados.rep != null && <Kpi ico="coroa" rot="Reputação" v={`${m.dados.rep >= 0 ? '+' : ''}${m.dados.rep}`} cls={m.dados.rep >= 0 ? 'pos' : 'neg'} />}
         {m.dados.dc != null && <Kpi ico="predio-classico" rot="Confiança" v={`${m.dados.dc >= 0 ? '+' : ''}${m.dados.dc}`} cls={m.dados.dc >= 0 ? 'pos' : 'neg'} />}

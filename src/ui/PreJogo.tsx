@@ -109,7 +109,7 @@ export function PreJogo({ s, m, d, n, total, onAssistir, onSimular, onDepois }: 
       </div>
 
       <div className="pj-board">
-        <div className="pj-team"><Crest s={s} team={A} size={88} /><b>{A.nome}</b><small>#{d.ta.rank} no ranking · {d.ta.camp.v}V {d.ta.camp.d}D</small>{meuA && <em>SUA ORG</em>}</div>
+        <div className="pj-team"><Crest link={false} s={s} team={A} size={88} /><b>{A.nome}</b><small>#{d.ta.rank} no ranking · {d.ta.camp.v}V {d.ta.camp.d}D</small>{meuA && <em>SUA ORG</em>}</div>
         <div className="pj-mid">
           <div className="pj-pct"><b>{d.pa > 0.995 ? ">99%" : d.pa < 0.005 ? "<1%" : pct(d.pa)}</b><span>chance de vitória</span><b>{d.pa < 0.005 ? ">99%" : d.pa > 0.995 ? "<1%" : pct(1 - d.pa)}</b></div>
           <div className="pj-bar"><i style={{ width: d.pa * 100 + '%' }} /></div>
@@ -119,7 +119,7 @@ export function PreJogo({ s, m, d, n, total, onAssistir, onSimular, onDepois }: 
           </div>
           <small className="mut">Favorito: <b>{fav.nome}</b>{Math.abs(d.pa - 0.5) < 0.07 ? ' (jogo equilibrado)' : ''}</small>
         </div>
-        <div className="pj-team"><Crest s={s} team={B} size={88} /><b>{B.nome}</b><small>#{d.tb.rank} no ranking · {d.tb.camp.v}V {d.tb.camp.d}D</small>{!meuA && isOrg(s, m.b) && <em>SUA ORG</em>}</div>
+        <div className="pj-team"><Crest link={false} s={s} team={B} size={88} /><b>{B.nome}</b><small>#{d.tb.rank} no ranking · {d.tb.camp.v}V {d.tb.camp.d}D</small>{!meuA && isOrg(s, m.b) && <em>SUA ORG</em>}</div>
       </div>
 
       <div className="pj-grid">

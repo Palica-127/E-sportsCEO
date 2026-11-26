@@ -8,7 +8,7 @@ import { anoDe, fmtData, isOrg, jogosDoDia, ligaDoTime, proximosJogosOrg, tornei
 import { forca, titulares } from '../../engine/world';
 import { janelaAberta, maxElenco } from '../../engine/mercado';
 import { useGame } from '../../store';
-import { Alerta, Bar, Crest, Panel, RetratoJogador, pct } from '../common';
+import { Alerta, Bar, Crest, Panel, RetratoJogador, pct, NomeTime } from '../common';
 import { AvatarMsg } from './Inbox';
 import type { Tela } from '../Shell';
 import type { State } from '../../engine/types';
@@ -135,9 +135,9 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
                 <>
                   <div className="sub-t" style={{ marginTop: 18 }}>Partida em destaque</div>
                   <div className="destaque" onClick={prox.dia === s.dia ? abrirDia : () => ir('competicoes', prox.tor)}>
-                    <div><Crest s={s} team={A} size={96} /><b>{A.nome}</b></div>
+                    <div><Crest s={s} team={A} size={96} /><b><NomeTime s={s} id={A.id} /></b></div>
                     <div className="dc"><b>{GAMES[prox.game].curto}</b><span>{prox.label}</span><small>{prox.dia === s.dia ? 'HOJE' : fmtData(prox.dia)}</small><small>Chance: {pct(isOrg(s, A.id) ? pa : 1 - pa)}</small></div>
-                    <div><Crest s={s} team={B} size={96} /><b>{B.nome}</b></div>
+                    <div><Crest s={s} team={B} size={96} /><b><NomeTime s={s} id={B.id} /></b></div>
                   </div>
                 </>
               );
@@ -147,8 +147,8 @@ export function Inicio({ ir, abrirDia }: { ir: (t: Tela, a?: string) => void; ab
 
         <div className="hc">
           <Panel ico="globo" title="Ranking mundial" right={<div className="seg sm">{s.jogos.map(g => <button key={g} className={g === gR ? 'on' : ''} style={{ '--g': GAMES[g].cor } as CSSProperties} onClick={() => setGR(g)}>{GAMES[g].curto}</button>)}</div>}>
-            {rank.slice(0, 7).map((t, i) => <div key={t.id} className={'rank-l ' + (t.org ? 'org' : '')}><span className="rp"># {i + 1}</span><Crest s={s} team={t} size={26} /><b>{t.nome}</b><span>{Math.round(forca(s, t) * 20)}</span><span className="mut">-</span></div>)}
-            {posOrg >= 7 && <div className="rank-l org"><span className="rp"># {posOrg + 1}</span><Crest s={s} team={rank[posOrg]} size={26} /><b>{rank[posOrg].nome}</b><span>{Math.round(forca(s, rank[posOrg]) * 20)}</span><span className="mut">-</span></div>}
+            {rank.slice(0, 7).map((t, i) => <div key={t.id} className={'rank-l ' + (t.org ? 'org' : '')}><span className="rp"># {i + 1}</span><Crest s={s} team={t} size={26} /><b><NomeTime s={s} id={t.id} /></b><span>{Math.round(forca(s, t) * 20)}</span><span className="mut">-</span></div>)}
+            {posOrg >= 7 && <div className="rank-l org"><span className="rp"># {posOrg + 1}</span><Crest s={s} team={rank[posOrg]} size={26} /><b><NomeTime s={s} id={rank[posOrg].id} /></b><span>{Math.round(forca(s, rank[posOrg]) * 20)}</span><span className="mut">-</span></div>}
           </Panel>
           <Panel ico="celular" title="Redes sociais">
             {(s.redes ?? []).slice(-5).reverse().map((p, i) => <div key={i} className={'post ' + p.tom}><div style={{ flex: 1 }}><span className="pa">{p.autor}</span><p>{p.txt}</p></div><small>♥ {p.likes.toLocaleString('pt-BR')}</small></div>)}

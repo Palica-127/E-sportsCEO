@@ -4,7 +4,7 @@ import type { Player, Staff, State, Team } from '../engine/types';
 import { estrelas, humor, logoUrl, slug } from '../engine/world';
 import FOTOS from '../data/fotos.json';
 import ROSTOS from '../data/rostos.json';
-import { abrirTime } from './nav';
+import { abrirJogador, abrirTime } from './nav';
 
 // fotos por jogo ({ lol: [...], cs2: [...] }): só jogadores reais daquele jogo têm foto
 const FOTO_SETS: Record<string, Set<string>> = Object.fromEntries(Object.entries(FOTOS as Record<string, string[]>).map(([g, l]) => [g, new Set(l)]));
@@ -15,12 +15,17 @@ export function fotoDe(game: string, nick: string): string | null {
 function hash(s: string) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 
 // ---------- escudos ----------
-export function Crest({ s, team, size = 32 }: { s: State; team: Team | undefined; size?: number }) {
+/** escudo do time; clicar abre a ficha (link={false} em telas de escolha e na janela do dia de jogo) */
+export function Crest({ s, team, size = 32, link = true }: { s: State; team: Team | undefined; size?: number; link?: boolean }) {
   const [falhou, setFalhou] = useState(false);
   if (!team) return <span style={{ width: size, height: size, display: 'inline-block' }} />;
   const real = team.slug === '__org' ? s.org.logo : logoUrl(team.slug);
-  if (real && !falhou) return <img className="crest-img" src={real} alt={team.nome} width={size} height={size} loading="lazy" onError={() => setFalhou(true)} />;
-  return <Escudo sigla={team.slug === '__org' ? s.org.sigla : team.sigla} cor={team.cor} size={size} />;
+  const img = real && !falhou
+    ? <img className="crest-img" src={real} alt={team.nome} width={size} height={size} loading="lazy" onError={() => setFalhou(true)} />
+    : <Escudo sigla={team.slug === '__org' ? s.org.sigla : team.sigla} cor={team.cor} size={size} />;
+  if (!link || !s.teams[team.id]) return img;
+  return <span className="lnk-crest" role="link" tabIndex={0} title={team.nome} onClick={e => { e.stopPropagation(); abrirTime(team.id); }}
+    onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); abrirTime(team.id); } }}>{img}</span>;
 }
 export function Escudo({ sigla, cor, size = 32 }: { sigla: string; cor: string; size?: number }) {
   const id = 'g' + hash(sigla + cor);
@@ -98,6 +103,13 @@ export function NomeTime({ s, id, children }: { s: State; id: string; children?:
   const t = s.teams[id];
   if (!t) return <>{children ?? '—'}</>;
   return <span className="lnk-time" role="link" tabIndex={0} onClick={e => { e.stopPropagation(); abrirTime(id); }} onKeyDown={e => e.key === 'Enter' && abrirTime(id)}>{children ?? t.nome}</span>;
+}
+
+/** nick do jogador clicável: abre o perfil */
+export function NomeJogador({ s, id, children }: { s: State; id: string | undefined | null; children?: ReactNode }) {
+  const p = id ? s.players[id] : undefined;
+  if (!p) return <>{children ?? '—'}</>;
+  return <span className="lnk-time" role="link" tabIndex={0} onClick={e => { e.stopPropagation(); abrirJogador(p.id); }} onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); abrirJogador(p.id); } }}>{children ?? p.nick}</span>;
 }
 
 // ---------- pequenos componentes ----------

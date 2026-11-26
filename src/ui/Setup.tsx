@@ -139,13 +139,13 @@ function EscolhaJogo({ s, g, cen, reg, time, onReg, onTime }: { s: State; g: Gam
           <div className="team-list">
             {ops.map(t => (
               <button key={t.id} className={'team-row ' + (t.id === time ? 'on' : '')} onClick={() => onTime(t.id)}>
-                <Crest s={s} team={t} size={30} /><span className="tn">{t.nome}</span><span className="tf">Força <b>{forca(s, t).toFixed(1)}</b></span>
+                <Crest link={false} s={s} team={t} size={30} /><span className="tn">{t.nome}</span><span className="tf">Força <b>{forca(s, t).toFixed(1)}</b></span>
               </button>
             ))}
           </div>
           {sel && (
             <div className="team-prev">
-              <div className="tp-h"><Crest s={s} team={sel} size={44} /><div><b>{sel.nome}</b><small>recebe o nome da sua org no rebrand</small></div></div>
+              <div className="tp-h"><Crest link={false} s={s} team={sel} size={44} /><div><b>{sel.nome}</b><small>recebe o nome da sua org no rebrand</small></div></div>
               {titulares(s, sel).map(p => <div key={p.id} className="tp-p"><span className="role">{GAMES[g].roles[p.role]}</span><Flag nat={p.nat} /><span className="nick">{p.nick}</span><span className="age">{p.idade}a</span><Ovr v={p.ovr} /></div>)}
             </div>
           )}

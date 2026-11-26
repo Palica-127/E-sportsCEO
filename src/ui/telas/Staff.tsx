@@ -5,7 +5,7 @@ import { moeda } from '../../engine/org';
 import { CARGOS, CARGOS_JOGO, CARGOS_ORG, NOME_COMODO, cobertura, contratarStaff, demitirStaff, doCargo, multaStaff } from '../../engine/staff';
 import type { Cargo, Staff } from '../../engine/types';
 import { act, useGame } from '../../store';
-import { Estrelas, Flag, Panel, RetratoStaff, Ico3D } from '../common';
+import { Estrelas, Flag, Panel, RetratoStaff, Ico3D, NomeJogador } from '../common';
 import { ICO_CARGO } from '../icones';
 
 export function StaffTela() {
@@ -31,7 +31,7 @@ export function StaffTela() {
         <b>{x.nome}</b>
         <Estrelas v={Math.max(0.5, Math.min(5, (x.nota - 50) / 9))} size={16} />
         <small><Flag nat={x.nat} /> Nota {x.nota} · {moeda(x.sal * 4)}/mês</small>
-        <p>{x.estilo}{x.tarefa ? ` · observando ${s.players[x.tarefa.pid]?.nick ?? ''}` : ''}{info.cap ? ` · cobertura ${Math.round(cobertura(s, cargo) * 100)}%` : ''}</p>
+        <p>{x.estilo}{x.tarefa ? <> · observando <NomeJogador s={s} id={x.tarefa.pid} /></> : ''}{info.cap ? ` · cobertura ${Math.round(cobertura(s, cargo) * 100)}%` : ''}</p>
         <button className="btn danger sm" onClick={() => { if (confirm(`Demitir ${x.nome}? Multa de ${moeda(multaStaff(x))}.`)) act(st => demitirStaff(st, x.id)); }}>Demitir</button>
       </div>
     );

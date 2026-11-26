@@ -4,7 +4,7 @@ import { fmtData } from '../../engine/sim';
 import { doCargo } from '../../engine/staff';
 import { notaVista } from '../../engine/mercado';
 import { useGame } from '../../store';
-import { Crest, Estrelas, Ovr, Panel, RetratoJogador, RetratoStaff } from '../common';
+import { Crest, Estrelas, Ovr, Panel, RetratoJogador, RetratoStaff, NomeTime, NomeJogador } from '../common';
 import type { Tela } from '../Shell';
 
 export function Olheiros({ ir }: { ir: (t: Tela, a?: string) => void }) {
@@ -20,7 +20,7 @@ export function Olheiros({ ir }: { ir: (t: Tela, a?: string) => void }) {
               <RetratoStaff s={s} x={o} size={96} /><b>{o.nome}</b>
               <Estrelas v={Math.max(0.5, Math.min(5, (o.nota - 50) / 9))} size={15} />
               <small>{o.estilo}</small>
-              <p>{o.tarefa ? <>Observando <b>{s.players[o.tarefa.pid]?.nick}</b> · relatório {fmtData(o.tarefa.fim, false)}</> : 'Livre: escolha alguém no mercado ou no perfil de um jogador.'}</p>
+              <p>{o.tarefa ? <>Observando <b><NomeJogador s={s} id={o.tarefa.pid} /></b> · relatório {fmtData(o.tarefa.fim, false)}</> : 'Livre: escolha alguém no mercado ou no perfil de um jogador.'}</p>
               {!o.tarefa && <button className="btn sm" onClick={() => ir('mercado')}>Escolher alvo</button>}
             </div>
           ))}
@@ -39,7 +39,7 @@ export function Olheiros({ ir }: { ir: (t: Tela, a?: string) => void }) {
                   <td className="tm"><RetratoJogador s={s} p={p} size={34} />{p.nick}</td>
                   <td><span className="gtag" style={{ ['--g' as string]: GAMES[p.game].cor }}>{GAMES[p.game].curto}</span></td>
                   <td>{GAMES[p.game].roles[p.role]}</td><td>{p.idade}</td>
-                  <td className="tm">{p.teamId ? <><Crest s={s} team={s.teams[p.teamId]} size={20} />{s.teams[p.teamId].nome}</> : 'Livre'}</td>
+                  <td className="tm">{p.teamId ? <><Crest s={s} team={s.teams[p.teamId]} size={20} /><NomeTime s={s} id={p.teamId} /></> : 'Livre'}</td>
                   <td><Ovr v={notaVista(s, p).txt} /></td>
                   <td><Estrelas v={Math.max(1, Math.min(5, (p.pot - 58) / 8))} size={12} /></td>
                   <td>{k.int ?? '?'}%</td>

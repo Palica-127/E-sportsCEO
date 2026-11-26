@@ -925,6 +925,8 @@ input[type=range] { width: 100%; padding: 0; accent-color: var(--cyan); }
 /* ---------- nome de time clicável (abre a ficha) ---------- */
 .lnk-time { cursor: pointer; text-decoration: none; border-bottom: 1px dotted transparent; }
 .lnk-time:hover, .lnk-time:focus-visible { color: #fff; border-bottom-color: currentColor; outline: none; }
+.lnk-crest { display: inline-flex; flex: none; cursor: pointer; border-radius: 6px; transition: transform .12s, filter .12s; }
+.lnk-crest:hover, .lnk-crest:focus-visible { transform: scale(1.08); filter: brightness(1.15); outline: none; }
 
 /* ---------- ficha do time ---------- */
 .ficha-time .ft-top { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding: 18px 22px; margin-bottom: 14px; border-radius: 4px;

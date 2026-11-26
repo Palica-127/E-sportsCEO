@@ -4,7 +4,7 @@ import { CSSProperties, useMemo, useState } from 'react';
 import { GAMES, GameId } from '../../engine/games';
 import { histJogo, lendas, Lenda, timeHist, tipoDoKind } from '../../engine/historiaReal';
 import { useGame } from '../../store';
-import { Crest, Flag, fotoDe, NomeTime, Panel, Retrato } from '../common';
+import { Crest, Flag, fotoDe, NomeJogador, NomeTime, Panel, Retrato } from '../common';
 import { irPara } from '../nav';
 
 const TODOS: GameId[] = ['lol', 'cs2', 'valorant', 'dota2', 'r6', 'ff', 'fifa', 'wr'];
@@ -132,6 +132,7 @@ function Times({ g }: { g: GameId }) {
 }
 
 function Recordes({ g, lista }: { g: GameId; lista: Lenda[] }) {
+  const s = useGame()!;
   const h = histJogo(g)!;
   const max = (f: (x: Lenda) => number) => lista.reduce<Lenda | null>((b, x) => (f(x) > (b ? f(b) : 0) ? x : b), null);
   const rec: [string, Lenda | null, (x: Lenda) => number][] = [
@@ -145,7 +146,7 @@ function Recordes({ g, lista }: { g: GameId; lista: Lenda[] }) {
     <Panel title="Recordes">
       <div className="lend-rec">
         {rec.filter(r => r[1]).map(([n, x, f]) => (
-          <div key={n} className="rec"><small>{n}</small><b className="num">{f(x!)}</b><span><Flag nat={x!.nat} /> {x!.nick}</span></div>
+          <div key={n} className="rec"><small>{n}</small><b className="num">{f(x!)}</b><span><Flag nat={x!.nat} /> {x!.pid ? <NomeJogador s={s} id={x!.pid}>{x!.nick}</NomeJogador> : x!.nick}</span></div>
         ))}
       </div>
     </Panel>

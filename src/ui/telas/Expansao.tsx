@@ -28,11 +28,11 @@ export function Modalidades() {
                 <div className="mc-h"><span className="gtag">{GAMES[g].curto}</span><b>{GAMES[g].nome}</b></div>
                 {t ? (
                   <>
-                    <div className="mc-t"><Crest s={s} team={t} size={34} /><div><b>{t.nome}</b><small>{ligaDoTime(s, t.id).nome} · força {forca(s, t).toFixed(1)}</small></div></div>
+                    <div className="mc-t"><Crest link={false} s={s} team={t} size={34} /><div><b>{t.nome}</b><small>{ligaDoTime(s, t.id).nome} · força {forca(s, t).toFixed(1)}</small></div></div>
                     <div className="mc-ac">
                       {ac ? (
                         <>
-                          <div className="mc-t"><Crest s={s} team={ac} size={26} /><div><b>{ac.nome}</b><small>{ligaDoTime(s, ac.id).nome} · {ac.elenco.length} jovens</small></div></div>
+                          <div className="mc-t"><Crest link={false} s={s} team={ac} size={26} /><div><b>{ac.nome}</b><small>{ligaDoTime(s, ac.id).nome} · {ac.elenco.length} jovens</small></div></div>
                           <button className="btn ghost sm" onClick={() => { if (confirm('Vender a vaga da Academy? Os jovens ficam livres.')) act(st => fecharAcademy(st, g, 'ceo')); }}>Fechar</button>
                         </>
                       ) : (
@@ -95,7 +95,7 @@ function Entrada({ g, onFechar }: { g: GameId; onFechar: (msg?: string) => void 
             <div className="team-list exp">
               {ops.map(t => (
                 <button key={t.id} className={'team-row ' + (t.id === time ? 'on' : '')} onClick={() => setTime(t.id)}>
-                  <Crest s={s} team={t} size={30} /><b>{t.nome}</b><small>{t.tier === 1 ? 'Elite' : 'Challengers'} · força {forca(s, t).toFixed(1)}</small><span>{moeda(preco(s, g, reg, modo, t.id))}</span>
+                  <Crest link={false} s={s} team={t} size={30} /><b>{t.nome}</b><small>{t.tier === 1 ? 'Elite' : 'Challengers'} · força {forca(s, t).toFixed(1)}</small><span>{moeda(preco(s, g, reg, modo, t.id))}</span>
                 </button>
               ))}
             </div>

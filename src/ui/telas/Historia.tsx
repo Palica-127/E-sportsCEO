@@ -6,7 +6,7 @@ import { anoDe } from '../../engine/sim';
 import type { Premiado, State, TorKind } from '../../engine/types';
 import { act, useGame } from '../../store';
 import { Lendas } from './Lendas';
-import { Crest, Escudo, Flag, fotoDe, Panel, Retrato, NomeTime } from '../common';
+import { Crest, Escudo, Flag, fotoDe, Panel, Retrato, NomeTime, NomeJogador } from '../common';
 
 const trofeu = (kind: TorKind, nome: string, g: GameId = 'lol') => {
   // outros jogos: troféus próprios (tools/gerar_trofeus.py; Aegis do Dota é foto do Commons)
@@ -156,7 +156,7 @@ function Hall() {
             <div key={h.pid} className={'placa ' + (h.lendaOrg ? 'org ' : '') + (h.camisa ? 'camisa' : '')} style={{ '--g': GAMES[h.game].cor } as CSSProperties}>
               <Retrato nome={h.nick + h.pid} cor={h.lendaOrg ? s.org.cor : '#8a6d2f'} size={96} foto={fotoDe(h.game, h.nick)} />
               <div className="pl-info">
-                <b>{h.nick}</b>
+                <b><NomeJogador s={s} id={h.pid}>{h.nick}</NomeJogador></b>
                 <small><Flag nat={h.nat} /> <span className="gtag">{GAMES[h.game].curto}</span> {GAMES[h.game].roleNomes[h.role]} · {h.inicio}–{h.ano}</small>
                 <div className="pl-num"><span><b>{h.titulos}</b>títulos</span><span><b>{h.premios.length}</b>prêmios</span><span><b>{h.mvps}</b>MVPs</span><span><b>{h.pico}</b>pico</span></div>
                 {h.premios.length > 0 && <small className="mut">{h.premios.slice(0, 3).join(' · ')}{h.premios.length > 3 ? '…' : ''}</small>}
@@ -194,7 +194,7 @@ function Campeoes() {
                       <span>{e.ano}{e.split ? ` · S${e.split}` : ''}</span>
                       {tc ? <Crest s={s} team={tc} size={22} /> : <span style={{ width: 22 }} />}
                       <b>{tc ? <NomeTime s={s} id={tc.id} /> : e.campeao}</b>
-                      <small className="mut">vice {e.vice}</small>
+                      <small className="mut">vice {(() => { const tv = timePorNome(s, g, e.vice); return tv ? <NomeTime s={s} id={tv.id}>{e.vice}</NomeTime> : e.vice; })()}</small>
                     </div>
                   );
                 })}

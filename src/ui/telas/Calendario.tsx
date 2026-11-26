@@ -4,7 +4,7 @@ import { anoDe, dataDe, isOrg, nomeMes } from '../../engine/sim';
 import { calendario, inicioAno, nomeIntl } from '../../engine/comp';
 import type { Match } from '../../engine/types';
 import { useGame } from '../../store';
-import { Crest } from '../common';
+import { Crest, NomeTime } from '../common';
 import { Resumo, nomeFase } from '../Resumo';
 
 const BASE = Date.UTC(2027, 0, 4);
@@ -51,7 +51,7 @@ export function Calendario() {
                 const venceu = jogado && (meuA ? m.sa! > m.sb! : m.sb! > m.sa!);
                 return (
                   <button key={m.id} className={'cal-m ' + (jogado ? (venceu ? 'v' : 'd') : '')} style={{ '--g': GAMES[m.game].cor } as CSSProperties} onClick={() => m.det && setRever(m.id)}>
-                    <Crest s={s} team={adv} size={16} /><span>{adv.sigla}</span>{jogado && <b>{meuA ? `${m.sa}-${m.sb}` : `${m.sb}-${m.sa}`}</b>}
+                    <Crest link={false} s={s} team={adv} size={16} /><span>{adv.sigla}</span>{jogado && <b>{meuA ? `${m.sa}-${m.sb}` : `${m.sb}-${m.sa}`}</b>}
                   </button>
                 );
               })}
@@ -66,7 +66,7 @@ export function Calendario() {
             <div key={m.id} className="cl-row" style={{ '--g': GAMES[m.game].cor } as CSSProperties} onClick={() => m.det && setRever(m.id)}>
               <span className="gtag">{GAMES[m.game].curto}</span>
               <span className="cl-d">{dataDe(m.dia).getUTCDate()}/{dataDe(m.dia).getUTCMonth() + 1}</span>
-              <span className="cl-t"><Crest s={s} team={s.teams[meuA ? m.b : m.a]} size={20} />{meuA ? 'vs' : '@'} {s.teams[meuA ? m.b : m.a].nome}</span>
+              <span className="cl-t"><Crest s={s} team={s.teams[meuA ? m.b : m.a]} size={20} />{meuA ? 'vs' : '@'} <NomeTime s={s} id={meuA ? m.b : m.a} /></span>
               <span className="cl-f">{nomeFase(m)}</span>
               <b>{m.sa != null ? (meuA ? `${m.sa}–${m.sb}` : `${m.sb}–${m.sa}`) : ''}</b>
             </div>

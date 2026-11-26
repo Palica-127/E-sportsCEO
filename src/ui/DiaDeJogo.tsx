@@ -64,9 +64,9 @@ function Resultados({ ids, onFechar }: { ids: string[]; onFechar: () => void }) 
           return (
             <button key={m.id} className={'res-card ' + (venceu ? 'v' : 'd')} style={{ '--g': GAMES[m.game].cor } as CSSProperties} onClick={() => setRever(m.id)}>
               <span className="gtag">{GAMES[m.game].curto}</span>
-              <span className="rc-t"><Crest s={s} team={s.teams[m.a]} size={36} />{s.teams[m.a].sigla}</span>
+              <span className="rc-t"><Crest link={false} s={s} team={s.teams[m.a]} size={36} />{s.teams[m.a].sigla}</span>
               <span className="rc-s">{m.sa}–{m.sb}</span>
-              <span className="rc-t">{s.teams[m.b].sigla}<Crest s={s} team={s.teams[m.b]} size={36} /></span>
+              <span className="rc-t">{s.teams[m.b].sigla}<Crest link={false} s={s} team={s.teams[m.b]} size={36} /></span>
               <span className={'rc-r ' + (venceu ? 'v' : 'd')}>{venceu ? 'VITÓRIA' : 'DERROTA'}</span>
               {m.mvp && <small>MVP: {s.players[m.mvp]?.nick}</small>}
             </button>
@@ -79,9 +79,9 @@ function Resultados({ ids, onFechar }: { ids: string[]; onFechar: () => void }) 
           <div className="res-outros">
             {academy.map(m => (
               <div key={m.id} className="ro">
-                <span className={m.sa! > m.sb! ? 'w' : ''}><Crest s={s} team={s.teams[m.a]} size={20} />{s.teams[m.a].sigla}</span>
+                <span className={m.sa! > m.sb! ? 'w' : ''}><Crest link={false} s={s} team={s.teams[m.a]} size={20} />{s.teams[m.a].sigla}</span>
                 <b>{m.sa}–{m.sb}</b>
-                <span className={m.sb! > m.sa! ? 'w' : ''}>{s.teams[m.b].sigla}<Crest s={s} team={s.teams[m.b]} size={20} /></span>
+                <span className={m.sb! > m.sa! ? 'w' : ''}>{s.teams[m.b].sigla}<Crest link={false} s={s} team={s.teams[m.b]} size={20} /></span>
               </div>
             ))}
           </div>
@@ -93,9 +93,9 @@ function Resultados({ ids, onFechar }: { ids: string[]; onFechar: () => void }) 
           <div className="res-outros">
             {outros.map(m => (
               <div key={m.id} className="ro">
-                <span className={m.sa! > m.sb! ? 'w' : ''}><Crest s={s} team={s.teams[m.a]} size={20} />{s.teams[m.a].sigla}</span>
+                <span className={m.sa! > m.sb! ? 'w' : ''}><Crest link={false} s={s} team={s.teams[m.a]} size={20} />{s.teams[m.a].sigla}</span>
                 <b>{m.sa}–{m.sb}</b>
-                <span className={m.sb! > m.sa! ? 'w' : ''}>{s.teams[m.b].sigla}<Crest s={s} team={s.teams[m.b]} size={20} /></span>
+                <span className={m.sb! > m.sa! ? 'w' : ''}>{s.teams[m.b].sigla}<Crest link={false} s={s} team={s.teams[m.b]} size={20} /></span>
               </div>
             ))}
           </div>

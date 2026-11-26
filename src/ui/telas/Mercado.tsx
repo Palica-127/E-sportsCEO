@@ -6,7 +6,7 @@ import { fmtData } from '../../engine/sim';
 import { valorMercado } from '../../engine/world';
 import { abrirNeg, candidatosRosto, convidarRosto, exigenciasRosto, interesse, janelaAberta, maxElenco, notaVista, pedidoSalario, proximaJanela, valorClube } from '../../engine/mercado';
 import { act, useGame } from '../../store';
-import { Crest, EstrelasNota, Flag, Ovr, Panel, RetratoJogador } from '../common';
+import { Crest, EstrelasNota, Flag, Ovr, Panel, RetratoJogador, NomeTime } from '../common';
 import type { Tela } from '../Shell';
 
 export function Proposta({ pid, onFechar }: { pid: string; onFechar: () => void }) {
@@ -74,7 +74,7 @@ export function Mercado({ ir, aba: aba0 }: { ir: (t: Tela, a?: string) => void; 
         <td className="tm"><RetratoJogador s={s} p={p} size={34} /><Flag nat={p.nat} />{p.nick}</td>
         <td><span className="role">{GAMES[p.game].roles[p.role]}</span></td>
         <td>{p.idade}</td>
-        <td className="tm">{t ? <><Crest s={s} team={t} size={20} />{t.nome}</> : <span className="mut">Livre</span>}</td>
+        <td className="tm">{t ? <><Crest s={s} team={t} size={20} /><NomeTime s={s} id={t.id} /></> : <span className="mut">Livre</span>}</td>
         <td><Ovr v={nv.txt} /></td>
         <td>{(() => { const i = k?.int ?? interesse(s, p, p.game); return <span className={'int ' + (i >= 65 ? 'hi' : i >= 40 ? 'md' : 'lo')}>{i}%</span>; })()}</td>
         <td>{moeda(valorMercado(p))}</td>
