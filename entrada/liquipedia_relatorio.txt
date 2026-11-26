@@ -1,0 +1,171 @@
+[ff] ? Corinthians: a página "Corinthians" diz que o time acabou — ignorada
+[ff]   (Fluxo = "Fluxo W7M" na Liquipedia)
+[ff] ? Black Dragons: a página "Black Dragons e-Sports" diz que o time acabou — ignorada
+[ff] ? Team Liquid: a página "Team Liquid" diz que o time acabou — ignorada
+[ff]   (Los Grandes = "LOS" na Liquipedia)
+[ff] ? Flamengo: a página "Flamengo Esports" diz que o time acabou — ignorada
+[ff] ? RED Canids: a página "RED Canids" diz que o time acabou — ignorada
+[ff] ? INTZ: a página "INTZ" diz que o time acabou — ignorada
+[ff] ? paiN Gaming: a página "PaiN Gaming" diz que o time acabou — ignorada
+[ff] ? Furious Gaming: a página "Furious Gaming" diz que o time acabou — ignorada
+[ff] ? Todak: a página "Todak" diz que o time acabou — ignorada
+[ff]   (ONIC Esports = "ONIC Olympus" na Liquipedia)
+[ff] ? Geek Fam: a página "Geek Fam" diz que o time acabou — ignorada
+[ff] ? Phoenix Force: a página "EVOS Phoenix" diz que o time acabou — ignorada
+[ff] ? FURIA: a página "FURIA Esports" diz que o time acabou — ignorada
+[ff] ? Flamengo: a página "Flamengo Esports" diz que o time acabou — ignorada
+[ff] ? paiN Gaming: a página "PaiN Gaming" diz que o time acabou — ignorada
+[ff]   (Bigetron = "Bigetron by Vitality" na Liquipedia)
+[ff]   (Buriram United = "Buriram United Esports" na Liquipedia)
+[ff] ? Vivo Keyd Stars: a página "Keyd Stars" diz que o time acabou — ignorada
+[ff] ? Corinthians: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Vivo Keyd Stars: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? FURIA: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Black Dragons: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Team Liquid: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Flamengo: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? RED Canids: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? INTZ: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? paiN Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Sharks Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? KaBuM!: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Vasco: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Rebirth Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Dynamo: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Cloud9 LATAM: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Nova Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Furious Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Thunder Predator: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Isurus: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Tigres: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Vorax: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Estral: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Marcos Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Pixel Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Gaimin LATAM: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? EVOS Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Todak: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Rex Regum Qeon: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Alter Ego: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Team Secret: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Vampire Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Geek Fam: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Talon Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Fire Flux: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Habibi: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Phoenix Force: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] ? Ghost: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[ff] LOUD: saem Trap | entram Bzp10
+[ff] Fluxo: saem Giuh, Butzin | entram But, Giuh.87
+[ff] Los Grandes: saem Torky, Axtek, Nale, dojiny | entram General, mtsexy, RIGBY, Raone7
+[ff] Infinity: saem jinlox, namiaxy, gisazz, vexruii | entram CHUCKY, David9, Poveda, Pabloo98
+[ff] Leviatán: saem jinmoy, oriaxii, hexze, crirexx | entram FAQ7, Paco07, JOTA, MAXI
+[ff] ONIC Esports: saem nalumni, Axbluroii, Nini, Orisho | entram CrimeMKS, Putraxx, G, ONEMORE
+[ff] Bigetron: saem Mooritek, Draka7, milumz, Dracrinao | entram Kyong, Kojaaaa, C1benk, Fellow
+[ff] Buriram United: saem lumdracrix, mopaze1, Shonaii, turuzex | entram GETHIGH, JOENA, Moshi, Wassana
+[ff] ? Fluxo: página sem logo
+[ff] ? ONIC Esports: página sem logo
+[ff] ? Buriram United: página sem logo
+[fifa] ? LOUD: a página "LOUD" diz que o time acabou — ignorada
+[fifa]   (Fluxo = "Fluxo W7M" na Liquipedia)
+[fifa] ? Team BDS: a página "Team BDS" diz que o time acabou — ignorada
+[fifa] ? Team Vitality: a página "Team Vitality" diz que o time acabou — ignorada
+[fifa]   (Boca Juniors = "Boca Juniors Gaming" na Liquipedia)
+[fifa]   (Galatasaray = "Galatasaray Esports" na Liquipedia)
+[fifa] ? Flamengo: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Corinthians: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? FURIA: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? paiN Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? LOUD: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Vasco: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Palmeiras: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Santos: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? São Paulo: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Grêmio: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Cruzeiro: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Athletico: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Sharks Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Keyd Stars: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Team BDS: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Team Vitality: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Team Liquid II: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? RBLZ Gaming II: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? RBLZ Gaming III: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Team Vitality II: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Man City Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Gaimin Gladiators: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Benfica: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Twisted Minds II: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Tuzzy Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Inter: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? LAFC: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Al-Hilal: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Flamengo Global: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Corinthians Global: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? River Plate: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Celtic: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Cruz Azul: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Seattle Sounders: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] ? Urawa: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[fifa] Fluxo: saem MarwanMC9 | entram Gueric
+[fifa] HYPERSPIRIT: saem RVPLegend | entram ChrisdeBoer
+[fifa] Team Falcons: saem Vejrgang | entram Msdossary
+[fifa] Team Liquid: saem ManuBachoore | entram EmreYilmaz
+[fifa] SC Freiburg: saem Nassada | entram Luuk
+[fifa] Exeed: saem Obrun | entram Kekkova
+[fifa] Twisted Minds: saem LJR Peixoto | entram S7wi
+[fifa] Boca Juniors: saem Lebluz | entram Tobias
+[fifa] Galatasaray: saem axtormo7 | entram KTzn_91
+[fifa] Team Liquid II: Emre Yilmaz está em Team Liquid — vaga aberta
+[wr] ? Los Grandes: a página "Los Grandes" diz que o time acabou — ignorada
+[wr] ? Team Flash: a página "Team Flash" diz que o time acabou — ignorada
+[wr] ? Rex Regum Qeon: a página "Rex Regum Qeon" diz que o time acabou — ignorada
+[wr] ? Geek Fam: a página "Geek Fam" diz que o time acabou — ignorada
+[wr] ? Cloud9: a página "Cloud9" diz que o time acabou — ignorada
+[wr]   (Flamengo = "Flamengo Esports" na Liquipedia)
+[wr]   (Vivo Keyd Stars = "Keyd Stars" na Liquipedia)
+[wr] ? LOUD: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? paiN Gaming: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? FURIA: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? RED Canids: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? INTZ: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? KaBuM!: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Los Grandes: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Netshoes Miners: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Fluxo: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Corinthians: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Sharks Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Team Liquid: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Team Flash: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Burmese Ghouls: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Talon Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Rex Regum Qeon: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Alter Ego: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Gen.G: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Vikings: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Hanwha Life: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Dplus: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? ONIC Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? EVOS Esports: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Bigetron: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Geek Fam: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Fnatic: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Team Heretics: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Karmine Corp: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Cloud9: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Dignitas: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Team Liquid Wild: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? 100 Thieves Wild: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Gentle Mates: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Misfits: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Excel: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Rebels: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Evil Geniuses: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? NRG: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Shopify Rebellion: não achei a página do time — elenco mantido (dá para indicar em entrada/liquipedia_alias.json)
+[wr] ? Black Dragons: só 0 titular(es) na página — elenco mantido
+[wr] ? Saigon Phantom: só 4 titular(es) na página — elenco mantido
+[wr] ? Flamengo: só 0 titular(es) na página — elenco mantido
+[wr] ? Vivo Keyd Stars: só 3 titular(es) na página — elenco mantido
+[wr] SBTC Esports: saem doxephoo, furuorix, Zordo1, teklo, Hexaxbluo | entram TF, T3, July, Kiral, Akeno
+[wr] Sentinels: saem lumdraii, Xefuni, Miky, Mirexfu, Loaxy | entram Zelo, Mali, Starting, Gume, Lebmont

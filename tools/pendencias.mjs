@@ -2,7 +2,8 @@
 // Ordem de prioridade: ligas principais primeiro, depois Challengers. Uso: node tools/pendencias.mjs
 import fs from 'node:fs';
 import path from 'node:path';
-const RAIZ = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+import { fileURLToPath } from 'node:url';
+const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const D = f => JSON.parse(fs.readFileSync(path.join(RAIZ, 'src/data', f), 'utf8'));
 const lol = D('lol.json'), outros = D('outros.json');
 const logos = new Set(D('logos.LOGOS.json')), FOTOS = D('fotos.json'), fotosDe = g => new Set(FOTOS[g] || []);

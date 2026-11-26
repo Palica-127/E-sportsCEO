@@ -14,7 +14,7 @@ Fontes:
   - r6:       siege.gg (página do time)
   - cs2:      prosettings.net (página do time e do jogador)
   - dota2:    OpenDota (times ativos e jogadores atuais; sem aniversário nem nome real)
-  Free Fire, EA FC e Wild Rift só têm fonte boa na Liquipedia (hoje bloqueada para este IP).
+  Free Fire, EA FC e Wild Rift: tools/buscar_liquipedia.py (API oficial da Liquipedia; ver entrada/COMO_BUSCAR_LIQUIPEDIA.txt)
 
 Uso: python tools/buscar_elencos.py lol valorant ...   (--refazer ignora o cache)
 Gera também entrada/elencos_relatorio.txt com o que mudou e o que ficou de fora.
@@ -387,7 +387,8 @@ def dedup(g, over, rel):
                 if k not in melhor or p[5] > melhor[k][1]: melhor[k] = (t, p[5])
     for t, ps in over.items():
         for i, p in enumerate(ps):
-            if p and melhor[bf.chave(p[0])][0] != t:
+            # dois fictícios com o mesmo nick (prioridade -1 nos dois) não são a mesma pessoa
+            if p and melhor[bf.chave(p[0])][0] != t and melhor[bf.chave(p[0])][1] >= 0:
                 rel.append(f'[{g}] {t}: {p[0]} está em {melhor[bf.chave(p[0])][0]} — vaga aberta')
                 ps[i] = None
     # times não pesquisados e sem conflito saem do arquivo; tira a marca de prioridade
@@ -400,7 +401,7 @@ def main():
     saida = json.loads(SAIDA.read_text(encoding='utf-8')) if SAIDA.exists() else {}
     rel = []
     for g in args:
-        if g not in FONTES: rel.append(f'[{g}] sem fonte disponível (precisa da Liquipedia)'); continue
+        if g not in FONTES: rel.append(f'[{g}] use tools/buscar_liquipedia.py {g}'); continue
         print(f'[{g}] pesquisando…', flush=True)
         try:
             saida[g] = FONTES[g](rel)

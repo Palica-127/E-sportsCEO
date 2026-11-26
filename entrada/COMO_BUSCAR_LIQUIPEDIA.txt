@@ -1,0 +1,91 @@
+COMO PUXAR ELENCOS E LOGOS DA LIQUIPEDIA (Free Fire, EA FC, Wild Rift e o que faltou de CS2/Dota 2)
+=====================================================================================================
+
+Por que existe este passo
+-------------------------
+A Liquipedia é a única fonte boa para Free Fire, EA FC e Wild Rift. Ela bloqueia quem acessa rápido
+demais ou por robô, e o seu IP está bloqueado agora (a página mostra "Rate Limited").
+O script tools/buscar_liquipedia.py usa a API oficial dela, do jeito que os termos permitem:
+devagar (1 pedido a cada 3 segundos), identificado e com cache. Se ela bloquear de novo, o script para sozinho.
+
+
+PASSO 1 — Esperar o bloqueio passar
+-----------------------------------
+Abra https://liquipedia.net/freefire/ no navegador, de forma normal.
+  - Se aparecer "Rate Limited", ainda está bloqueado. Espere algumas horas (às vezes até 1 dia) e tente de novo.
+  - Se a página abrir normal, siga em frente.
+Dica: se a sua internet tiver IP dinâmico, reiniciar o modem costuma trocar o IP.
+Enquanto estiver bloqueado, NÃO fique recarregando a página: isso pode aumentar o bloqueio.
+
+
+PASSO 2 — Fazer um teste pequeno (não grava nada)
+-------------------------------------------------
+A Liquipedia exige um contato no programa que acessa a API. Use o seu e-mail ou o link do seu GitHub
+(ex.: https://github.com/Palica-127). Esse contato só vai para a Liquipedia, mais ninguém vê.
+
+No terminal, na pasta do projeto:
+
+    python tools/buscar_liquipedia.py ff --times=LOUD,Fluxo --mostrar --contato=SEU_CONTATO
+
+Ele mostra o elenco que encontrou, com função, país, nascimento e nome real. Confira se bate com o site.
+Se algo estiver errado, me mande o que apareceu na tela.
+
+
+PASSO 3 — Buscar tudo
+---------------------
+    python tools/buscar_liquipedia.py ff fifa wr --contato=SEU_CONTATO
+
+Leva cerca de 20 a 25 minutos por jogo (a Liquipedia só deixa pedir 1 elenco a cada 30 segundos).
+É lento de propósito, deixe rodando.
+O que ele faz:
+  - grava os elencos reais em src/data/elencos.json
+  - baixa os logos que faltam para entrada/logos/
+  - escreve o que mudou, e o que não achou, em entrada/liquipedia_relatorio.txt
+
+Quer também os times de CS2 e Dota 2 que ficaram sem elenco confirmado?
+
+    python tools/buscar_liquipedia.py cs2 dota2 --contato=SEU_CONTATO
+
+(Nesses jogos ele só mexe nos times que as outras fontes não acharam.)
+
+Se a Liquipedia bloquear no meio do caminho, o script para e avisa. O que já tinha vindo fica guardado
+no cache, então é só rodar o mesmo comando de novo outro dia: ele continua de onde parou.
+
+
+PASSO 4 — Colocar os logos no jogo
+----------------------------------
+    python tools/importar_imagens.py
+
+(o mesmo de sempre: recorta, tira o fundo, converte e atualiza a lista de pendências)
+
+
+PASSO 5 — Fotos dos jogadores novos
+-----------------------------------
+    python tools/buscar_fotos.py ff fifa wr
+
+Esse script também consulta a Liquipedia, então rode depois do passo 3 e com calma.
+
+
+PASSO 6 — Conferir
+------------------
+Abra entrada/liquipedia_relatorio.txt. Linhas que começam com "?" são times que ele não resolveu:
+  - "não achei a página do time": o nome do time no jogo é diferente do nome na Liquipedia.
+    Crie o arquivo entrada/liquipedia_alias.json dizendo qual é a página certa, por exemplo:
+
+        { "ff":   { "Vivo Keyd Stars": "Keyd Stars" },
+          "fifa": { "Team Liquid II": "Team Liquid" } }
+
+    e rode o passo 3 de novo (só os que faltaram serão pedidos).
+  - "só N titular(es) na página": o time está sem elenco completo na Liquipedia. Fica com o elenco antigo.
+  - "logo só em SVG": baixe a imagem do link manualmente, salve como PNG em entrada/logos/ e rode o passo 4.
+
+Depois rode o jogo (npm run dev) e veja se os times estão certos. Quando estiver tudo bem, é só me pedir o commit.
+
+
+Opções extras do script
+-----------------------
+  --mostrar     só mostra o que acharia, não grava nada
+  --times=A,B   só esses times
+  --sem-logos   não baixa logos       --so-logos   só baixa logos
+  --todos       refaz também os times que já têm elenco real
+  --refazer     ignora o cache e pede tudo de novo (evite: gasta pedidos à toa)
