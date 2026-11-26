@@ -139,12 +139,18 @@ def elenco_ativo(txt):
 def secao_ativos(txt):
     """número da seção "Active" logo abaixo de "Player Roster" (numeração do MediaWiki: cabeçalhos do wikitexto em ordem)"""
     txt = re.sub(r'<!--.*?-->', '', txt, flags=re.S)
-    heads = [h.strip() for h in re.findall(r'^=+\s*(.*?)\s*=+\s*$', txt, re.M)]
-    for i, h in enumerate(heads):
+    # o MediaWiki só numera os títulos fora de templates ({{Tabs dynamic|...===Active===...}} não conta)
+    heads, prof = [], 0
+    for ln in txt.splitlines():
+        m = re.match(r'^(=+)\s*(.*?)\s*=+\s*$', ln)
+        if m and prof == 0: heads.append((len(m.group(1)), m.group(2).strip()))
+        prof = max(0, prof + ln.count('{{') - ln.count('}}'))
+    for i, (nv, h) in enumerate(heads):
         if re.match(r'player roster|roster', h, re.I):
             for k in range(i + 1, len(heads)):
-                if re.match(r'active|current', heads[k], re.I): return k + 1
-            return i + 1
+                if heads[k][0] <= nv: break  # saiu de "Player Roster" (ex.: "Organization" também tem "Active")
+                if re.match(r'active|current', heads[k][1], re.I): return k + 1
+            return i + 1  # "Active" dentro de abas: pega a seção inteira (ex-jogadores têm data de saída e são ignorados)
     return None
 
 _ult_parse = [0.0]
