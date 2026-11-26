@@ -96,3 +96,6 @@ al-qadsiah	https://liquipedia.net/commons/images/6/6a/Al_Qadsiah_2024_allmode.pn
 holstein-kiel	https://liquipedia.net/commons/images/e/ee/Holstein_Kiel.png
 ajax-esports	https://liquipedia.net/commons/images/4/47/AFC_Ajax_allmode.png
 as-monaco-esports	https://liquipedia.net/commons/images/7/78/AS_Monaco_allmode.png
+burmese-ghouls	https://liquipedia.net/commons/images/3/3c/Burmese_Ghouls_2023_darkmode.png
+sbo3a	https://liquipedia.net/commons/images/9/9d/Sbo3a_2024_allmode.png
+solo-leveling	https://liquipedia.net/commons/images/5/52/Solo_Leveling_darkmode.png
