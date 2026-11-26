@@ -254,10 +254,25 @@ def logos(g, achados, rel):
         ib = infobox(p['texto'], r'Infobox team')
         arq = ib.get('image') or ib.get('imagedark')
         if arq: quer[t] = 'File:' + re.sub(r'^(File|Image):', '', arq, flags=re.I).strip()
-        else: rel.append(f'[{g}] ? {t}: página sem logo')
-    if not quer: return 0
+        else: quer[t] = None
     urls = {}
-    for lote in bf.lotes(sorted(set(quer.values())), 50):
+    sem = [t for t, a in quer.items() if a is None]
+    if sem:  # logo guardado no modelo {{Team|...}}: um único action=parse com todos eles
+        w = _ult_parse[0] + ESPERA_PARSE - time.time()
+        if w > 0: time.sleep(w)
+        txt = ''.join(f'<div class="lq-t">{{{{Team|{achados[t]["titulo"]}}}}}</div>' for t in sem)
+        d = api(g, action='parse', text=txt, contentmodel='wikitext', prop='text', disablelimitreport='1')
+        _ult_parse[0] = time.time()
+        blocos = re.findall(r'<div class="lq-t">(.*?)</div>\s*(?=<div class="lq-t">|$)', d.get('parse', {}).get('text', ''), re.S)
+        for t, b in zip(sem, blocos):
+            src = re.search(r'<img[^>]+src="(/commons/images/[^"]+)"', b)
+            if not src or 'filler' in src.group(1).lower(): rel.append(f'[{g}] ? {t}: página sem logo'); continue
+            m = re.match(r'/commons/images/thumb/(.+?)/\d+px-[^/]+$', src.group(1))
+            quer[t] = 'icone:' + t
+            urls[quer[t]] = 'https://liquipedia.net/commons/images/' + (m.group(1) if m else src.group(1).split('/commons/images/', 1)[1])
+    quer = {t: a for t, a in quer.items() if a}
+    if not quer: return 0
+    for lote in bf.lotes(sorted({a for a in quer.values() if not a.startswith('icone:')}), 50):
         d = api(g, action='query', prop='imageinfo', iiprop='url', titles='|'.join(lote))
         qy = d.get('query', {})
         volta = {x['to']: x['from'] for x in qy.get('normalized', [])}
@@ -282,7 +297,7 @@ def logos(g, achados, rel):
 # ---------------------------------------------------------------- principal
 def processa(g, saida, rel):
     atuais = be.dados_atuais(g)
-    over = saida.get(g, {})
+    over = {t: ps for t, ps in saida.get(g, {}).items() if t in atuais}  # times que saíram do jogo não disputam jogadores
     nomes = list(atuais)
     if '--times' in OPC: nomes = [t for t in nomes if t in OPC['--times'].split(',')]
     elif g in be.FONTES and '--todos' not in OPC: nomes = [t for t in nomes if t not in over]  # só o que as outras fontes não acharam

@@ -1,0 +1,6 @@
+Troféus
+- <jogo>-A/B/liga.png: desenhados para o jogo (tools/gerar_trofeus.py), não são os troféus oficiais.
+- dota2-B.png (Aegis of Champions): foto "The International 2018" por Dota 2 The International (Flickr),
+  Wikimedia Commons, CC BY 2.0 — https://commons.wikimedia.org/wiki/File:The_International_2018_(30311589518).jpg
+  (recortada e reduzida).
+- ff-A.png: cópia de e.png (Esports World Cup).

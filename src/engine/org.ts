@@ -1,5 +1,5 @@
 // A org do jogador: cenários de início, peneira, finanças, patrocínios, caixa de entrada e decisões.
-import { GAMES, GameId } from './games';
+import { GAMES, GameId, premioReal } from './games';
 import { chance, clamp, pick, ri, rnd, shuffle } from './rng';
 import type { Candidato, Cenario, Msg, Player, State, Team, Torneio } from './types';
 import { TRACOS } from './types';
@@ -483,7 +483,8 @@ export function aoFimTorneioOrg(s: State, tor: Torneio) {
   else if (tor.elim[org]) fase = tor.elim[org];
   else fase = `${(tor.rank ?? []).indexOf(org) + 1}º lugar`;
   const mult = fase === 'CAMPEÃ' ? 1 : fase === 'Vice' ? 0.5 : /3º|4º|Semi/.test(fase) ? 0.25 : /Quartas|5º/.test(fase) ? 0.12 : INTL.has(tor.kind) ? 0.05 : 0;
-  const premio = Math.round((PREMIO[tor.kind] ?? 0) * mult);
+  const base = premioReal(g, tor.kind, tor.league ? s.leagues[tor.league]?.region : undefined) ?? PREMIO[tor.kind] ?? 0;
+  const premio = Math.round(base * mult);
   const intl = INTL.has(tor.kind);
   const rep = fase === 'CAMPEÃ' ? (intl ? 12 : tor.kind === 'split' ? 8 : 4) : fase === 'Vice' ? (intl ? 6 : 3) : mult >= 0.12 ? (intl ? 3 : 1) : intl ? 1 : -2;
   if (premio) { s.org.caixa += premio; lanca(s, 'rec', 'Premiações', premio); }

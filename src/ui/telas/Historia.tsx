@@ -8,7 +8,9 @@ import { act, useGame } from '../../store';
 import { Lendas } from './Lendas';
 import { Crest, Escudo, Flag, fotoDe, Panel, Retrato, NomeTime } from '../common';
 
-const trofeu = (kind: TorKind, nome: string) => {
+const trofeu = (kind: TorKind, nome: string, g: GameId = 'lol') => {
+  // outros jogos: troféus próprios (tools/gerar_trofeus.py; Aegis do Dota é foto do Commons)
+  if (g !== 'lol') return `/trofeus/${g}-${kind === 'intlA' ? 'A' : kind === 'intlB' ? 'B' : 'liga'}.png`;
   const m: Partial<Record<TorKind, string>> = { worlds: 'w', msi: 'm', fs: 'f', ewc: 'e', intlA: 'm', intlB: 'w' };
   if (m[kind]) return `/trofeus/${m[kind]}.png`;
   const liga = ['CBLOL', 'LCK', 'LCS', 'LEC', 'LPL'].find(l => nome.startsWith(l) && !nome.includes('Challengers'));
@@ -52,7 +54,7 @@ function Trofeus() {
           <div className="estante">
             {titulos.map(h => (
               <div key={h.tor + h.ano} className="trofeu" style={{ '--g': GAMES[h.game].cor } as CSSProperties}>
-                <img src={trofeu(h.kind, h.nome)} alt="" onError={e => ((e.target as HTMLImageElement).style.visibility = 'hidden')} />
+                <img src={trofeu(h.kind, h.nome, h.game)} alt="" onError={e => ((e.target as HTMLImageElement).style.visibility = 'hidden')} />
                 <b>{h.nome}</b>
                 <small><span className="gtag">{GAMES[h.game].curto}</span> {h.ano} · vice {h.vice}</small>
               </div>

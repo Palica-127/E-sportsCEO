@@ -35,7 +35,7 @@ export const GAMES: Record<GameId, GameDef> = {
 export const GAME_IDS = Object.keys(GAMES) as GameId[];
 
 export interface RawTeam { n: string; p: (string | number | null)[][] | null; real?: boolean }
-export interface RawLeague { nome: string; regiao: string; t1: RawTeam[]; t2: RawTeam[] }
+export interface RawLeague { nome: string; regiao: string; premio?: number; t1: RawTeam[]; t2: RawTeam[] }
 
 // elencos reais pesquisados (tools/buscar_elencos.py): [nick, nota, idade, nac, nome real], por cima dos dados base
 const cacheLigas: Partial<Record<GameId, Record<string, RawLeague>>> = {};
@@ -51,4 +51,14 @@ export function rawLeagues(g: GameId): Record<string, RawLeague> {
 
 export function regioes(g: GameId): { id: string; nome: string; regiao: string }[] {
   return Object.entries(rawLeagues(g)).map(([id, l]) => ({ id, nome: l.nome, regiao: l.regiao }));
+}
+
+/** prêmio do campeão em R$ quando o jogo tem valor real (tools/ligas_reais.py); senão undefined */
+export function premioReal(g: GameId, kind: string, region?: string): number | undefined {
+  if (g === 'lol') return undefined;
+  const d = (OUTROS as any)[g];
+  if (kind === 'intlA' || kind === 'intlB') return d.intl[kind === 'intlA' ? 'A' : 'B'].premio;
+  const p = region ? d.leagues[region]?.premio : undefined;
+  if (p == null) return undefined;
+  return kind === 'split' ? p : kind === 'd2' ? Math.round(p * 0.25 / 1000) * 1000 : undefined;
 }
